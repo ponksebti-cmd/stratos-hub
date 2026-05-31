@@ -3,7 +3,7 @@ import db from "./db.js";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is missing. This is required for security.");
+  console.error("[auth] WARNING: JWT_SECRET is not set. Authentication will fail.");
 }
 
 // ── Crypto helpers ────────────────────────────────────────────────────────────

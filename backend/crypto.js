@@ -3,10 +3,13 @@
 
 const MASTER_SECRET = process.env.MASTER_SECRET;
 if (!MASTER_SECRET) {
-  throw new Error("MASTER_SECRET environment variable is missing. This is required for security.");
+  console.error("[crypto] WARNING: MASTER_SECRET is not set. API key encryption will fail.");
 }
 
 async function getMasterKey() {
+  if (!MASTER_SECRET) {
+    throw new Error("MASTER_SECRET is not configured. Please set it in your environment variables.");
+  }
   const raw = new TextEncoder().encode(MASTER_SECRET.padEnd(32).slice(0, 32));
   return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
 }
