@@ -106,10 +106,16 @@ export async function handleLogin(req) {
   const safeEmail = sanitizeString(email, 254).toLowerCase();
   const [user] = await db`SELECT * FROM users WHERE email = ${safeEmail} LIMIT 1`;
 
-  // Always run password hash to prevent timing attacks when user doesn't exist
-  const dummyHash = "$2b$10$invalid.hash.to.prevent.timing.attacks.padding";
-  const hashToVerify = user?.password ?? dummyHash;
-  const ok = await verifyPassword(password, hashToVerify);
+  // Always attempt verification to prevent timing-based user enumeration.
+  // Use a pre-hashed sentinel when the user doesn't exist so the bcrypt
+  // work-factor is always paid regardless of outcome.
+  const SENTINEL_HASH = "$2b$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012";
+  let ok = false;
+  try {
+    ok = await verifyPassword(password, user?.password ?? SENTINEL_HASH);
+  } catch {
+    ok = false;
+  }
 
   if (!user || !ok) {
     return Response.json({ error: "Invalid credentials" }, { status: 401 });
