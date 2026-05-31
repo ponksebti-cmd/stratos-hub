@@ -87,7 +87,7 @@ args = "git add . && git commit -m \"Initial commit\""
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "git remote add origin https://github.com/ponksebti-cmd/stratos-hub.git && git push -u origin main"
+args = "git remote set-url origin https://github.com/ponksebti-cmd/stratos-hub.git && git push -u origin main"
 
 [[ports]]
 localPort = 3001
