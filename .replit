@@ -108,5 +108,5 @@ externalPort = 8080
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "cd backend && bun run index.js & npm run dev -- --host 0.0.0.0 --port 5000"]
-build = ["npm", "run", "build"]
+run = ["bash", "-c", "cd /home/runner/workspace && bun run backend/index.js"]
+build = ["bash", "-c", "cd /home/runner/workspace && npm run build"]
