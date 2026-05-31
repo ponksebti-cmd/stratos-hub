@@ -16,11 +16,17 @@ export default defineConfig({
       headers: {
         "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
       },
+      // Proxy /api/* → backend so webhook URLs work through the frontend domain
+      proxy: {
+        "/api": {
+          target: "http://localhost:3001",
+          changeOrigin: false,
+          rewrite: (path) => path.replace(/^\/api/, ""),
+        },
+      },
     },
   },
   tanstackStart: {
-    // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-    // nitro/vite builds from this
     server: { entry: "server" },
   },
 });

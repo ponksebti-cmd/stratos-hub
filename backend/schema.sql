@@ -171,3 +171,22 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS widget_config JSONB;
 -- Added for AI Persona & Lead Scoring
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS system_prompt TEXT;
 ALTER TABLE leads ADD COLUMN IF NOT EXISTS score INTEGER NOT NULL DEFAULT 0;
+
+-- ── Messaging Channel Integrations ────────────────────────────────────────────
+
+-- Facebook Messenger
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS messenger_page_id      TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS messenger_token        TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS messenger_verify_token TEXT;
+
+-- Instagram Messaging
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS instagram_account_id   TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS instagram_token        TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS instagram_verify_token TEXT;
+
+-- TikTok for Business Messaging
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS tiktok_app_id         TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS tiktok_app_secret     TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS tiktok_access_token   TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS tiktok_account_id     TEXT;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS tiktok_verify_token   TEXT;

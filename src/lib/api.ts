@@ -60,6 +60,35 @@ export interface WidgetConfig {
   theme: "light" | "dark";
   position: "right" | "left";
 }
+
+export interface ChannelStatus {
+  connected: boolean;
+}
+export interface WhatsAppChannel extends ChannelStatus {
+  phoneId: string;
+  businessId: string;
+  verifyToken: string;
+}
+export interface MessengerChannel extends ChannelStatus {
+  pageId: string;
+  verifyToken: string;
+}
+export interface InstagramChannel extends ChannelStatus {
+  accountId: string;
+  verifyToken: string;
+}
+export interface TikTokChannel extends ChannelStatus {
+  appId: string;
+  accountId: string;
+  verifyToken: string;
+}
+export interface Channels {
+  whatsapp: WhatsAppChannel;
+  messenger: MessengerChannel;
+  instagram: InstagramChannel;
+  tiktok: TikTokChannel;
+}
+
 export interface Settings {
   company: Company;
   subscription: Subscription;
@@ -67,6 +96,7 @@ export interface Settings {
   systemPrompt?: string;
   user: User;
   widgetConfig?: WidgetConfig;
+  channels: Channels;
 }
 
 // ===== API surface =====
@@ -179,5 +209,13 @@ export const api = {
       request<{ ok: boolean }>("/settings/system-prompt", { method: "PUT", body: JSON.stringify({ prompt }) }),
     saveWidgetConfig: (config: Partial<WidgetConfig>) =>
       request<{ ok: boolean }>("/settings/widget", { method: "PUT", body: JSON.stringify(config) }),
+    saveWhatsApp: (data: { phoneId: string; businessId: string; token: string; verifyToken: string }) =>
+      request<{ ok: boolean }>("/settings/whatsapp", { method: "PUT", body: JSON.stringify(data) }),
+    saveMessenger: (data: { pageId: string; token: string; verifyToken: string }) =>
+      request<{ ok: boolean }>("/settings/messenger", { method: "PUT", body: JSON.stringify(data) }),
+    saveInstagram: (data: { accountId: string; token: string; verifyToken: string }) =>
+      request<{ ok: boolean }>("/settings/instagram", { method: "PUT", body: JSON.stringify(data) }),
+    saveTikTok: (data: { appId: string; appSecret: string; accessToken: string; accountId: string; verifyToken: string }) =>
+      request<{ ok: boolean }>("/settings/tiktok", { method: "PUT", body: JSON.stringify(data) }),
   },
 };

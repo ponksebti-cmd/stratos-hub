@@ -9,13 +9,18 @@ import {
   handleWidgetChat,
 } from "./routes/chat.js";
 import { handleWhatsAppVerification, handleWhatsAppMessage } from "./routes/whatsapp.js";
+import { handleMessengerVerification, handleMessengerMessage } from "./routes/messenger.js";
+import { handleInstagramVerification, handleInstagramMessage } from "./routes/instagram.js";
+import { handleTikTokVerification, handleTikTokMessage } from "./routes/tiktok.js";
 import { handleListLeads, handleCreateLead, handleUpdateLead, handleDeleteLead } from "./routes/leads.js";
 import { handleGetUsage } from "./routes/usage.js";
 import {
   handleGetSettings, handleUpdateSettings,
   handleSaveOpenAIKey, handleDeleteOpenAIKey,
   handleSaveWidgetConfig, handleGetWidgetConfig,
-  handleSaveWhatsAppSettings, handleSaveSystemPrompt
+  handleSaveWhatsAppSettings, handleSaveMessengerSettings,
+  handleSaveInstagramSettings, handleSaveTikTokSettings,
+  handleSaveSystemPrompt
 } from "./routes/settings.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
@@ -73,8 +78,24 @@ const server = Bun.serve({
     else if (method === "GET"  && path === "/chat/sessions") response = await handleListSessions(req);
     else if (method === "POST" && path === "/chat/sessions") response = await handleCreateSession(req);
     else if (method === "POST" && path === "/chat/widget")   response = await handleWidgetChat(req);
+
+    // WhatsApp webhook
     else if (method === "GET"  && path === "/chat/whatsapp/webhook") response = await handleWhatsAppVerification(req);
     else if (method === "POST" && path === "/chat/whatsapp/webhook") response = await handleWhatsAppMessage(req);
+
+    // Messenger webhook
+    else if (method === "GET"  && path === "/chat/messenger/webhook") response = await handleMessengerVerification(req);
+    else if (method === "POST" && path === "/chat/messenger/webhook") response = await handleMessengerMessage(req);
+
+    // Instagram webhook
+    else if (method === "GET"  && path === "/chat/instagram/webhook") response = await handleInstagramVerification(req);
+    else if (method === "POST" && path === "/chat/instagram/webhook") response = await handleInstagramMessage(req);
+
+    // TikTok webhook
+    else if (method === "GET"  && path === "/chat/tiktok/webhook") response = await handleTikTokVerification(req);
+    else if (method === "POST" && path === "/chat/tiktok/webhook") response = await handleTikTokMessage(req);
+
+    // Chat messages
     else if (method === "GET"  && match(path, "/chat/sessions/:id/messages")) {
       const [id] = match(path, "/chat/sessions/:id/messages");
       response = await handleGetMessages(req, id);
@@ -100,16 +121,19 @@ const server = Bun.serve({
     else if (method === "GET" && path === "/usage") response = await handleGetUsage(req);
 
     // Settings
-    else if (method === "GET"    && path === "/settings")            response = await handleGetSettings(req);
-    else if (method === "PATCH"  && path === "/settings")            response = await handleUpdateSettings(req);
-    else if (method === "PUT"    && path === "/settings/openai-key") response = await handleSaveOpenAIKey(req);
-    else if (method === "DELETE" && path === "/settings/openai-key") response = await handleDeleteOpenAIKey(req);
-    else if (method === "PUT"    && path === "/settings/system-prompt") response = await handleSaveSystemPrompt(req);
-    else if (method === "PUT"    && path === "/settings/whatsapp")   response = await handleSaveWhatsAppSettings(req);
-    else if (method === "PUT"    && path === "/settings/widget")     response = await handleSaveWidgetConfig(req);
+    else if (method === "GET"    && path === "/settings")                response = await handleGetSettings(req);
+    else if (method === "PATCH"  && path === "/settings")                response = await handleUpdateSettings(req);
+    else if (method === "PUT"    && path === "/settings/openai-key")     response = await handleSaveOpenAIKey(req);
+    else if (method === "DELETE" && path === "/settings/openai-key")     response = await handleDeleteOpenAIKey(req);
+    else if (method === "PUT"    && path === "/settings/system-prompt")  response = await handleSaveSystemPrompt(req);
+    else if (method === "PUT"    && path === "/settings/whatsapp")       response = await handleSaveWhatsAppSettings(req);
+    else if (method === "PUT"    && path === "/settings/messenger")      response = await handleSaveMessengerSettings(req);
+    else if (method === "PUT"    && path === "/settings/instagram")      response = await handleSaveInstagramSettings(req);
+    else if (method === "PUT"    && path === "/settings/tiktok")         response = await handleSaveTikTokSettings(req);
+    else if (method === "PUT"    && path === "/settings/widget")         response = await handleSaveWidgetConfig(req);
     else if (method === "GET"    && path.startsWith("/widget/config/")) {
       const agencyId = path.split("/").pop();
-      req.agencyId = agencyId; // Pass it along
+      req.agencyId = agencyId;
       response = await handleGetWidgetConfig(req);
     }
 

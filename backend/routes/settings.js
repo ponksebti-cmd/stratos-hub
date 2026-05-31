@@ -17,14 +17,18 @@ export async function handleGetSettings(req) {
   if (!company) return Response.json({ error: "Not found" }, { status: 404 });
 
   const [settings] = await db`
-    SELECT system_prompt, openai_key_enc, widget_config, whatsapp_phone_id, whatsapp_business_id, whatsapp_token, whatsapp_verify_token 
+    SELECT 
+      system_prompt, openai_key_enc, widget_config,
+      whatsapp_phone_id, whatsapp_business_id, whatsapp_token, whatsapp_verify_token,
+      messenger_page_id, messenger_token, messenger_verify_token,
+      instagram_account_id, instagram_token, instagram_verify_token,
+      tiktok_app_id, tiktok_app_secret, tiktok_access_token, tiktok_account_id, tiktok_verify_token
     FROM settings 
     WHERE company_id = ${user.company_id} 
     LIMIT 1
   `;
 
   const hasOpenAIKey = !!settings?.openai_key_enc;
-  const hasWhatsApp = !!settings?.whatsapp_token;
   let widgetConfig = null;
   
   if (settings?.widget_config) {
@@ -46,14 +50,32 @@ export async function handleGetSettings(req) {
       renewsAt: company.renews_at,
     },
     hasOpenAIKey,
-    hasWhatsApp,
     systemPrompt: settings?.system_prompt ?? "",
-    whatsapp: {
-      phoneId: settings?.whatsapp_phone_id ?? "",
-      businessId: settings?.whatsapp_business_id ?? "",
-      verifyToken: settings?.whatsapp_verify_token ?? "",
-    },
     widgetConfig,
+    channels: {
+      whatsapp: {
+        connected: !!settings?.whatsapp_token,
+        phoneId: settings?.whatsapp_phone_id ?? "",
+        businessId: settings?.whatsapp_business_id ?? "",
+        verifyToken: settings?.whatsapp_verify_token ?? "",
+      },
+      messenger: {
+        connected: !!settings?.messenger_token,
+        pageId: settings?.messenger_page_id ?? "",
+        verifyToken: settings?.messenger_verify_token ?? "",
+      },
+      instagram: {
+        connected: !!settings?.instagram_token,
+        accountId: settings?.instagram_account_id ?? "",
+        verifyToken: settings?.instagram_verify_token ?? "",
+      },
+      tiktok: {
+        connected: !!settings?.tiktok_access_token,
+        appId: settings?.tiktok_app_id ?? "",
+        accountId: settings?.tiktok_account_id ?? "",
+        verifyToken: settings?.tiktok_verify_token ?? "",
+      },
+    },
     user: { id: user.id, email: user.email, name: user.name, role: user.role },
   });
 }
@@ -71,16 +93,11 @@ export async function handleUpdateSettings(req) {
   if (name) companyUpdates.name = name;
 
   if (email) {
-    // Check if email belongs to another company
     const [existing] = await db`
       SELECT id FROM companies WHERE email = ${email} AND id != ${user.company_id} LIMIT 1
     `;
-
     if (existing) return Response.json({ error: "Email already taken" }, { status: 409 });
-
-    // Also update the admin user's email
     await db`UPDATE users SET email = ${email} WHERE company_id = ${user.company_id} AND role = 'admin'`;
-
     companyUpdates.email = email;
   }
 
@@ -176,16 +193,96 @@ export async function handleSaveWhatsAppSettings(req) {
   try {
     await db`
       INSERT INTO settings (company_id, whatsapp_phone_id, whatsapp_business_id, whatsapp_token, whatsapp_verify_token)
-      VALUES (${user.company_id}, ${phoneId}, ${businessId}, ${token}, ${verifyToken})
+      VALUES (${user.company_id}, ${phoneId ?? ""}, ${businessId ?? ""}, ${token ?? ""}, ${verifyToken ?? ""})
       ON CONFLICT (company_id) DO UPDATE SET 
-        whatsapp_phone_id = EXCLUDED.whatsapp_phone_id,
-        whatsapp_business_id = EXCLUDED.whatsapp_business_id,
-        whatsapp_token = EXCLUDED.whatsapp_token,
+        whatsapp_phone_id     = EXCLUDED.whatsapp_phone_id,
+        whatsapp_business_id  = EXCLUDED.whatsapp_business_id,
+        whatsapp_token        = EXCLUDED.whatsapp_token,
         whatsapp_verify_token = EXCLUDED.whatsapp_verify_token
     `;
   } catch (error) {
     console.error("save whatsapp settings:", error);
     return Response.json({ error: "Failed to save WhatsApp settings" }, { status: 500 });
+  }
+
+  return Response.json({ ok: true });
+}
+
+export async function handleSaveMessengerSettings(req) {
+  const user = await requireAuth(req);
+  if (!user) return unauthorized();
+
+  let body;
+  try { body = await req.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
+
+  const { pageId, token, verifyToken } = body ?? {};
+
+  try {
+    await db`
+      INSERT INTO settings (company_id, messenger_page_id, messenger_token, messenger_verify_token)
+      VALUES (${user.company_id}, ${pageId ?? ""}, ${token ?? ""}, ${verifyToken ?? ""})
+      ON CONFLICT (company_id) DO UPDATE SET 
+        messenger_page_id     = EXCLUDED.messenger_page_id,
+        messenger_token       = EXCLUDED.messenger_token,
+        messenger_verify_token = EXCLUDED.messenger_verify_token
+    `;
+  } catch (error) {
+    console.error("save messenger settings:", error);
+    return Response.json({ error: "Failed to save Messenger settings" }, { status: 500 });
+  }
+
+  return Response.json({ ok: true });
+}
+
+export async function handleSaveInstagramSettings(req) {
+  const user = await requireAuth(req);
+  if (!user) return unauthorized();
+
+  let body;
+  try { body = await req.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
+
+  const { accountId, token, verifyToken } = body ?? {};
+
+  try {
+    await db`
+      INSERT INTO settings (company_id, instagram_account_id, instagram_token, instagram_verify_token)
+      VALUES (${user.company_id}, ${accountId ?? ""}, ${token ?? ""}, ${verifyToken ?? ""})
+      ON CONFLICT (company_id) DO UPDATE SET 
+        instagram_account_id     = EXCLUDED.instagram_account_id,
+        instagram_token          = EXCLUDED.instagram_token,
+        instagram_verify_token   = EXCLUDED.instagram_verify_token
+    `;
+  } catch (error) {
+    console.error("save instagram settings:", error);
+    return Response.json({ error: "Failed to save Instagram settings" }, { status: 500 });
+  }
+
+  return Response.json({ ok: true });
+}
+
+export async function handleSaveTikTokSettings(req) {
+  const user = await requireAuth(req);
+  if (!user) return unauthorized();
+
+  let body;
+  try { body = await req.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
+
+  const { appId, appSecret, accessToken, accountId, verifyToken } = body ?? {};
+
+  try {
+    await db`
+      INSERT INTO settings (company_id, tiktok_app_id, tiktok_app_secret, tiktok_access_token, tiktok_account_id, tiktok_verify_token)
+      VALUES (${user.company_id}, ${appId ?? ""}, ${appSecret ?? ""}, ${accessToken ?? ""}, ${accountId ?? ""}, ${verifyToken ?? ""})
+      ON CONFLICT (company_id) DO UPDATE SET 
+        tiktok_app_id       = EXCLUDED.tiktok_app_id,
+        tiktok_app_secret   = EXCLUDED.tiktok_app_secret,
+        tiktok_access_token = EXCLUDED.tiktok_access_token,
+        tiktok_account_id   = EXCLUDED.tiktok_account_id,
+        tiktok_verify_token = EXCLUDED.tiktok_verify_token
+    `;
+  } catch (error) {
+    console.error("save tiktok settings:", error);
+    return Response.json({ error: "Failed to save TikTok settings" }, { status: 500 });
   }
 
   return Response.json({ ok: true });
@@ -213,7 +310,6 @@ export async function handleGetWidgetConfig(req) {
 
   return Response.json(config);
 }
-
 
 export async function handleSaveSystemPrompt(req) {
   const user = await requireAuth(req);
