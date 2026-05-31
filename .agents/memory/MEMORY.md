@@ -1,0 +1,2 @@
+- [i18n setup](i18n-setup.md) — fallbackLng is "ar" (not "en"); translation files live at src/locales/{en,ar}/translation.json; sub-components need their own useTranslation() hook.
+- [widget + embed architecture](widget-embed-arch.md) — public/widget.js is the embeddable snippet (FAB+teaser+panel); the panel is an iframe pointing to /embed/:agencyId route; postMessage bridge for close/config sync.
