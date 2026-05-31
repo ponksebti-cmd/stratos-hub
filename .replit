@@ -55,6 +55,32 @@ waitForPort = 3001
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "rando"
+mode = "sequential"
+author = 57506094
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git add ."
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git commit -m \"my commit message\""
+
+[[workflows.workflow]]
+name = "please"
+mode = "sequential"
+author = 57506094
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git config --global user.name \"ponksebti-cmd\" && git config --global user.email \"ponksebti@gmail.com\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git add . && git commit -m \"Initial commit\""
+
 [[ports]]
 localPort = 3001
 externalPort = 3001
