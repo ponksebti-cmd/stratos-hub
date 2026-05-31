@@ -68,6 +68,10 @@ args = "git add ."
 task = "shell.exec"
 args = "git commit -m \"my commit message\""
 
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git remote add origin https://github.com/ponksebti-cmd/stratos-hub.git && git push -u origin main"
+
 [[workflows.workflow]]
 name = "please"
 mode = "sequential"
