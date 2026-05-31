@@ -28,7 +28,8 @@ import {
 const PORT = Number(process.env.PORT ?? 3001);
 
 // ── Static file serving (production) ─────────────────────────────────────────
-const DIST_DIR = new URL("../dist", import.meta.url).pathname;
+// TanStack Start builds frontend assets to dist/client/, not dist/
+const DIST_DIR = new URL("../dist/client", import.meta.url).pathname;
 const IS_PROD = existsSync(join(DIST_DIR, "index.html"));
 
 const API_PREFIXES = [
