@@ -1,5 +1,6 @@
 # Nixpacks configuration for Railway deployment
-# Requires: Node.js (frontend build) + Bun (backend)
+# Builds the frontend (Node/Vite) then starts the Bun backend.
+# The backend serves both the API and the built static frontend.
 
 [phases.setup]
 nixPkgs = ["nodejs_22", "bun"]

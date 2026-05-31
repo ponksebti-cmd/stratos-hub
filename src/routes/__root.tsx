@@ -4,14 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
-  HeadContent,
-  Scripts,
 } from "@tanstack/react-router";
-
 import { Toaster } from "@/components/ui/sonner";
-import appCss from "../styles.css?url";
 import { useTranslation } from "react-i18next";
+import { useEffect } from "react";
 import "@/lib/i18n";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "261210447110-loatthu0bslu6v3a48v1u1p9dh0qtdm3.apps.googleusercontent.com";
 
 function NotFoundComponent() {
   return (
@@ -71,91 +71,22 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Stratos Hub" },
-      { name: "description", content: "AI Powered Real Estate Agent" },
-      { name: "author", content: "Stratos Hub" },
-      { property: "og:title", content: "Stratos Hub" },
-      { property: "og:description", content: "AI Powered Real Estate Agent" },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@StratosHub" },
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        href: "/logo-dark.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        href: "/logo.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-    ],
-    scripts: [
-      {
-        children: `
-          (function() {
-            const updateFavicon = () => {
-              const isDark = document.documentElement.classList.contains('dark');
-              const lightIcon = document.querySelector("link[href='/logo-dark.png']");
-              const darkIcon = document.querySelector("link[href='/logo.png']");
-              
-              if (isDark) {
-                if (lightIcon) lightIcon.removeAttribute('rel');
-                if (darkIcon) darkIcon.setAttribute('rel', 'icon');
-              } else {
-                if (darkIcon) darkIcon.removeAttribute('rel');
-                if (lightIcon) lightIcon.setAttribute('rel', 'icon');
-              }
-            };
-            const observer = new MutationObserver(updateFavicon);
-            observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-            updateFavicon();
-          })();
-        `
-      }
-    ]
-  }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
-  const { i18n } = useTranslation();
-  
-  return (
-    <html lang={i18n.language} dir={i18n.dir()}>
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
-import { GoogleOAuthProvider } from "@react-oauth/google";
-
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    document.documentElement.lang = i18n.language;
+    document.documentElement.dir = i18n.dir();
+  }, [i18n.language]);
 
   return (
-    <GoogleOAuthProvider clientId="261210447110-loatthu0bslu6v3a48v1u1p9dh0qtdm3.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <QueryClientProvider client={queryClient}>
         <Outlet />
         <Toaster richColors position="top-right" />

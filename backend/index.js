@@ -190,4 +190,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`🚀 Stratos Hub backend running on http://localhost:${PORT}${IS_PROD ? " [serving static build]" : ""}`);
+console.log(`🚀 Stratos Hub backend running on port ${PORT}${IS_PROD ? " [serving static build]" : " [dev mode]"}`);

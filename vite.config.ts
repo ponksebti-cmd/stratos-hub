@@ -1,32 +1,37 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (build-only using cloudflare as a default target),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import tsConfigPaths from "vite-tsconfig-paths";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
 export default defineConfig({
-  vite: {
-    server: {
-      host: "0.0.0.0",
-      port: 5000,
-      strictPort: true,
-      allowedHosts: true,
-      headers: {
-        "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
-      },
-      // Proxy /api/* → backend so webhook URLs work through the frontend domain
-      proxy: {
-        "/api": {
-          target: "http://localhost:3001",
-          changeOrigin: false,
-          rewrite: (path) => path.replace(/^\/api/, ""),
-        },
-      },
-    },
+  plugins: [
+    TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
+    react(),
+    tailwindcss(),
+    tsConfigPaths(),
+  ],
+  build: {
+    outDir: "dist/client",
+    emptyOutDir: true,
   },
-  tanstackStart: {
-    server: { entry: "server" },
+  server: {
+    host: "0.0.0.0",
+    port: 5000,
+    strictPort: true,
+    allowedHosts: true,
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+    },
+    proxy: {
+      "/auth": { target: "http://localhost:3001", changeOrigin: false },
+      "/files": { target: "http://localhost:3001", changeOrigin: false },
+      "/chat": { target: "http://localhost:3001", changeOrigin: false },
+      "/leads": { target: "http://localhost:3001", changeOrigin: false },
+      "/usage": { target: "http://localhost:3001", changeOrigin: false },
+      "/settings": { target: "http://localhost:3001", changeOrigin: false },
+      "/widget": { target: "http://localhost:3001", changeOrigin: false },
+      "/health": { target: "http://localhost:3001", changeOrigin: false },
+    },
   },
 });

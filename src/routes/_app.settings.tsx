@@ -214,7 +214,7 @@ function Settings() {
   const embedCode = [
     `<!-- Stratos Hub Widget — paste before </body> -->`,
     `<script`,
-    `  src="${typeof window !== "undefined" ? window.location.origin : "https://app.stratoshub.ai"}/widget.js"`,
+    `  src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js"`,
     `  data-key="${widgetKey}"`,
     `  data-color="${wColor}"`,
     `  data-name="${wName}"`,
