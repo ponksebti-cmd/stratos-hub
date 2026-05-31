@@ -85,6 +85,10 @@ args = "git config --global user.name \"ponksebti-cmd\" && git config --global u
 task = "shell.exec"
 args = "git add . && git commit -m \"Initial commit\""
 
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git remote add origin https://github.com/ponksebti-cmd/stratos-hub.git && git push -u origin main"
+
 [[ports]]
 localPort = 3001
 externalPort = 3001
