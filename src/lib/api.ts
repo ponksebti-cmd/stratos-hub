@@ -1,7 +1,10 @@
 // Central API service — connected to the Bun backend.
 // Token is stored in localStorage under "stratos_token".
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001";
+// In development, call the backend directly (port 3001).
+// In production, use the same origin (backend serves the built frontend).
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+  ?? (import.meta.env.DEV ? "http://localhost:3001" : "");
 
 function getToken(): string | null {
   return localStorage.getItem("stratos_token");

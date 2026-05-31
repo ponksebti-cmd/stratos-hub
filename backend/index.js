@@ -1,4 +1,6 @@
 // index.js — Bun HTTP server, main router
+import { existsSync } from "fs";
+import { join } from "path";
 import { migrate } from "./migrate.js";
 
 import { handleRegister, handleLogin, handleGoogleLogin } from "./routes/auth.js";
@@ -24,6 +26,36 @@ import {
 } from "./routes/settings.js";
 
 const PORT = Number(process.env.PORT ?? 3001);
+
+// ── Static file serving (production) ─────────────────────────────────────────
+const DIST_DIR = new URL("../dist", import.meta.url).pathname;
+const IS_PROD = existsSync(join(DIST_DIR, "index.html"));
+
+const API_PREFIXES = [
+  "/auth", "/files", "/chat", "/leads",
+  "/usage", "/settings", "/widget", "/health",
+];
+
+function isApiRoute(pathname) {
+  return API_PREFIXES.some(p => pathname === p || pathname.startsWith(p + "/"));
+}
+
+async function serveStatic(pathname) {
+  // Strip query string
+  const cleanPath = pathname.split("?")[0];
+  // Prevent directory traversal
+  if (cleanPath.includes("..")) return null;
+
+  const filePath = join(DIST_DIR, cleanPath);
+  if (existsSync(filePath)) {
+    const f = Bun.file(filePath);
+    if (f.size > 0) return new Response(f);
+  }
+  // SPA fallback — serve index.html for any unmatched route
+  return new Response(Bun.file(join(DIST_DIR, "index.html")), {
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
 
 // ── CORS headers ──────────────────────────────────────────────────────────────
 const CORS = {
@@ -140,7 +172,13 @@ const server = Bun.serve({
     // Health check
     else if (path === "/health") response = Response.json({ status: "ok", timestamp: new Date().toISOString() });
 
-    else response = Response.json({ error: "Not found" }, { status: 404 });
+    // Static file serving (production build)
+    else if (IS_PROD && !isApiRoute(path)) {
+      const staticRes = await serveStatic(path);
+      if (staticRes) return staticRes; // No CORS needed for static files
+    }
+
+    if (!response) response = Response.json({ error: "Not found" }, { status: 404 });
 
     return cors(response);
   },
@@ -151,4 +189,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`🚀 Stratos Hub backend running on http://localhost:${PORT}`);
+console.log(`🚀 Stratos Hub backend running on http://localhost:${PORT}${IS_PROD ? " [serving static build]" : ""}`);
