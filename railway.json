@@ -6,7 +6,7 @@
     "buildCommand": "cd backend && npm install"
   },
   "deploy": {
-    "startCommand": "cd backend && bun run index.js",
+    "startCommand": "bun backend/index.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
