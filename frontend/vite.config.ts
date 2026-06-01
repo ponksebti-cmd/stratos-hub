@@ -3,6 +3,47 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { writeFileSync } from "fs";
+import { resolve } from "path";
+
+// Cloudflare Pages headers for optimization
+const cfHeaders = `
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+  Cache-Control: public, max-age=31536000, immutable
+
+*.js
+  Cache-Control: public, max-age=31536000, immutable
+
+*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+*.woff
+  Cache-Control: public, max-age=31536000, immutable
+
+*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+index.html
+  Cache-Control: public, max-age=0, must-revalidate
+`;
+
+// Cloudflare Pages redirects for SPA routing
+const cfRedirects = `
+/* /index.html 200
+`;
 
 export default defineConfig({
   plugins: [
@@ -10,10 +51,22 @@ export default defineConfig({
     react(),
     tailwindcss(),
     tsConfigPaths(),
+    {
+      name: 'cloudflare-headers',
+      writeBundle() {
+        const headersPath = resolve(__dirname, 'dist/client/_headers');
+        writeFileSync(headersPath, cfHeaders.trim());
+        
+        const redirectsPath = resolve(__dirname, 'dist/client/_redirects');
+        writeFileSync(redirectsPath, cfRedirects.trim());
+      },
+    },
   ],
   build: {
     outDir: "dist/client",
     emptyOutDir: true,
+    sourcemap: false,
+    chunkSizeWarningLimit: 1000,
   },
   server: {
     host: "0.0.0.0",
