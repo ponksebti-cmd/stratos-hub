@@ -112,7 +112,7 @@ migrate().catch(err => console.error("[migrate] Background migration failed:", e
 // ── Router ────────────────────────────────────────────────────────────────────
 const server = Bun.serve({
   port: PORT,
-  hostname: "0.0.0.0",
+  hostname: "::",
   // Global request body size limit: 20 MB (file uploads can be up to 10 MB per file)
   maxRequestBodySize: 20 * 1024 * 1024,
 
