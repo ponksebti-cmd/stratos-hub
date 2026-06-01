@@ -1,0 +1,36 @@
+# Stage 1: Build the Vite frontend
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app
+# Copy frontend source
+COPY frontend/ ./frontend/
+WORKDIR /app/frontend
+# Pass API base URL for build if available
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+RUN npm ci
+RUN npm run build
+
+# Stage 2: Build and run the Bun backend
+FROM oven/bun:1-alpine
+WORKDIR /app
+
+# The backend expects the frontend to be in ../dist/client relative to the backend folder
+# Since the backend is run from /app/backend, we place the frontend in /app/dist/client
+COPY --from=frontend-builder /app/frontend/dist/client ./dist/client
+
+# Install backend dependencies
+COPY backend/package.json backend/bun.lock ./backend/
+WORKDIR /app/backend
+RUN bun install --production
+
+# Copy backend source
+COPY backend/ ./
+
+# Create uploads directory
+RUN mkdir -p uploads
+
+# Expose the default port
+EXPOSE 3001
+
+# Run the backend
+CMD ["bun", "run", "start"]
