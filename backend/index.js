@@ -106,11 +106,13 @@ function match(pathname, pattern) {
 }
 
 // ── Startup ───────────────────────────────────────────────────────────────────
-await migrate();
+// We run migration in the background so the server can start and be healthy immediately
+migrate().catch(err => console.error("[migrate] Background migration failed:", err));
 
 // ── Router ────────────────────────────────────────────────────────────────────
 const server = Bun.serve({
   port: PORT,
+  hostname: "0.0.0.0",
   // Global request body size limit: 20 MB (file uploads can be up to 10 MB per file)
   maxRequestBodySize: 20 * 1024 * 1024,
 
@@ -251,4 +253,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`🚀 Stratos Hub backend running on port ${PORT}${IS_PROD ? " [serving static build]" : " [dev mode]"}`);
+console.log(`🚀 Stratos Hub backend running on http://0.0.0.0:${PORT}${IS_PROD ? " [serving static build]" : " [dev mode]"}`);
