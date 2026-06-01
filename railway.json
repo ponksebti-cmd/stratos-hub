@@ -1,11 +1,11 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "cd backend && bun install"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "backend/Dockerfile",
+    "context": "backend"
   },
   "deploy": {
-    "startCommand": "cd backend && bun index.js",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE"
