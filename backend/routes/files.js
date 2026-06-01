@@ -6,7 +6,7 @@ import { unlinkSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { sanitizeFilename, hasDangerousExtension, isValidUUID } from "../middleware/validate.js";
 
-import { PDFParse } from "pdf-parse";
+import pdfParse from "pdf-parse";
 import { parse as csvParse } from "csv-parse/sync";
 
 const UPLOADS_DIR = new URL("../uploads", import.meta.url).pathname;
@@ -147,13 +147,8 @@ async function processFileBackground(id, companyId, filePath, mimeType, ext) {
     const buf = await Bun.file(filePath).arrayBuffer();
 
     if (mimeType === "application/pdf" || ext === "pdf") {
-      const parser = new PDFParse({ data: Buffer.from(buf) });
-      try {
-        const data = await parser.getText();
-        text = data.text;
-      } finally {
-        await parser.destroy();
-      }
+      const data = await pdfParse(Buffer.from(buf));
+      text = data.text;
     } else if (mimeType === "text/csv" || ext === "csv" || ext === "xls") {
       const records = csvParse(Buffer.from(buf), { skip_empty_lines: true });
       text = records.map((row) => row.join(", ")).join("\n");
