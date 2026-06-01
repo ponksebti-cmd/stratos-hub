@@ -6,7 +6,9 @@ import { unlinkSync, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 import { sanitizeFilename, hasDangerousExtension, isValidUUID } from "../middleware/validate.js";
 
-import pdfParse from "pdf-parse";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pdfParse = require("pdf-parse");
 import { parse as csvParse } from "csv-parse/sync";
 
 const UPLOADS_DIR = new URL("../uploads", import.meta.url).pathname;
