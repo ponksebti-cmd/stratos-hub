@@ -321,7 +321,7 @@ export async function handleGetMessages(req, sessionId) {
 
   let messages = [], error = null;
   try {
-    messages = await db`SELECT id, role, content, created_at FROM messages WHERE session_id = ${id} ORDER BY created_at ASC`;
+    messages = await db`SELECT id, role, content, created_at FROM messages WHERE session_id = ${sessionId} ORDER BY created_at ASC`;
   } catch(e) { error = e; }
 
   if (error) {
