@@ -15,6 +15,18 @@
 (function () {
   "use strict";
 
+  // ── Origin validation ────────────────────────────────────────────────────
+  var allowedOrigins = [
+    "http://localhost:8080",
+    "https://yourdomain.com",  // Add your production domain here
+  ];
+
+  var currentOrigin = window.location.origin;
+  if (allowedOrigins.indexOf(currentOrigin) === -1) {
+    console.warn("Stratos Widget: Blocked from " + currentOrigin);
+    return;
+  }
+
   var script = document.currentScript || (function () {
     var s = document.querySelectorAll("script[data-key]");
     return s[s.length - 1] || null;
@@ -57,7 +69,7 @@
   var DARK  = THEME === "dark";
   var ORIGIN = "bottom " + SIDE;
 
-  // ── CSS ───────────────────────────────────────────────────────────────────
+  // ── CSS ────────────────────────────────────────────────────────────────────
   var css = [
     "#sh-root*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}",
 
@@ -128,7 +140,7 @@
     "#sh-dismiss:hover{opacity:1;background:" + (DARK ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)") + ";transform:scale(1.1);}",
     "#sh-dismiss svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;}",
 
-    /* ── FAB ─────────────────────────────────────────────────────────────── */
+    /* ── FAB ───────────────────────────────────────────────────────────── */
     "#sh-fab{",
       "position:relative;",
       "width:58px;height:58px;border-radius:18px;",
@@ -225,7 +237,7 @@
   styleEl.textContent = css;
   document.head.appendChild(styleEl);
 
-  // ── DOM ───────────────────────────────────────────────────────────────────
+  // ── DOM ────────────────────────────────────────────────────────────────────
   var root = document.createElement("div");
   root.id = "sh-root";
 
@@ -279,7 +291,7 @@
   iframe.setAttribute("title", NAME + " Chat");
   panel.appendChild(iframe);
 
-  // ── State ─────────────────────────────────────────────────────────────────
+  // ── State ────────────────────────────────────────────────────────────────────
   var isOpen = false;
 
   function openWidget() {
@@ -323,7 +335,7 @@
     if (!isOpen) teaser.classList.remove("sh-in");
   }, 14500);
 
-  // ── postMessage bridge ────────────────────────────────────────────────────
+  // ── postMessage bridge ──────────────────────────────────────────────────────
   window.addEventListener("message", function (ev) {
     if (!ev.data) return;
     if (ev.data.type === "stratos_close_widget") closeWidget();
@@ -337,7 +349,7 @@
     }
   });
 
-  // ── Mount ─────────────────────────────────────────────────────────────────
+  // ── Mount ────────────────────────────────────────────────────────────────────
   function mount() {
     document.body.appendChild(panel);
     document.body.appendChild(root);
