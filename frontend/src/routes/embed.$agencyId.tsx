@@ -117,7 +117,7 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
     >
       {!isUser && (
         <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 shadow-sm ring-1 ring-black/5"
+          className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mb-1 shadow-sm ring-1 ring-black/5"
           style={{ background: "var(--accent-color)" }}
         >
           <img src="/logo.png" alt="AI" className="h-5 w-5 object-contain" />
@@ -125,12 +125,12 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
       )}
       <div
         className={cn(
-          "max-w-[82%] px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] flex flex-col gap-2 transition-all",
+          "max-w-[82%] px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] flex flex-col gap-2 transition-all ring-1 ring-inset",
           isUser
-            ? "rounded-br-sm text-white"
+            ? "rounded-br-sm text-white ring-black/10"
             : dark
-            ? "bg-white/10 text-white rounded-bl-sm border border-white/5 prose-invert prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-white"
-            : "bg-white text-slate-800 rounded-bl-sm border border-slate-100 prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-slate-900"
+            ? "bg-white/10 backdrop-blur-sm text-white rounded-bl-sm ring-white/10 prose-invert prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-white"
+            : "bg-white text-slate-800 rounded-bl-sm ring-slate-100 prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-slate-900"
         )}
         style={isUser ? { background: "var(--accent-color)" } : undefined}
       >
@@ -507,7 +507,7 @@ function EmbedWidget() {
               <div
                 ref={scrollRef}
                 onScroll={onScroll}
-                className="h-full overflow-y-auto px-3 py-4 space-y-3"
+                className="h-full overflow-y-auto px-4 py-6 space-y-4"
               >
                 {messages.map((msg, i) => (
                   <Bubble key={msg.id} msg={msg} dark={dark} isLatest={i === messages.length - 1} />

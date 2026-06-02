@@ -29,7 +29,10 @@ const starterSuggestions = [
 function TypingDots() {
   return (
     <div className="flex justify-start msg-ai">
-      <div className="bg-muted rounded-2xl px-4 py-3.5 flex items-center gap-1.5">
+      <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 mr-2">
+        <Sparkles className="h-4 w-4 text-primary" />
+      </div>
+      <div className="bg-muted text-foreground border border-border/50 rounded-2xl rounded-bl-sm px-4 py-3.5 flex items-center gap-1.5 shadow-sm">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
@@ -232,9 +235,13 @@ function Chat() {
             const { thoughtProcess, cleanContent } = parseMessage(m.content);
             return (
             <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end msg-user" : "justify-start msg-ai")}>
-              <div className={cn("max-w-[80%] rounded-2xl px-4 py-2 text-sm flex flex-col gap-2",
-                m.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground")}>
-                {m.role === "assistant" && <div className="flex items-center gap-1 text-xs opacity-70"><Sparkles className="h-3 w-3" /> {t("Assistant")}</div>}
+              {m.role === "assistant" && (
+                <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 mr-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                </div>
+              )}
+              <div className={cn("max-w-[80%] px-4 py-3 text-[14.5px] leading-relaxed shadow-sm flex flex-col gap-2",
+                m.role === "user" ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm" : "bg-muted text-foreground border border-border/50 rounded-2xl rounded-bl-sm")}>
                 
                 {thoughtProcess && (
                   <details className="text-xs border border-border/60 rounded-lg bg-background/50 overflow-hidden group/tp transition-all duration-200 open:shadow-sm">
