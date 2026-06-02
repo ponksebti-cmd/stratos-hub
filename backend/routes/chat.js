@@ -56,9 +56,10 @@ export const TOOLS = [
           phone: { type: "string", description: "The prospect's phone number" },
           budget: { type: "number", description: "The prospect's budget in local currency (as a number)" },
           city: { type: "string", description: "The target city or location of interest" },
-          propertyType: { type: "string", description: "The type of property (e.g. Apartment, Villa, Plot, Commercial)" }
+          propertyType: { type: "string", description: "The type of property (e.g. Apartment, Villa, Plot, Commercial)" },
+          score: { type: "number", description: "Score the lead's seriousness from 1 to 5 based on the user's conversation" }
         },
-        required: ["name"]
+        required: ["name", "score"]
       }
     }
   }
@@ -113,10 +114,7 @@ export async function executeTool(name, args, companyId, sessionId) {
       const id = randomUUID();
       
       // Basic lead scoring calculation
-      let score = 0;
-      if (args.budget && args.budget > 0) score += 2;
-      if (args.propertyType && args.propertyType.length > 0) score += 2;
-      if (args.city && args.city.length > 0) score += 1;
+      let score = args.score || 0;
       
       let error = null;
       try {

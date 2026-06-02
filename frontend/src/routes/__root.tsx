@@ -1,17 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  useRouter,
-} from "@tanstack/react-router";
+import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import "@/lib/i18n";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "261210447110-loatthu0bslu6v3a48v1u1p9dh0qtdm3.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID =
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ??
+  "261210447110-loatthu0bslu6v3a48v1u1p9dh0qtdm3.apps.googleusercontent.com";
 
 function NotFoundComponent() {
   return (

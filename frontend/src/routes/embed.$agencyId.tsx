@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Sparkles, ChevronDown, Lock, X, Phone, User, Mail, ShieldCheck, ArrowRight } from "lucide-react";
+import {
+  Send,
+  Sparkles,
+  ChevronDown,
+  Lock,
+  X,
+  Phone,
+  User,
+  Mail,
+  ShieldCheck,
+  ArrowRight,
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -11,10 +22,13 @@ import remarkGfm from "remark-gfm";
 // ─── Route ──────────────────────────────────────────────────────────────────
 
 const searchSchema = z.object({
-  color:    z.string().optional().default("#6366f1"),
-  name:     z.string().optional().default("Property Assistant"),
-  greeting: z.string().optional().default("Hi! I can help you find your perfect property. What are you looking for?"),
-  theme:    z.enum(["light", "dark"]).optional().default("light"),
+  color: z.string().optional().default("#6366f1"),
+  name: z.string().optional().default("Property Assistant"),
+  greeting: z
+    .string()
+    .optional()
+    .default("Hi! I can help you find your perfect property. What are you looking for?"),
+  theme: z.enum(["light", "dark"]).optional().default("light"),
 });
 
 export const Route = createFileRoute("/embed/$agencyId")({
@@ -42,7 +56,9 @@ function darken(hex: string, factor = 0.72): string {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!r) return hex;
   const ch = (v: string) =>
-    Math.round(parseInt(v, 16) * factor).toString(16).padStart(2, "0");
+    Math.round(parseInt(v, 16) * factor)
+      .toString(16)
+      .padStart(2, "0");
   return `#${ch(r[1])}${ch(r[2])}${ch(r[3])}`;
 }
 
@@ -57,7 +73,7 @@ function parseMessage(content: string) {
   if (match) {
     return {
       thoughtProcess: match[1].trim(),
-      cleanContent: content.replace(match[0], "").trim()
+      cleanContent: content.replace(match[0], "").trim(),
     };
   }
   return { thoughtProcess: null, cleanContent: content };
@@ -77,7 +93,7 @@ function TypingDots({ dark }: { dark: boolean }) {
       <div
         className={cn(
           "px-4 py-3 rounded-2xl rounded-bl-sm",
-          dark ? "bg-white/10" : "bg-white shadow-sm border border-black/5"
+          dark ? "bg-white/10" : "bg-white shadow-sm border border-black/5",
         )}
       >
         <div className="flex gap-1 items-center h-3">
@@ -86,7 +102,7 @@ function TypingDots({ dark }: { dark: boolean }) {
               key={i}
               className={cn(
                 "h-1.5 w-1.5 rounded-full animate-bounce",
-                dark ? "bg-white/50" : "bg-gray-400"
+                dark ? "bg-white/50" : "bg-gray-400",
               )}
               style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
             />
@@ -112,12 +128,12 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
       className={cn(
         "flex items-end gap-2.5 group",
         isUser ? "flex-row-reverse" : "flex-row",
-        isLatest && "animate-[widget-pop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_both]"
+        isLatest && "animate-[widget-pop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_both]",
       )}
     >
       {!isUser && (
         <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 shadow-sm ring-1 ring-black/5"
+          className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 mb-1 shadow-sm ring-1 ring-black/5"
           style={{ background: "var(--accent-color)" }}
         >
           <img src="/logo.png" alt="AI" className="h-5 w-5 object-contain" />
@@ -125,12 +141,12 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
       )}
       <div
         className={cn(
-          "max-w-[82%] px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] flex flex-col gap-2 transition-all",
+          "max-w-[82%] px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] flex flex-col gap-2 transition-all ring-1 ring-inset",
           isUser
-            ? "rounded-br-sm text-white"
+            ? "rounded-br-sm text-white ring-black/10"
             : dark
-            ? "bg-white/10 text-white rounded-bl-sm border border-white/5 prose-invert prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-white"
-            : "bg-white text-slate-800 rounded-bl-sm border border-slate-100 prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-slate-900"
+              ? "bg-white/10 backdrop-blur-sm text-white rounded-bl-sm ring-white/10 prose-invert prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-white"
+              : "bg-white text-slate-800 rounded-bl-sm ring-slate-100 prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-slate-900",
         )}
         style={isUser ? { background: "var(--accent-color)" } : undefined}
       >
@@ -141,20 +157,25 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
               Thinking Process
               <ChevronDown className="h-3 w-3 ml-auto transition-transform group-open/tp:rotate-180" />
             </summary>
-            <div className="mt-2 font-mono whitespace-pre-wrap leading-tight bg-black/5 p-2 rounded-lg">{thoughtProcess}</div>
+            <div className="mt-2 font-mono whitespace-pre-wrap leading-tight bg-black/5 p-2 rounded-lg">
+              {thoughtProcess}
+            </div>
           </details>
         )}
         <div dir="auto" className="break-words">
           {isUser ? (
             <div className="whitespace-pre-wrap font-medium">{cleanContent}</div>
           ) : (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {cleanContent}
-            </ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent}</ReactMarkdown>
           )}
         </div>
-        <div className={cn("text-[10px] mt-1 text-right font-medium tracking-tight", isUser ? "text-white/70" : "text-slate-400")}>
-          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <div
+          className={cn(
+            "text-[10px] mt-1 text-right font-medium tracking-tight",
+            isUser ? "text-white/70" : "text-slate-400",
+          )}
+        >
+          {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
         </div>
       </div>
     </div>
@@ -171,9 +192,11 @@ function EmbedWidget() {
   const [config, setConfig] = useState({
     color: searchParams.color || "#6366f1",
     name: searchParams.name || "Property Assistant",
-    greeting: searchParams.greeting || "Hi! I can help you find your perfect property. What are you looking for?",
+    greeting:
+      searchParams.greeting ||
+      "Hi! I can help you find your perfect property. What are you looking for?",
     theme: searchParams.theme || "light",
-    position: "right"
+    position: "right",
   });
 
   const dark = config.theme === "dark";
@@ -192,9 +215,9 @@ function EmbedWidget() {
   const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const bottomRef  = useRef<HTMLDivElement>(null);
-  const scrollRef  = useRef<HTMLDivElement>(null);
-  const inputRef   = useRef<HTMLInputElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Auto-scroll
   useEffect(() => {
@@ -214,22 +237,27 @@ function EmbedWidget() {
   // Load session from localStorage on mount & fetch live widget config
   useEffect(() => {
     fetch(`${API_BASE_URL}/widget/config/${agencyId}`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (!data.error) {
-          setConfig(prev => ({ ...prev, ...data }));
-          setMessages(m => {
+          setConfig((prev) => ({ ...prev, ...data }));
+          setMessages((m) => {
             if (m.length === 1 && m[0].id === "welcome") {
-              return [{ ...m[0], content: data.greeting || prev.greeting, createdAt: m[0].createdAt }];
+              return [
+                { ...m[0], content: data.greeting || prev.greeting, createdAt: m[0].createdAt },
+              ];
             }
             return m;
           });
           if (window.parent) {
-            window.parent.postMessage({
-              type: 'stratos_widget_config',
-              color: data.color || color,
-              position: data.position || "right"
-            }, '*');
+            window.parent.postMessage(
+              {
+                type: "stratos_widget_config",
+                color: data.color || color,
+                position: data.position || "right",
+              },
+              "*",
+            );
           }
         }
       })
@@ -264,7 +292,12 @@ function EmbedWidget() {
     setDraft("");
     setSending(true);
 
-    const userMsg: EmbedMsg = { id: crypto.randomUUID(), role: "user", content, createdAt: new Date().toISOString() };
+    const userMsg: EmbedMsg = {
+      id: crypto.randomUUID(),
+      role: "user",
+      content,
+      createdAt: new Date().toISOString(),
+    };
     setMessages((m) => [...m, userMsg]);
     setTyping(true);
 
@@ -304,8 +337,8 @@ function EmbedWidget() {
                     m.map((msg) =>
                       msg.id === assistantMsgId
                         ? { ...msg, content: msg.content + data.text }
-                        : msg
-                    )
+                        : msg,
+                    ),
                   );
                 } else if (data.type === "done") {
                   if (data.sessionId && data.sessionId !== sessionId) {
@@ -316,16 +349,18 @@ function EmbedWidget() {
                     const audio = new Audio("/notify.mp3");
                     audio.volume = 0.5;
                     audio.play().catch(() => {});
-                  } catch {}
+                  } catch {
+                    // Ignore missing audio
+                  }
                   setMessages((m) =>
                     m.map((msg) =>
-                      msg.id === assistantMsgId
-                        ? { ...msg, content: data.message }
-                        : msg
-                    )
+                      msg.id === assistantMsgId ? { ...msg, content: data.message } : msg,
+                    ),
                   );
                 }
-              } catch (e) {}
+              } catch (e) {
+                // Ignore parse errors from chunk stream
+              }
             }
           }
         }
@@ -336,8 +371,8 @@ function EmbedWidget() {
         m.map((msg) =>
           msg.id === assistantMsgId
             ? { ...msg, content: "Thanks for your message! Our team will get back to you shortly." }
-            : msg
-        )
+            : msg,
+        ),
       );
     } finally {
       setTyping(false);
@@ -370,7 +405,7 @@ function EmbedWidget() {
       <div
         className={cn(
           "flex flex-col w-full h-full select-none",
-          dark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900"
+          dark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900",
         )}
         style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
       >
@@ -381,17 +416,19 @@ function EmbedWidget() {
         >
           <div className="relative flex-shrink-0">
             <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center ring-1 ring-white/30 overflow-hidden shadow-inner">
-              <img 
-                src={dark ? "/logo.png" : "/logo-dark.png"} 
-                alt="Logo" 
-                className="h-full w-full object-contain scale-110" 
+              <img
+                src={dark ? "/logo.png" : "/logo-dark.png"}
+                alt="Logo"
+                className="h-full w-full object-contain scale-110"
               />
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-white leading-tight tracking-tight truncate">{botName}</div>
+            <div className="text-[15px] font-bold text-white leading-tight tracking-tight truncate">
+              {botName}
+            </div>
             <div className="text-[11px] text-white/80 mt-0.5 flex items-center gap-1.5 font-medium">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Online · replies instantly
@@ -401,7 +438,7 @@ function EmbedWidget() {
           <button
             onClick={() => {
               if (window.parent) {
-                window.parent.postMessage({ type: 'stratos_close_widget' }, '*');
+                window.parent.postMessage({ type: "stratos_close_widget" }, "*");
               }
             }}
             className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-white/20 transition-all text-white/80 hover:text-white hover:scale-105 active:scale-95"
@@ -422,7 +459,9 @@ function EmbedWidget() {
                   <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="space-y-1">
-                  <h2 className="text-[20px] font-black tracking-tight leading-tight">Welcome to {botName}</h2>
+                  <h2 className="text-[20px] font-black tracking-tight leading-tight">
+                    Welcome to {botName}
+                  </h2>
                   <p className="text-[14px] opacity-70 leading-relaxed font-medium">
                     We'd love to help you find your next property. How can we reach you?
                   </p>
@@ -432,7 +471,12 @@ function EmbedWidget() {
               <form onSubmit={handleCaptureSubmit} className="w-full space-y-4 max-w-[300px]">
                 <div className="space-y-3">
                   <div className="group space-y-1.5">
-                    <Label className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1" htmlFor="name">Full Name</Label>
+                    <Label
+                      className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1"
+                      htmlFor="name"
+                    >
+                      Full Name
+                    </Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <User className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -443,19 +487,26 @@ function EmbedWidget() {
                         required
                         placeholder="John Doe"
                         value={captureForm.name}
-                        onChange={e => setCaptureForm(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) =>
+                          setCaptureForm((prev) => ({ ...prev, name: e.target.value }))
+                        }
                         className={cn(
                           "w-full pl-10 pr-4 py-3 text-[14px] font-medium rounded-2xl outline-none transition-all ring-1",
                           dark
                             ? "bg-white/5 ring-white/10 focus:ring-white/30 text-white placeholder:text-slate-600"
-                            : "bg-white ring-slate-200 focus:ring-slate-400 shadow-sm text-slate-900"
+                            : "bg-white ring-slate-200 focus:ring-slate-400 shadow-sm text-slate-900",
                         )}
                       />
                     </div>
                   </div>
 
                   <div className="group space-y-1.5">
-                    <Label className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1" htmlFor="phone">Phone Number</Label>
+                    <Label
+                      className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1"
+                      htmlFor="phone"
+                    >
+                      Phone Number
+                    </Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <Phone className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -466,12 +517,14 @@ function EmbedWidget() {
                         required
                         placeholder="+91 98765 43210"
                         value={captureForm.phone}
-                        onChange={e => setCaptureForm(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={(e) =>
+                          setCaptureForm((prev) => ({ ...prev, phone: e.target.value }))
+                        }
                         className={cn(
                           "w-full pl-10 pr-4 py-3 text-[14px] font-medium rounded-2xl outline-none transition-all ring-1",
                           dark
                             ? "bg-white/5 ring-white/10 focus:ring-white/30 text-white placeholder:text-slate-600"
-                            : "bg-white ring-slate-200 focus:ring-slate-400 shadow-sm text-slate-900"
+                            : "bg-white ring-slate-200 focus:ring-slate-400 shadow-sm text-slate-900",
                         )}
                       />
                     </div>
@@ -479,7 +532,9 @@ function EmbedWidget() {
                 </div>
 
                 {captureError && (
-                  <div className="text-red-500 text-[12px] text-center font-bold animate-shake">{captureError}</div>
+                  <div className="text-red-500 text-[12px] text-center font-bold animate-shake">
+                    {captureError}
+                  </div>
                 )}
 
                 <button
@@ -507,7 +562,7 @@ function EmbedWidget() {
               <div
                 ref={scrollRef}
                 onScroll={onScroll}
-                className="h-full overflow-y-auto px-3 py-4 space-y-3"
+                className="h-full overflow-y-auto px-4 py-6 space-y-4"
               >
                 {messages.map((msg, i) => (
                   <Bubble key={msg.id} msg={msg} dark={dark} isLatest={i === messages.length - 1} />
@@ -539,7 +594,7 @@ function EmbedWidget() {
                         "text-[11px] px-3 py-1.5 rounded-full border transition-all duration-150 active:scale-95",
                         dark
                           ? "border-white/15 text-white/70 hover:border-white/40 hover:text-white bg-white/5"
-                          : "border-gray-200 text-gray-600 hover:border-gray-400 bg-white hover:bg-gray-50"
+                          : "border-gray-200 text-gray-600 hover:border-gray-400 bg-white hover:bg-gray-50",
                       )}
                     >
                       {q}
@@ -552,10 +607,12 @@ function EmbedWidget() {
         </div>
 
         {/* ── Input ──────────────────────────────────────────────── */}
-        <div className={cn(
-          "p-4 border-t flex-shrink-0 relative",
-          dark ? "bg-slate-900/50 border-white/5" : "bg-white border-slate-100"
-        )}>
+        <div
+          className={cn(
+            "p-4 border-t flex-shrink-0 relative",
+            dark ? "bg-slate-900/50 border-white/5" : "bg-white border-slate-100",
+          )}
+        >
           {!hasCapturedInfo && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 backdrop-blur-[2px] transition-all">
               <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-2 rounded-2xl flex items-center gap-2 text-[12px] font-bold tracking-tight shadow-xl ring-1 ring-white/10">
@@ -564,13 +621,15 @@ function EmbedWidget() {
               </div>
             </div>
           )}
-          
-          <div className={cn(
-            "flex items-center gap-2 pl-4 pr-1.5 py-1.5 rounded-2xl transition-all shadow-inner ring-1",
-            dark 
-              ? "bg-white/5 ring-white/10 focus-within:ring-white/25 focus-within:bg-white/10" 
-              : "bg-slate-50 ring-slate-200 focus-within:ring-slate-300 focus-within:bg-white"
-          )}>
+
+          <div
+            className={cn(
+              "flex items-center gap-2 pl-4 pr-1.5 py-1.5 rounded-2xl transition-all shadow-inner ring-1",
+              dark
+                ? "bg-white/5 ring-white/10 focus-within:ring-white/25 focus-within:bg-white/10"
+                : "bg-slate-50 ring-slate-200 focus-within:ring-slate-300 focus-within:bg-white",
+            )}
+          >
             <input
               ref={inputRef}
               value={draft}
@@ -585,7 +644,7 @@ function EmbedWidget() {
               disabled={!hasCapturedInfo}
               className={cn(
                 "flex-1 bg-transparent outline-none text-[14px] font-medium placeholder:text-slate-400 min-w-0 disabled:opacity-50",
-                dark ? "text-white" : "text-slate-900"
+                dark ? "text-white" : "text-slate-900",
               )}
             />
             <button
@@ -603,7 +662,7 @@ function EmbedWidget() {
         <div
           className={cn(
             "text-center py-1 text-[10px] flex items-center justify-center gap-1 flex-shrink-0",
-            dark ? "text-white/25" : "text-gray-400"
+            dark ? "text-white/25" : "text-gray-400",
           )}
         >
           <Sparkles className="h-2.5 w-2.5" />

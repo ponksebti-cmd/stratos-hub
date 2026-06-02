@@ -7,8 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
@@ -31,10 +43,15 @@ const statusColor: Record<string, string> = {
 
 const STATUSES = ["new", "contacted", "qualified", "won", "lost"] as const;
 
-const fmtBudget = (n: number) => n > 0 ? `₹${(n / 10000000).toFixed(2)} Cr` : "—";
+const fmtBudget = (n: number) => (n > 0 ? `₹${(n / 10000000).toFixed(2)} Cr` : "—");
 
 function initials(name: string) {
-  return (name || "?").split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+  return (name || "?")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 function Leads() {
@@ -53,7 +70,8 @@ function Leads() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: Partial<Lead> }) => api.leads.update(id, patch),
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<Lead> }) =>
+      api.leads.update(id, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       toast.success(t("Lead updated"));
@@ -92,15 +110,24 @@ function Leads() {
       city: formData.get("city") as string,
       propertyType: formData.get("propertyType") as string,
       source: "Manual",
-      status: "new"
+      status: "new",
     });
   };
 
-  const filtered = useMemo(() => leads.filter((l) => {
-    const matchQ = !q || [l.name, l.phone, l.city, l.propertyType].join(" ").toLowerCase().includes(q.toLowerCase());
-    const matchS = status === "all" || l.status === status;
-    return matchQ && matchS;
-  }), [leads, q, status]);
+  const filtered = useMemo(
+    () =>
+      leads.filter((l) => {
+        const matchQ =
+          !q ||
+          [l.name, l.phone, l.city, l.propertyType]
+            .join(" ")
+            .toLowerCase()
+            .includes(q.toLowerCase());
+        const matchS = status === "all" || l.status === status;
+        return matchQ && matchS;
+      }),
+    [leads, q, status],
+  );
 
   return (
     <div className="space-y-4">
@@ -132,10 +159,17 @@ function Leads() {
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-1">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t("Search by name, city, phone…")} className="ps-9" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t("Search by name, city, phone…")}
+            className="ps-9"
+          />
         </div>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="sm:w-44"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="sm:w-44">
+            <SelectValue />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("All statuses")}</SelectItem>
             <SelectItem value="new">{t("New")}</SelectItem>
@@ -166,7 +200,9 @@ function Leads() {
               </div>
             ) : filtered.length === 0 ? (
               <div className="p-10 text-center text-sm text-muted-foreground">
-                {leads.length === 0 ? t("No leads yet. Start a chat to extract leads automatically.") : t("No leads match your filters.")}
+                {leads.length === 0
+                  ? t("No leads yet. Start a chat to extract leads automatically.")
+                  : t("No leads match your filters.")}
               </div>
             ) : (
               <table className="w-full text-sm">
@@ -184,7 +220,11 @@ function Leads() {
                 </thead>
                 <tbody>
                   {filtered.map((l) => (
-                    <tr key={l.id} onClick={() => setActive(l)} className="border-t border-border cursor-pointer hover:bg-muted/30">
+                    <tr
+                      key={l.id}
+                      onClick={() => setActive(l)}
+                      className="border-t border-border cursor-pointer hover:bg-muted/30"
+                    >
                       <td className="px-4 py-3 font-medium">
                         <div className="flex items-center gap-2">
                           <div className="h-7 w-7 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center flex-shrink-0">
@@ -199,11 +239,21 @@ function Leads() {
                       <td className="px-4 py-3">{t(l.propertyType) || "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{t(l.source)}</td>
                       <td className="px-4 py-3">
-                        <Badge variant={l.score >= 5 ? "default" : l.score >= 3 ? "secondary" : "outline"}>
+                        <Badge
+                          variant={
+                            l.score >= 5 ? "default" : l.score >= 3 ? "secondary" : "outline"
+                          }
+                        >
                           {l.score || 0}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs capitalize ${statusColor[l.status]}`}>{t(l.status)}</span></td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-xs capitalize ${statusColor[l.status]}`}
+                        >
+                          {t(l.status)}
+                        </span>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -222,32 +272,48 @@ function Leads() {
               return (
                 <div key={col} className="flex flex-col w-60 flex-shrink-0">
                   <div className="flex items-center justify-between mb-3 px-1">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusColor[col]}`}>{t(col)}</span>
-                    <span className="text-xs text-muted-foreground font-medium tabular-nums">{isLoading ? "—" : columnLeads.length}</span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusColor[col]}`}
+                    >
+                      {t(col)}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium tabular-nums">
+                      {isLoading ? "—" : columnLeads.length}
+                    </span>
                   </div>
                   <div className="space-y-2">
                     {isLoading ? (
-                      [...Array(3)].map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)
+                      [...Array(3)].map((_, i) => (
+                        <Skeleton key={i} className="h-24 w-full rounded-xl" />
+                      ))
                     ) : columnLeads.length === 0 ? (
                       <div className="h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center">
                         <span className="text-xs text-muted-foreground">{t("No leads")}</span>
                       </div>
-                    ) : columnLeads.map((l) => (
-                      <button
-                        key={l.id}
-                        onClick={() => setActive(l)}
-                        className="w-full text-start bg-card border border-border rounded-xl p-3 hover:shadow-sm hover:border-primary/40 transition-all group"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="h-7 w-7 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center flex-shrink-0">
-                            {initials(l.name)}
+                    ) : (
+                      columnLeads.map((l) => (
+                        <button
+                          key={l.id}
+                          onClick={() => setActive(l)}
+                          className="w-full text-start bg-card border border-border rounded-xl p-3 hover:shadow-sm hover:border-primary/40 transition-all group"
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="h-7 w-7 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center flex-shrink-0">
+                              {initials(l.name)}
+                            </div>
+                            <span className="text-sm font-medium truncate">{l.name || "—"}</span>
                           </div>
-                          <span className="text-sm font-medium truncate">{l.name || "—"}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">{t(l.city) || "—"} · {t(l.propertyType) || "—"}</div>
-                        {l.budget > 0 && <div className="text-xs font-medium mt-1.5 text-foreground">{fmtBudget(l.budget)}</div>}
-                      </button>
-                    ))}
+                          <div className="text-xs text-muted-foreground">
+                            {t(l.city) || "—"} · {t(l.propertyType) || "—"}
+                          </div>
+                          {l.budget > 0 && (
+                            <div className="text-xs font-medium mt-1.5 text-foreground">
+                              {fmtBudget(l.budget)}
+                            </div>
+                          )}
+                        </button>
+                      ))
+                    )}
                   </div>
                 </div>
               );
@@ -261,7 +327,9 @@ function Leads() {
         <SheetContent>
           {active && (
             <>
-              <SheetHeader><SheetTitle>{active.name || t("Lead details")}</SheetTitle></SheetHeader>
+              <SheetHeader>
+                <SheetTitle>{active.name || t("Lead details")}</SheetTitle>
+              </SheetHeader>
               <div className="mt-6 space-y-4 text-sm">
                 {[
                   [t("Phone"), active.phone || "—"],
@@ -280,9 +348,16 @@ function Leads() {
                 <div className="flex gap-2 pt-4 flex-wrap">
                   <Select
                     value={active.status}
-                    onValueChange={(val) => updateMutation.mutate({ id: active.id, patch: { status: val as Lead["status"] } })}
+                    onValueChange={(val) =>
+                      updateMutation.mutate({
+                        id: active.id,
+                        patch: { status: val as Lead["status"] },
+                      })
+                    }
                   >
-                    <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">{t("New")}</SelectItem>
                       <SelectItem value="contacted">{t("Contacted")}</SelectItem>
@@ -291,7 +366,13 @@ function Leads() {
                       <SelectItem value="lost">{t("Lost")}</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="destructive" size="sm" onClick={() => setIsDeleteDialogOpen(true)}>{t("Delete")}</Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    {t("Delete")}
+                  </Button>
                 </div>
               </div>
             </>
@@ -305,10 +386,19 @@ function Leads() {
           <DialogHeader>
             <DialogTitle>{t("Delete lead")}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">{t("Are you sure you want to delete")} <strong>{active?.name}</strong>? {t("This cannot be undone.")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("Are you sure you want to delete")} <strong>{active?.name}</strong>?{" "}
+            {t("This cannot be undone.")}
+          </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>{t("Cancel")}</Button>
-            <Button variant="destructive" onClick={() => active && deleteMutation.mutate(active.id)} disabled={deleteMutation.isPending}>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              {t("Cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => active && deleteMutation.mutate(active.id)}
+              disabled={deleteMutation.isPending}
+            >
               {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               {t("Delete")}
             </Button>
@@ -319,15 +409,34 @@ function Leads() {
       {/* Add lead dialog */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{t("Add lead")}</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{t("Add lead")}</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleAddSubmit} className="space-y-3">
-            <div><Label>{t("Name")}</Label><Input name="name" required /></div>
-            <div><Label>{t("Phone")}</Label><Input name="phone" dir="ltr" /></div>
-            <div><Label>{t("Budget (₹)")}</Label><Input name="budget" type="number" min={0} defaultValue={0} /></div>
-            <div><Label>{t("City")}</Label><Input name="city" /></div>
-            <div><Label>{t("Property type")}</Label><Input name="propertyType" /></div>
+            <div>
+              <Label>{t("Name")}</Label>
+              <Input name="name" required />
+            </div>
+            <div>
+              <Label>{t("Phone")}</Label>
+              <Input name="phone" dir="ltr" />
+            </div>
+            <div>
+              <Label>{t("Budget (₹)")}</Label>
+              <Input name="budget" type="number" min={0} defaultValue={0} />
+            </div>
+            <div>
+              <Label>{t("City")}</Label>
+              <Input name="city" />
+            </div>
+            <div>
+              <Label>{t("Property type")}</Label>
+              <Input name="propertyType" />
+            </div>
             <DialogFooter>
-              <Button variant="outline" type="button" onClick={() => setIsAddOpen(false)}>{t("Cancel")}</Button>
+              <Button variant="outline" type="button" onClick={() => setIsAddOpen(false)}>
+                {t("Cancel")}
+              </Button>
               <Button type="submit" disabled={createMutation.isPending}>
                 {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {t("Create")}
