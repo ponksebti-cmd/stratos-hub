@@ -2,7 +2,13 @@ import { useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  LayoutDashboard, FileText, MessageSquare, Users, TrendingUp, Settings, Plus,
+  LayoutDashboard,
+  FileText,
+  MessageSquare,
+  Users,
+  TrendingUp,
+  Settings,
+  Plus,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -20,11 +26,11 @@ import { toast } from "sonner";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, shortcut: "" },
-  { to: "/chat",      label: "Chat",      icon: MessageSquare,   shortcut: "" },
-  { to: "/leads",     label: "Leads",     icon: Users,           shortcut: "" },
-  { to: "/files",     label: "Files",     icon: FileText,        shortcut: "" },
-  { to: "/roi",       label: "ROI",       icon: TrendingUp,      shortcut: "" },
-  { to: "/settings",  label: "Settings",  icon: Settings,        shortcut: "" },
+  { to: "/chat", label: "Chat", icon: MessageSquare, shortcut: "" },
+  { to: "/leads", label: "Leads", icon: Users, shortcut: "" },
+  { to: "/files", label: "Files", icon: FileText, shortcut: "" },
+  { to: "/roi", label: "ROI", icon: TrendingUp, shortcut: "" },
+  { to: "/settings", label: "Settings", icon: Settings, shortcut: "" },
 ] as const;
 
 interface Props {
@@ -92,10 +98,16 @@ export function CommandPalette({ open, onOpenChange }: Props) {
             <CommandSeparator />
             <CommandGroup heading={t("Recent leads")}>
               {leads.slice(0, 6).map((lead) => (
-                <CommandItem key={lead.id} value={`lead ${lead.name} ${lead.city}`} onSelect={() => go("/leads")}>
+                <CommandItem
+                  key={lead.id}
+                  value={`lead ${lead.name} ${lead.city}`}
+                  onSelect={() => go("/leads")}
+                >
                   <Users />
                   <span className="font-medium">{lead.name || "—"}</span>
-                  <span className="text-muted-foreground text-xs ms-1">· {lead.city || ""} · {lead.propertyType || ""}</span>
+                  <span className="text-muted-foreground text-xs ms-1">
+                    · {lead.city || ""} · {lead.propertyType || ""}
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>

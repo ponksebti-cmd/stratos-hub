@@ -1,6 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, Send, Sparkles, Plus, Loader2, Calendar, DollarSign, FileText, GitCompareArrows } from "lucide-react";
+import {
+  ChevronDown,
+  Send,
+  Sparkles,
+  Plus,
+  Loader2,
+  Calendar,
+  DollarSign,
+  FileText,
+  GitCompareArrows,
+} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +30,30 @@ export const Route = createFileRoute("/_app/chat")({
 });
 
 const starterSuggestions = [
-  { key: "visit",    icon: Calendar,           title: "Schedule a site visit",  desc: "Coordinate a property viewing with a lead" },
-  { key: "qualify",  icon: DollarSign,         title: "Qualify buyer budget",    desc: "Ask key financial qualification questions" },
-  { key: "followup", icon: FileText,           title: "Follow up on proposal",   desc: "Send a polite follow-up message" },
-  { key: "compare",  icon: GitCompareArrows,   title: "Compare properties",      desc: "Help a lead compare two listings" },
+  {
+    key: "visit",
+    icon: Calendar,
+    title: "Schedule a site visit",
+    desc: "Coordinate a property viewing with a lead",
+  },
+  {
+    key: "qualify",
+    icon: DollarSign,
+    title: "Qualify buyer budget",
+    desc: "Ask key financial qualification questions",
+  },
+  {
+    key: "followup",
+    icon: FileText,
+    title: "Follow up on proposal",
+    desc: "Send a polite follow-up message",
+  },
+  {
+    key: "compare",
+    icon: GitCompareArrows,
+    title: "Compare properties",
+    desc: "Help a lead compare two listings",
+  },
 ] as const;
 
 function TypingDots() {
@@ -50,7 +80,7 @@ function parseMessage(content: string) {
   if (match) {
     return {
       thoughtProcess: match[1].trim(),
-      cleanContent: content.replace(match[0], "").trim()
+      cleanContent: content.replace(match[0], "").trim(),
     };
   }
   return { thoughtProcess: null, cleanContent: content };
@@ -59,7 +89,12 @@ function parseMessage(content: string) {
 function Chat() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const suggestions = [t("Schedule a site visit"), t("Send pricing PDF"), t("Qualify budget"), t("Ask about timeline")];
+  const suggestions = [
+    t("Schedule a site visit"),
+    t("Send pricing PDF"),
+    t("Qualify budget"),
+    t("Ask about timeline"),
+  ];
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -113,29 +148,35 @@ function Chat() {
     setSending(true);
 
     const optimisticUser: Message = {
-      id: crypto.randomUUID(), role: "user", content, createdAt: new Date().toISOString(),
+      id: crypto.randomUUID(),
+      role: "user",
+      content,
+      createdAt: new Date().toISOString(),
     };
-    
+
     // Create an optimistic AI message that will receive chunks
     const aiMessageId = crypto.randomUUID();
     const optimisticAi: Message = {
-      id: aiMessageId, role: "assistant", content: "", createdAt: new Date().toISOString(),
+      id: aiMessageId,
+      role: "assistant",
+      content: "",
+      createdAt: new Date().toISOString(),
     };
 
     setLocalMessages((m) => [...m, optimisticUser, optimisticAi]);
 
     try {
       const reply = await api.chat.streamSend(activeId, content, (chunk) => {
-        setLocalMessages((m) => 
-          m.map(msg => 
-            msg.id === aiMessageId 
-              ? { ...msg, content: msg.content + chunk } 
-              : msg
-          )
+        setLocalMessages((m) =>
+          m.map((msg) => (msg.id === aiMessageId ? { ...msg, content: msg.content + chunk } : msg)),
         );
       });
       // Replace optimistic message with the final saved one from backend
-      setLocalMessages((m) => [...m.filter((x) => x.id !== optimisticUser.id && x.id !== aiMessageId), optimisticUser, reply]);
+      setLocalMessages((m) => [
+        ...m.filter((x) => x.id !== optimisticUser.id && x.id !== aiMessageId),
+        optimisticUser,
+        reply,
+      ]);
       queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["usage"] });
@@ -154,11 +195,17 @@ function Chat() {
         <CardHeader className="p-4 pb-2 flex-row items-center justify-between">
           <CardTitle className="text-sm">{t("Conversations")}</CardTitle>
           <Button
-            size="icon" variant="ghost" className="h-7 w-7"
+            size="icon"
+            variant="ghost"
+            className="h-7 w-7"
             onClick={() => createSessionMutation.mutate()}
             disabled={createSessionMutation.isPending}
           >
-            {createSessionMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+            {createSessionMutation.isPending ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Plus className="h-3 w-3" />
+            )}
           </Button>
         </CardHeader>
         <CardContent className="p-2 flex-1 overflow-y-auto">
@@ -172,21 +219,28 @@ function Chat() {
               ))}
             </div>
           ) : sessions.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center pt-6">{t("No conversations yet.")}</p>
-          ) : sessions.map((s) => (
-            <button
-              key={s.id} onClick={() => switchSession(s.id)}
-              className={cn(
-                "w-full text-start rounded-md px-3 py-2 text-sm transition-all duration-150 active:scale-[0.98]",
-                activeId === s.id
-                  ? "bg-accent text-accent-foreground translate-x-0.5"
-                  : "hover:bg-muted hover:translate-x-0.5"
-              )}
-            >
-              <div className="font-medium truncate">{s.title}</div>
-              <div className="text-xs text-muted-foreground truncate">{new Date(s.updatedAt).toLocaleDateString()}</div>
-            </button>
-          ))}
+            <p className="text-xs text-muted-foreground text-center pt-6">
+              {t("No conversations yet.")}
+            </p>
+          ) : (
+            sessions.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => switchSession(s.id)}
+                className={cn(
+                  "w-full text-start rounded-md px-3 py-2 text-sm transition-all duration-150 active:scale-[0.98]",
+                  activeId === s.id
+                    ? "bg-accent text-accent-foreground translate-x-0.5"
+                    : "hover:bg-muted hover:translate-x-0.5",
+                )}
+              >
+                <div className="font-medium truncate">{s.title}</div>
+                <div className="text-xs text-muted-foreground truncate">
+                  {new Date(s.updatedAt).toLocaleDateString()}
+                </div>
+              </button>
+            ))
+          )}
         </CardContent>
       </Card>
 
@@ -195,17 +249,27 @@ function Chat() {
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {messagesLoading ? (
             <div className="space-y-3 p-2">
-              <div className="flex justify-end"><Skeleton className="h-10 w-48 rounded-2xl" /></div>
-              <div className="flex justify-start"><Skeleton className="h-16 w-64 rounded-2xl" /></div>
-              <div className="flex justify-end"><Skeleton className="h-10 w-36 rounded-2xl" /></div>
-              <div className="flex justify-start"><Skeleton className="h-12 w-56 rounded-2xl" /></div>
+              <div className="flex justify-end">
+                <Skeleton className="h-10 w-48 rounded-2xl" />
+              </div>
+              <div className="flex justify-start">
+                <Skeleton className="h-16 w-64 rounded-2xl" />
+              </div>
+              <div className="flex justify-end">
+                <Skeleton className="h-10 w-36 rounded-2xl" />
+              </div>
+              <div className="flex justify-start">
+                <Skeleton className="h-12 w-56 rounded-2xl" />
+              </div>
             </div>
           ) : !activeId || localMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-6 px-4">
               <div className="text-center">
                 <Sparkles className="h-10 w-10 opacity-30 mx-auto mb-3" />
                 <h2 className="text-base font-semibold">{t("Stratos Hub")}</h2>
-                <p className="text-sm text-muted-foreground mt-1">{t("Start a conversation or pick a suggestion below")}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {t("Start a conversation or pick a suggestion below")}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-3 w-full max-w-md">
                 {starterSuggestions.map((s, i) => {
@@ -214,7 +278,7 @@ function Chat() {
                     <button
                       key={s.key}
                       style={{ animationDelay: `${i * 80}ms` }}
-                      onClick={() => activeId ? send(t(s.title)) : createSessionMutation.mutate()}
+                      onClick={() => (activeId ? send(t(s.title)) : createSessionMutation.mutate())}
                       className="group card-pop text-start rounded-xl border border-border bg-card p-4 hover:bg-accent/40 hover:border-primary/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 active:scale-[0.97]"
                     >
                       <Icon className="h-4 w-4 text-primary mb-2 transition-transform duration-150 group-hover:scale-110" />
@@ -225,57 +289,100 @@ function Chat() {
                 })}
               </div>
               {!activeId && (
-                <Button size="sm" onClick={() => createSessionMutation.mutate()} disabled={createSessionMutation.isPending}>
-                  {createSessionMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
+                <Button
+                  size="sm"
+                  onClick={() => createSessionMutation.mutate()}
+                  disabled={createSessionMutation.isPending}
+                >
+                  {createSessionMutation.isPending ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  ) : null}
                   {t("New conversation")}
                 </Button>
               )}
             </div>
-          ) : localMessages.map((m) => {
-            const { thoughtProcess, cleanContent } = parseMessage(m.content);
-            return (
-            <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end msg-user" : "justify-start msg-ai")}>
-              {m.role === "assistant" && (
-                <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 mr-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                </div>
-              )}
-              <div className={cn("max-w-[80%] px-4 py-3 text-[14.5px] leading-relaxed shadow-sm flex flex-col gap-2",
-                m.role === "user" ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm" : "bg-muted text-foreground border border-border/50 rounded-2xl rounded-bl-sm")}>
-                
-                {thoughtProcess && (
-                  <details className="text-xs border border-border/60 rounded-lg bg-background/50 overflow-hidden group/tp transition-all duration-200 open:shadow-sm">
-                    <summary className="px-3 py-2 cursor-pointer font-medium opacity-80 hover:opacity-100 flex items-center gap-1.5 select-none bg-background/30 hover:bg-background/80">
-                      <Sparkles className="h-3 w-3 text-primary" />
-                      {t("Thinking...")}
-                      <ChevronDown className="h-3 w-3 ml-auto transition-transform duration-200 group-open/tp:rotate-180" />
-                    </summary>
-                    <div className="px-3 pb-3 pt-1 opacity-80 whitespace-pre-wrap font-mono text-[11px] leading-relaxed border-t border-border/30 bg-background/40">
-                      {thoughtProcess}
+          ) : (
+            localMessages.map((m) => {
+              const { thoughtProcess, cleanContent } = parseMessage(m.content);
+              return (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "flex",
+                    m.role === "user" ? "justify-end msg-user" : "justify-start msg-ai",
+                  )}
+                >
+                  {m.role === "assistant" && (
+                    <div className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary/10 mr-2">
+                      <Sparkles className="h-4 w-4 text-primary" />
                     </div>
-                  </details>
-                )}
-                
-                <div dir="auto" className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:my-2 prose-p:my-2">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {cleanContent}
-                  </ReactMarkdown>
+                  )}
+                  <div
+                    className={cn(
+                      "max-w-[80%] px-4 py-3 text-[14.5px] leading-relaxed shadow-sm flex flex-col gap-2",
+                      m.role === "user"
+                        ? "bg-primary text-primary-foreground rounded-2xl rounded-br-sm"
+                        : "bg-muted text-foreground border border-border/50 rounded-2xl rounded-bl-sm",
+                    )}
+                  >
+                    {thoughtProcess && (
+                      <details className="text-xs border border-border/60 rounded-lg bg-background/50 overflow-hidden group/tp transition-all duration-200 open:shadow-sm">
+                        <summary className="px-3 py-2 cursor-pointer font-medium opacity-80 hover:opacity-100 flex items-center gap-1.5 select-none bg-background/30 hover:bg-background/80">
+                          <Sparkles className="h-3 w-3 text-primary" />
+                          {t("Thinking...")}
+                          <ChevronDown className="h-3 w-3 ml-auto transition-transform duration-200 group-open/tp:rotate-180" />
+                        </summary>
+                        <div className="px-3 pb-3 pt-1 opacity-80 whitespace-pre-wrap font-mono text-[11px] leading-relaxed border-t border-border/30 bg-background/40">
+                          {thoughtProcess}
+                        </div>
+                      </details>
+                    )}
+
+                    <div
+                      dir="auto"
+                      className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:my-2 prose-p:my-2"
+                    >
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent}</ReactMarkdown>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )})}
+              );
+            })
+          )}
           {sending && <TypingDots />}
           <div ref={bottomRef} />
         </div>
         <div className="border-t border-border p-3 space-y-2">
           <div className="flex gap-2 flex-wrap">
             {suggestions.map((s) => (
-              <button key={s} onClick={() => send(s)} className="text-xs px-2.5 py-1 rounded-full border border-border hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:scale-105 active:scale-95">{s}</button>
+              <button
+                key={s}
+                onClick={() => send(s)}
+                className="text-xs px-2.5 py-1 rounded-full border border-border hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:scale-105 active:scale-95"
+              >
+                {s}
+              </button>
             ))}
           </div>
-          <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex gap-2">
-            <Input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t("Type a message…")} disabled={!activeId || sending} />
-            <Button type="submit" size="icon" disabled={!activeId || sending || !draft.trim()} className="transition-transform active:scale-90">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              send();
+            }}
+            className="flex gap-2"
+          >
+            <Input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              placeholder={t("Type a message…")}
+              disabled={!activeId || sending}
+            />
+            <Button
+              type="submit"
+              size="icon"
+              disabled={!activeId || sending || !draft.trim()}
+              className="transition-transform active:scale-90"
+            >
               <Send className="h-4 w-4 transition-transform duration-150 group-hover:-rotate-12" />
             </Button>
           </form>

@@ -20,6 +20,7 @@ export function registerImageRoutes(app: Express): void {
       });
 
       const candidate = response.candidates?.[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const imagePart = candidate?.content?.parts?.find((part: any) => part.inlineData);
 
       if (!imagePart?.inlineData?.data) {
@@ -37,4 +38,3 @@ export function registerImageRoutes(app: Express): void {
     }
   });
 }
-
