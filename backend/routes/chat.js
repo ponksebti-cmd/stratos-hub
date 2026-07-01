@@ -157,7 +157,7 @@ Whenever you include an image or file link, use standard markdown image syntax: 
   const systemInstruction = customPrompt ? `${baseInstruction}\n\nCustom Instructions:\n${customPrompt}` : baseInstruction;
 
   const model = genAI.getGenerativeModel({
-    model: modelName || "gemini-3.5-flash",
+    model: modelName || "gemini-1.5-flash",
     systemInstruction,
     tools: [
       {
@@ -373,7 +373,7 @@ export async function handleSendMessage(req, sessionId) {
   // Retrieve active API key and model settings
   const provider = "gemini";
   let apiKey = process.env.GEMINI_API_KEY;
-  let modelName = process.env.GEMINI_MODEL ?? "gemini-3.5-flash";
+  let modelName = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
 
   // Fallback to database BYOK settings if local environment variables are missing
   const [settings] = await db`SELECT openai_key_enc, openai_key_iv, openai_key_tag, system_prompt FROM settings WHERE company_id = ${user.company_id} LIMIT 1`;
@@ -572,7 +572,7 @@ export async function handleWidgetChat(req) {
   let body;
   try { body = await req.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
 
-  const { agencyId, message, sessionId: clientSessionId } = body ?? {};
+  const { agencyId, message, sessionId: clientSessionId, leadInfo } = body ?? {};
   if (!agencyId || !message?.trim()) {
     return Response.json({ error: "agencyId and message required" }, { status: 400 });
   }
@@ -589,7 +589,7 @@ export async function handleWidgetChat(req) {
   // 2. Fetch API keys
   const provider = "gemini";
   let apiKey = process.env.GEMINI_API_KEY;
-  let modelName = process.env.GEMINI_MODEL ?? "gemini-3.5-flash";
+  let modelName = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
 
   const [settings] = await db`SELECT openai_key_enc, openai_key_iv, openai_key_tag, system_prompt FROM settings WHERE company_id = ${agencyId} LIMIT 1`;
   
@@ -617,6 +617,20 @@ export async function handleWidgetChat(req) {
   if (!activeSessionId) {
     activeSessionId = randomUUID();
     await db`INSERT INTO chat_sessions (id, company_id, title) VALUES (${activeSessionId}, ${agencyId}, 'Widget Chat Session')`;
+
+    // If lead info was provided at the start of the session, auto-create a lead
+    if (leadInfo?.name && leadInfo?.phone) {
+      try {
+        await executeTool("create_lead", {
+          name: leadInfo.name,
+          phone: leadInfo.phone,
+          city: leadInfo.city || "",
+          propertyType: leadInfo.propertyType || "",
+        }, agencyId, activeSessionId);
+      } catch (err) {
+        console.error("[widget] Failed to auto-create lead:", err);
+      }
+    }
   } else {
     // Check if session exists and is valid
     const [sessionExists] = await db`SELECT id FROM chat_sessions WHERE id = ${activeSessionId} AND company_id = ${agencyId} LIMIT 1`;

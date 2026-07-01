@@ -29,6 +29,7 @@ function webhookUrl(platform: string) {
 }
 
 function CopyButton({ value, label }: { value: string; label: string }) {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   return (
     <Button
@@ -41,7 +42,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
       }}
     >
       {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-      {copied ? <span className="text-emerald-600">Copied!</span> : label}
+      {copied ? <span className="text-emerald-600">{t("Copied!")}</span> : label}
     </Button>
   );
 }

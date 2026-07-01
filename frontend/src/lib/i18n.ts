@@ -20,9 +20,12 @@ i18n
   .init({
     resources,
     fallbackLng: "ar",
-    lng: "ar", // Default to Arabic
     interpolation: {
       escapeValue: false, // react already safes from xss
+    },
+    detection: {
+      order: ["querystring", "cookie", "localStorage", "navigator", "htmlTag"],
+      caches: ["localStorage", "cookie"],
     },
   });
 

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Send, Sparkles, ChevronDown, Lock, X, Phone, User, Mail, ShieldCheck, ArrowRight } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/lib/api";
@@ -66,6 +67,7 @@ function parseMessage(content: string) {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function TypingDots({ dark }: { dark: boolean }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-end gap-2">
       <div
@@ -104,6 +106,7 @@ interface BubbleProps {
 }
 
 function Bubble({ msg, dark, isLatest }: BubbleProps) {
+  const { t } = useTranslation();
   const isUser = msg.role === "user";
   const { thoughtProcess, cleanContent } = parseMessage(msg.content);
 
@@ -138,7 +141,7 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
           <details className="text-[11px] opacity-75 border-b border-current/10 pb-2 mb-1 group/tp">
             <summary className="cursor-pointer list-none flex items-center gap-1.5 font-bold tracking-wide uppercase text-[9px]">
               <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-              Thinking Process
+              {t("Thinking Process")}
               <ChevronDown className="h-3 w-3 ml-auto transition-transform group-open/tp:rotate-180" />
             </summary>
             <div className="mt-2 font-mono whitespace-pre-wrap leading-tight bg-black/5 p-2 rounded-lg">{thoughtProcess}</div>
@@ -164,14 +167,16 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 function EmbedWidget() {
+  const { t, i18n } = useTranslation();
+  const isRtl = i18n.dir() === "rtl";
   const { agencyId } = Route.useParams();
   const searchParams = Route.useSearch();
 
   // Default values until we fetch from DB
   const [config, setConfig] = useState({
     color: searchParams.color || "#6366f1",
-    name: searchParams.name || "Property Assistant",
-    greeting: searchParams.greeting || "Hi! I can help you find your perfect property. What are you looking for?",
+    name: searchParams.name || t("Property Assistant"),
+    greeting: searchParams.greeting || t("Hi! I can help you find your perfect property. What are you looking for?"),
     theme: searchParams.theme || "light",
     position: "right"
   });
@@ -256,6 +261,7 @@ function EmbedWidget() {
 
     setHasCapturedInfo(true);
     localStorage.setItem(`sh_captured_${agencyId}`, "true");
+    localStorage.setItem(`sh_lead_${agencyId}`, JSON.stringify(captureForm));
   };
 
   const send = async (text?: string) => {
@@ -275,13 +281,21 @@ function EmbedWidget() {
     ]);
 
     try {
+      const savedLead = localStorage.getItem(`sh_lead_${agencyId}`);
+      const leadInfo = savedLead ? JSON.parse(savedLead) : null;
+
       const res = await fetch(`${API_BASE_URL}/chat/widget?stream=true`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agencyId, message: content, sessionId }),
+        body: JSON.stringify({
+          agencyId,
+          message: content,
+          sessionId,
+          leadInfo: sessionId ? null : leadInfo // Only send leadInfo when starting a new session
+        }),
       });
 
-      if (!res.ok) throw new Error("Failed to send message");
+      if (!res.ok) throw new Error(t("Failed to send message"));
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -335,7 +349,7 @@ function EmbedWidget() {
       setMessages((m) =>
         m.map((msg) =>
           msg.id === assistantMsgId
-            ? { ...msg, content: "Thanks for your message! Our team will get back to you shortly." }
+            ? { ...msg, content: t("Thanks for your message! Our team will get back to you shortly.") }
             : msg
         )
       );
@@ -394,7 +408,7 @@ function EmbedWidget() {
             <div className="text-[15px] font-bold text-white leading-tight tracking-tight truncate">{botName}</div>
             <div className="text-[11px] text-white/80 mt-0.5 flex items-center gap-1.5 font-medium">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              Online · replies instantly
+              {t("Online · replies instantly")}
             </div>
           </div>
 
@@ -422,9 +436,9 @@ function EmbedWidget() {
                   <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
                 </div>
                 <div className="space-y-1">
-                  <h2 className="text-[20px] font-black tracking-tight leading-tight">Welcome to {botName}</h2>
+                  <h2 className="text-[20px] font-black tracking-tight leading-tight">{t("Welcome to")} {botName}</h2>
                   <p className="text-[14px] opacity-70 leading-relaxed font-medium">
-                    We'd love to help you find your next property. How can we reach you?
+                    {t("We'd love to help you find your next property. How can we reach you?")}
                   </p>
                 </div>
               </div>
@@ -432,7 +446,7 @@ function EmbedWidget() {
               <form onSubmit={handleCaptureSubmit} className="w-full space-y-4 max-w-[300px]">
                 <div className="space-y-3">
                   <div className="group space-y-1.5">
-                    <Label className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1" htmlFor="name">Full Name</Label>
+                    <Label className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1" htmlFor="name">{t("Full Name")}</Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <User className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -441,7 +455,7 @@ function EmbedWidget() {
                         id="name"
                         type="text"
                         required
-                        placeholder="John Doe"
+                        placeholder={t("John Doe")}
                         value={captureForm.name}
                         onChange={e => setCaptureForm(prev => ({ ...prev, name: e.target.value }))}
                         className={cn(
@@ -455,7 +469,7 @@ function EmbedWidget() {
                   </div>
 
                   <div className="group space-y-1.5">
-                    <Label className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1" htmlFor="phone">Phone Number</Label>
+                    <Label className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1" htmlFor="phone">{t("Phone Number")}</Label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <Phone className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
@@ -464,7 +478,7 @@ function EmbedWidget() {
                         id="phone"
                         type="tel"
                         required
-                        placeholder="+91 98765 43210"
+                        placeholder={t("+91 98765 43210")}
                         value={captureForm.phone}
                         onChange={e => setCaptureForm(prev => ({ ...prev, phone: e.target.value }))}
                         className={cn(
@@ -479,7 +493,7 @@ function EmbedWidget() {
                 </div>
 
                 {captureError && (
-                  <div className="text-red-500 text-[12px] text-center font-bold animate-shake">{captureError}</div>
+                  <div className="text-red-500 text-[12px] text-center font-bold animate-shake">{t(captureError)}</div>
                 )}
 
                 <button
@@ -488,8 +502,8 @@ function EmbedWidget() {
                   style={{ background: headerGrad }}
                 >
                   <span className="relative z-10 flex items-center justify-center gap-2">
-                    Start Conversation
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    {t("Start Conversation")}
+                    <ArrowRight className={`w-4 h-4 transition-transform ${isRtl ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1"}`} />
                   </span>
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform" />
                 </button>
@@ -497,7 +511,7 @@ function EmbedWidget() {
                 <div className="flex items-center justify-center gap-2 pt-2 opacity-60">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                   <span className="text-[10px] font-bold tracking-tight">
-                    Secure & Private Channel
+                    {t("Secure & Private Channel")}
                   </span>
                 </div>
               </form>
@@ -534,7 +548,7 @@ function EmbedWidget() {
                   {QUICK.map((q) => (
                     <button
                       key={q}
-                      onClick={() => send(q)}
+                      onClick={() => send(t(q))}
                       className={cn(
                         "text-[11px] px-3 py-1.5 rounded-full border transition-all duration-150 active:scale-95",
                         dark
@@ -542,7 +556,7 @@ function EmbedWidget() {
                           : "border-gray-200 text-gray-600 hover:border-gray-400 bg-white hover:bg-gray-50"
                       )}
                     >
-                      {q}
+                      {t(q)}
                     </button>
                   ))}
                 </div>
@@ -560,7 +574,7 @@ function EmbedWidget() {
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 backdrop-blur-[2px] transition-all">
               <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-2 rounded-2xl flex items-center gap-2 text-[12px] font-bold tracking-tight shadow-xl ring-1 ring-white/10">
                 <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                Information Required
+                {t("Information Required")}
               </div>
             </div>
           )}
@@ -581,7 +595,7 @@ function EmbedWidget() {
                   send();
                 }
               }}
-              placeholder="Type a message…"
+              placeholder={t("Type a message…")}
               disabled={!hasCapturedInfo}
               className={cn(
                 "flex-1 bg-transparent outline-none text-[14px] font-medium placeholder:text-slate-400 min-w-0 disabled:opacity-50",
@@ -607,7 +621,7 @@ function EmbedWidget() {
           )}
         >
           <Sparkles className="h-2.5 w-2.5" />
-          Powered by&nbsp;<span className="font-semibold">Stratos Hub</span>
+          {t("Powered by")}&nbsp;<span className="font-semibold">Stratos Hub</span>
         </div>
       </div>
     </>
