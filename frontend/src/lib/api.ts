@@ -38,23 +38,60 @@ async function request<T>(path: string, opts: FetchOptions = {}): Promise<T> {
 }
 
 // ===== Types (data model) =====
-export interface Company { id: string; name: string; email: string; phone: string; }
-export interface User { id: string; email: string; name: string; companyId: string; role: "admin" | "member"; }
-export interface UploadedFile {
-  id: string; name: string; size: number; type: string;
-  status: "processing" | "ready" | "failed"; uploadedAt: string;
+export interface Company {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
 }
-export interface ChatSession { id: string; title: string; updatedAt: string; }
-export interface Message { id: string; role: "user" | "assistant"; content: string; createdAt: string; }
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  companyId: string;
+  role: "admin" | "member";
+}
+export interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  status: "processing" | "ready" | "failed";
+  uploadedAt: string;
+}
+export interface ChatSession {
+  id: string;
+  title: string;
+  updatedAt: string;
+}
+export interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
+}
 export interface Lead {
-  id: string; name: string; phone: string; budget: number; city: string;
-  propertyType: string; source: string;
+  id: string;
+  name: string;
+  phone: string;
+  budget: number;
+  city: string;
+  propertyType: string;
+  source: string;
   status: "new" | "contacted" | "qualified" | "lost" | "won";
   score: number;
   createdAt: string;
 }
-export interface CreditUsage { date: string; credits: number; chats: number; }
-export interface Subscription { plan: string; creditsLeft: number; renewsAt: string; }
+export interface CreditUsage {
+  date: string;
+  credits: number;
+  chats: number;
+}
+export interface Subscription {
+  plan: string;
+  creditsLeft: number;
+  renewsAt: string;
+}
 export interface WidgetConfig {
   color: string;
   name: string;
@@ -107,15 +144,18 @@ export const api = {
   auth: {
     register: (email: string, password: string, name: string) =>
       request<{ token: string; userId: string; companyId: string }>("/auth/register", {
-        method: "POST", body: JSON.stringify({ email, password, name }),
+        method: "POST",
+        body: JSON.stringify({ email, password, name }),
       }),
     login: (email: string, password: string) =>
       request<{ token: string; user: User }>("/auth/login", {
-        method: "POST", body: JSON.stringify({ email, password }),
+        method: "POST",
+        body: JSON.stringify({ email, password }),
       }),
     google: (token: string) =>
       request<{ token: string; user: User }>("/auth/google", {
-        method: "POST", body: JSON.stringify({ token }),
+        method: "POST",
+        body: JSON.stringify({ token }),
       }),
   },
   files: {
@@ -135,7 +175,8 @@ export const api = {
     messages: (sessionId: string) => request<Message[]>(`/chat/sessions/${sessionId}/messages`),
     send: (sessionId: string, content: string) =>
       request<Message>(`/chat/sessions/${sessionId}/messages`, {
-        method: "POST", body: JSON.stringify({ content }),
+        method: "POST",
+        body: JSON.stringify({ content }),
       }),
     streamSend: async (sessionId: string, content: string, onChunk: (chunk: string) => void) => {
       const token = getToken();
@@ -204,20 +245,42 @@ export const api = {
     update: (data: Partial<Company>) =>
       request<{ ok: boolean }>("/settings", { method: "PATCH", body: JSON.stringify(data) }),
     saveOpenAIKey: (apiKey: string) =>
-      request<{ ok: boolean }>("/settings/openai-key", { method: "PUT", body: JSON.stringify({ apiKey }) }),
-    deleteOpenAIKey: () =>
-      request<{ ok: boolean }>("/settings/openai-key", { method: "DELETE" }),
+      request<{ ok: boolean }>("/settings/openai-key", {
+        method: "PUT",
+        body: JSON.stringify({ apiKey }),
+      }),
+    deleteOpenAIKey: () => request<{ ok: boolean }>("/settings/openai-key", { method: "DELETE" }),
     saveSystemPrompt: (prompt: string) =>
-      request<{ ok: boolean }>("/settings/system-prompt", { method: "PUT", body: JSON.stringify({ prompt }) }),
+      request<{ ok: boolean }>("/settings/system-prompt", {
+        method: "PUT",
+        body: JSON.stringify({ prompt }),
+      }),
     saveWidgetConfig: (config: Partial<WidgetConfig>) =>
       request<{ ok: boolean }>("/settings/widget", { method: "PUT", body: JSON.stringify(config) }),
-    saveWhatsApp: (data: { phoneId: string; businessId: string; token: string; verifyToken: string }) =>
+    saveWhatsApp: (data: {
+      phoneId: string;
+      businessId: string;
+      token: string;
+      verifyToken: string;
+    }) =>
       request<{ ok: boolean }>("/settings/whatsapp", { method: "PUT", body: JSON.stringify(data) }),
     saveMessenger: (data: { pageId: string; token: string; verifyToken: string }) =>
-      request<{ ok: boolean }>("/settings/messenger", { method: "PUT", body: JSON.stringify(data) }),
+      request<{ ok: boolean }>("/settings/messenger", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
     saveInstagram: (data: { accountId: string; token: string; verifyToken: string }) =>
-      request<{ ok: boolean }>("/settings/instagram", { method: "PUT", body: JSON.stringify(data) }),
-    saveTikTok: (data: { appId: string; appSecret: string; accessToken: string; accountId: string; verifyToken: string }) =>
+      request<{ ok: boolean }>("/settings/instagram", {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    saveTikTok: (data: {
+      appId: string;
+      appSecret: string;
+      accessToken: string;
+      accountId: string;
+      verifyToken: string;
+    }) =>
       request<{ ok: boolean }>("/settings/tiktok", { method: "PUT", body: JSON.stringify(data) }),
   },
 };
