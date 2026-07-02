@@ -157,7 +157,7 @@ Whenever you include an image or file link, use standard markdown image syntax: 
   const systemInstruction = customPrompt ? `${baseInstruction}\n\nCustom Instructions:\n${customPrompt}` : baseInstruction;
 
   const model = genAI.getGenerativeModel({
-    model: modelName || "gemini-1.5-flash",
+    model: modelName || "gemini-3.5-flash",
     systemInstruction,
     tools: [
       {
@@ -373,7 +373,7 @@ export async function handleSendMessage(req, sessionId) {
   // Retrieve active API key and model settings
   const provider = "gemini";
   let apiKey = process.env.GEMINI_API_KEY;
-  let modelName = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+  let modelName = process.env.GEMINI_MODEL ?? "gemini-3.5-flash";
 
   // Fallback to database BYOK settings if local environment variables are missing
   const [settings] = await db`SELECT openai_key_enc, openai_key_iv, openai_key_tag, system_prompt FROM settings WHERE company_id = ${user.company_id} LIMIT 1`;
@@ -589,7 +589,7 @@ export async function handleWidgetChat(req) {
   // 2. Fetch API keys
   const provider = "gemini";
   let apiKey = process.env.GEMINI_API_KEY;
-  let modelName = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+  let modelName = process.env.GEMINI_MODEL ?? "gemini-3.5-flash";
 
   const [settings] = await db`SELECT openai_key_enc, openai_key_iv, openai_key_tag, system_prompt FROM settings WHERE company_id = ${agencyId} LIMIT 1`;
   

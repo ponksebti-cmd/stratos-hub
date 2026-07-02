@@ -83,7 +83,7 @@ export async function handleInstagramMessage(req) {
 
   // Resolve API key
   let apiKey = process.env.GEMINI_API_KEY;
-  let modelName = process.env.GEMINI_MODEL ?? "gemini-1.5-flash";
+  let modelName = process.env.GEMINI_MODEL ?? "gemini-3.5-flash";
 
   if (!apiKey && settings.openai_key_enc) {
     try {

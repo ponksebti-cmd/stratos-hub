@@ -83,28 +83,27 @@ function parseMessage(content: string) {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function TypingDots({ dark }: { dark: boolean }) {
-  const { t } = useTranslation();
   return (
-    <div className="flex items-end gap-2">
+    <div className="flex items-end gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div
-        className="h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0"
+        className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
         style={{ background: "var(--accent-color)" }}
       >
-        <Sparkles className="h-3 w-3 text-white" />
+        <Sparkles className="h-3.5 w-3.5 text-white" />
       </div>
       <div
         className={cn(
-          "px-4 py-3 rounded-2xl rounded-bl-sm",
-          dark ? "bg-white/10" : "bg-white shadow-sm border border-black/5",
+          "px-4 py-3 rounded-2xl rounded-bl-none shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)]",
+          dark ? "bg-white/10 border border-white/5" : "bg-white border border-slate-100",
         )}
       >
-        <div className="flex gap-1 items-center h-3">
+        <div className="flex gap-1.5 items-center h-3">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
               className={cn(
                 "h-1.5 w-1.5 rounded-full animate-bounce",
-                dark ? "bg-white/50" : "bg-gray-400",
+                dark ? "bg-white/50" : "bg-indigo-400",
               )}
               style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
             />
@@ -131,12 +130,12 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
       className={cn(
         "flex items-end gap-2.5 group",
         isUser ? "flex-row-reverse" : "flex-row",
-        isLatest && "animate-[widget-pop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_both]",
+        isLatest && "animate-[widget-pop_0.4s_cubic-bezier(0.175,0.885,0.32,1.275)_both]",
       )}
     >
       {!isUser && (
         <div
-          className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 mb-1 shadow-sm ring-1 ring-black/5"
+          className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 mb-1 shadow-md ring-2 ring-white/10"
           style={{ background: "var(--accent-color)" }}
         >
           <img src="/logo.png" alt="AI" className="h-5 w-5 object-contain" />
@@ -144,38 +143,40 @@ function Bubble({ msg, dark, isLatest }: BubbleProps) {
       )}
       <div
         className={cn(
-          "max-w-[82%] px-4 py-3 rounded-2xl text-[13.5px] leading-relaxed shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] flex flex-col gap-2 transition-all",
+          "max-w-[85%] px-4 py-3 rounded-[20px] text-[14px] leading-relaxed shadow-[0_3px_12px_-3px_rgba(0,0,0,0.08)] flex flex-col gap-2 transition-all relative",
           isUser
-            ? "rounded-br-sm text-white"
+            ? "rounded-br-none text-white font-medium"
             : dark
-              ? "bg-white/10 text-white rounded-bl-sm border border-white/5 prose-invert prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-white"
-              : "bg-white text-slate-800 rounded-bl-sm border border-slate-100 prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-slate-900",
+              ? "bg-white/10 text-slate-100 rounded-bl-none border border-white/10 prose-invert prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-white"
+              : "bg-white text-slate-800 rounded-bl-none border border-slate-200/60 prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-slate-900",
         )}
         style={isUser ? { background: "var(--accent-color)" } : undefined}
       >
         {!isUser && thoughtProcess && (
-          <details className="text-[11px] opacity-75 border-b border-current/10 pb-2 mb-1 group/tp">
-            <summary className="cursor-pointer list-none flex items-center gap-1.5 font-bold tracking-wide uppercase text-[9px]">
-              <Sparkles className="h-3 w-3 text-primary animate-pulse" />
+          <details className="text-[11px] opacity-80 border-b border-current/10 pb-2 mb-1 group/tp">
+            <summary className="cursor-pointer list-none flex items-center gap-2 font-bold tracking-wider uppercase text-[10px]">
+              <div className="p-1 rounded-md bg-primary/10">
+                <Sparkles className="h-3 w-3 text-primary animate-pulse" />
+              </div>
               {t("Thinking Process")}
-              <ChevronDown className="h-3 w-3 ml-auto transition-transform group-open/tp:rotate-180" />
+              <ChevronDown className="h-3 w-3 ml-auto transition-transform duration-300 group-open/tp:rotate-180" />
             </summary>
-            <div className="mt-2 font-mono whitespace-pre-wrap leading-tight bg-black/5 p-2 rounded-lg">
+            <div className="mt-2 font-mono text-[11px] whitespace-pre-wrap leading-relaxed bg-black/5 p-2.5 rounded-xl border border-black/5">
               {thoughtProcess}
             </div>
           </details>
         )}
         <div dir="auto" className="break-words">
           {isUser ? (
-            <div className="whitespace-pre-wrap font-medium">{cleanContent}</div>
+            <div className="whitespace-pre-wrap">{cleanContent}</div>
           ) : (
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent}</ReactMarkdown>
           )}
         </div>
         <div
           className={cn(
-            "text-[10px] mt-1 text-right font-medium tracking-tight",
-            isUser ? "text-white/70" : "text-slate-400",
+            "text-[10px] mt-1 text-right font-semibold tracking-tight opacity-50",
+            isUser ? "text-white" : "text-slate-500",
           )}
         >
           {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -393,7 +394,7 @@ function EmbedWidget() {
     }
   };
 
-  const headerGrad = `linear-gradient(135deg, ${color} 0%, ${darken(color)} 100%)`;
+  const headerGrad = `linear-gradient(135deg, ${color} 0%, ${darken(color, 0.82)} 100%)`;
 
   return (
     <>
@@ -401,50 +402,61 @@ function EmbedWidget() {
       <style>{`
         :root { --accent-color: ${color}; }
         @keyframes widget-pop {
-          from { opacity: 0; transform: translateY(10px) scale(0.96); }
+          from { opacity: 0; transform: translateY(15px) scale(0.95); }
           to   { opacity: 1; transform: translateY(0)   scale(1); }
         }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
+        }
+        .animate-shake { animation: shake 0.3s ease-in-out 2; }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body, #root {
           height: 100%;
           width: 100%;
           overflow: hidden;
         }
-        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${alpha(color, 0.25)}; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb { background: ${alpha(color, 0.15)}; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: ${alpha(color, 0.3)}; }
       `}</style>
 
       <div
         className={cn(
-          "flex flex-col w-full h-full select-none",
-          dark ? "bg-gray-950 text-white" : "bg-gray-50 text-gray-900",
+          "flex flex-col w-full h-full select-none overflow-hidden",
+          dark ? "bg-[#0b0e14] text-white" : "bg-slate-50 text-slate-900",
         )}
-        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+        style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
       >
         {/* ── Header ─────────────────────────────────────────────── */}
         <div
-          className="flex items-center gap-3 px-4 py-4 flex-shrink-0 shadow-lg relative z-20"
+          className="flex items-center gap-3 px-5 py-5 flex-shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.15)] relative z-20 border-b border-white/10"
           style={{ background: headerGrad }}
         >
-          <div className="relative flex-shrink-0">
-            <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center ring-1 ring-white/30 overflow-hidden shadow-inner">
+          <div className="relative flex-shrink-0 group">
+            <div className="h-12 w-12 rounded-[14px] bg-white/15 backdrop-blur-xl flex items-center justify-center ring-1 ring-white/30 overflow-hidden shadow-inner transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
               <img
-                src={dark ? "/logo.png" : "/logo-dark.png"}
+                src="/logo.png"
                 alt="Logo"
-                className="h-full w-full object-contain scale-110"
+                className="h-7 w-7 object-contain"
               />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-white shadow-lg" />
           </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="text-[15px] font-bold text-white leading-tight tracking-tight truncate">
+          <div className="flex-1 min-w-0 ml-1">
+            <div className="text-[16px] font-extrabold text-white leading-none tracking-tight truncate mb-1">
               {botName}
             </div>
-            <div className="text-[11px] text-white/80 mt-0.5 flex items-center gap-1.5 font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              {t("Online · replies instantly")}
+            <div className="text-[11px] text-white/90 flex items-center gap-1.5 font-bold tracking-wide uppercase">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              {t("Live Support")}
             </div>
           </div>
 
@@ -454,123 +466,121 @@ function EmbedWidget() {
                 window.parent.postMessage({ type: "stratos_close_widget" }, "*");
               }
             }}
-            className="h-8 w-8 flex items-center justify-center rounded-xl hover:bg-white/20 transition-all text-white/80 hover:text-white hover:scale-105 active:scale-95"
+            className="h-9 w-9 flex items-center justify-center rounded-xl bg-black/10 hover:bg-black/20 transition-all text-white/90 hover:text-white hover:scale-110 active:scale-90"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* ── Main Content Area ──────────────────────────────────── */}
         <div className="flex-1 min-h-0 overflow-hidden relative">
           {!hasCapturedInfo ? (
-            <div className="h-full overflow-y-auto px-6 py-10 flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in duration-300">
-              <div className="text-center space-y-4">
-                <div
-                  className="w-16 h-16 rounded-[24px] mx-auto flex items-center justify-center shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-300"
-                  style={{ background: headerGrad }}
-                >
-                  <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+            <div className="h-full overflow-y-auto px-6 py-4 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
+              <div className="w-full max-w-[340px] bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-white/5 flex flex-col items-center">
+                <div className="text-center space-y-4 mb-8">
+                  <div
+                    className="w-16 h-16 rounded-[22px] mx-auto flex items-center justify-center shadow-lg rotate-3 hover:rotate-0 transition-all duration-500"
+                    style={{ background: headerGrad }}
+                  >
+                    <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <h2 className="text-[22px] font-black tracking-tight leading-tight text-slate-900 dark:text-white">
+                      {t("Welcome to")} {botName}
+                    </h2>
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                      {t("We'd love to help you find your next property. How can we reach you?")}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h2 className="text-[20px] font-black tracking-tight leading-tight">
-                    {t("Welcome to")} {botName}
-                  </h2>
-                  <p className="text-[14px] opacity-70 leading-relaxed font-medium">
-                    {t("We'd love to help you find your next property. How can we reach you?")}
-                  </p>
-                </div>
+
+                <form onSubmit={handleCaptureSubmit} className="w-full space-y-4">
+                  <div className="space-y-4">
+                    <div className="group space-y-1.5">
+                      <Label
+                        className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1 flex items-center gap-2"
+                        htmlFor="name"
+                      >
+                        <User className="w-3 h-3" />
+                        {t("Full Name")}
+                      </Label>
+                      <div className="relative">
+                        <input
+                          id="name"
+                          type="text"
+                          required
+                          placeholder={t("John Doe")}
+                          value={captureForm.name}
+                          onChange={(e) =>
+                            setCaptureForm((prev) => ({ ...prev, name: e.target.value }))
+                          }
+                          className={cn(
+                            "w-full px-4 py-3.5 text-[14px] font-semibold rounded-[16px] outline-none transition-all border-2",
+                            dark
+                              ? "bg-white/5 border-white/10 focus:border-white/30 text-white"
+                              : "bg-slate-50 border-slate-50 focus:border-indigo-500/20 focus:bg-white focus:shadow-sm",
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="group space-y-1.5">
+                      <Label
+                        className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1 flex items-center gap-2"
+                        htmlFor="phone"
+                      >
+                        <Phone className="w-3 h-3" />
+                        {t("Phone Number")}
+                      </Label>
+                      <div className="relative">
+                        <input
+                          id="phone"
+                          type="tel"
+                          required
+                          placeholder={t("+91 98765 43210")}
+                          value={captureForm.phone}
+                          onChange={(e) =>
+                            setCaptureForm((prev) => ({ ...prev, phone: e.target.value }))
+                          }
+                          className={cn(
+                            "w-full px-4 py-3.5 text-[14px] font-semibold rounded-[16px] outline-none transition-all border-2",
+                            dark
+                              ? "bg-white/5 border-white/10 focus:border-white/30 text-white"
+                              : "bg-slate-50 border-slate-50 focus:border-indigo-500/20 focus:bg-white focus:shadow-sm",
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {captureError && (
+                    <div className="text-red-500 text-[12px] text-center font-bold animate-shake bg-red-50 py-2 rounded-xl border border-red-100">
+                      {t(captureError)}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 rounded-[16px] text-[14px] font-bold text-white shadow-lg hover:shadow-xl hover:brightness-110 active:scale-[0.97] transition-all relative overflow-hidden group h-[52px]"
+                    style={{ background: headerGrad }}
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-2">
+                      {t("Start Conversation")}
+                      <ArrowRight
+                        className={`w-4 h-4 transition-transform duration-300 ${isRtl ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1"}`}
+                      />
+                    </span>
+                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                  </button>
+
+                  <div className="flex items-center justify-center gap-2 pt-2 opacity-50">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-[10px] font-bold tracking-tight uppercase dark:text-white">
+                      {t("Secure End-to-End Chat")}
+                    </span>
+                  </div>
+                </form>
               </div>
-
-              <form onSubmit={handleCaptureSubmit} className="w-full space-y-4 max-w-[300px]">
-                <div className="space-y-3">
-                  <div className="group space-y-1.5">
-                    <Label
-                      className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1"
-                      htmlFor="name"
-                    >
-                      {t("Full Name")}
-                    </Label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                        <User className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                      </div>
-                      <input
-                        id="name"
-                        type="text"
-                        required
-                        placeholder={t("John Doe")}
-                        value={captureForm.name}
-                        onChange={(e) =>
-                          setCaptureForm((prev) => ({ ...prev, name: e.target.value }))
-                        }
-                        className={cn(
-                          "w-full pl-10 pr-4 py-3 text-[14px] font-medium rounded-2xl outline-none transition-all ring-1",
-                          dark
-                            ? "bg-white/5 ring-white/10 focus:ring-white/30 text-white placeholder:text-slate-600"
-                            : "bg-white ring-slate-200 focus:ring-slate-400 shadow-sm text-slate-900",
-                        )}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="group space-y-1.5">
-                    <Label
-                      className="text-[11px] font-bold uppercase tracking-wider opacity-60 px-1"
-                      htmlFor="phone"
-                    >
-                      {t("Phone Number")}
-                    </Label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                        <Phone className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                      </div>
-                      <input
-                        id="phone"
-                        type="tel"
-                        required
-                        placeholder={t("+91 98765 43210")}
-                        value={captureForm.phone}
-                        onChange={(e) =>
-                          setCaptureForm((prev) => ({ ...prev, phone: e.target.value }))
-                        }
-                        className={cn(
-                          "w-full pl-10 pr-4 py-3 text-[14px] font-medium rounded-2xl outline-none transition-all ring-1",
-                          dark
-                            ? "bg-white/5 ring-white/10 focus:ring-white/30 text-white placeholder:text-slate-600"
-                            : "bg-white ring-slate-200 focus:ring-slate-400 shadow-sm text-slate-900",
-                        )}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {captureError && (
-                  <div className="text-red-500 text-[12px] text-center font-bold animate-shake">
-                    {t(captureError)}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full py-3.5 rounded-2xl text-[14px] font-black text-white shadow-xl hover:brightness-110 active:scale-[0.98] transition-all relative overflow-hidden group"
-                  style={{ background: headerGrad }}
-                >
-                  <span className="relative z-10 flex items-center justify-center gap-2">
-                    {t("Start Conversation")}
-                    <ArrowRight
-                      className={`w-4 h-4 transition-transform ${isRtl ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1"}`}
-                    />
-                  </span>
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform" />
-                </button>
-
-                <div className="flex items-center justify-center gap-2 pt-2 opacity-60">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                  <span className="text-[10px] font-bold tracking-tight">
-                    {t("Secure & Private Channel")}
-                  </span>
-                </div>
-              </form>
             </div>
           ) : (
             <>
@@ -600,16 +610,16 @@ function EmbedWidget() {
 
               {/* Quick suggestions */}
               {messages.length === 1 && !typing && (
-                <div className="absolute bottom-4 left-0 right-0 px-3 flex gap-2 flex-wrap justify-center">
+                <div className="absolute bottom-6 left-0 right-0 px-4 flex gap-2.5 flex-wrap justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
                   {QUICK.map((q) => (
                     <button
                       key={q}
                       onClick={() => send(t(q))}
                       className={cn(
-                        "text-[11px] px-3 py-1.5 rounded-full border transition-all duration-150 active:scale-95",
+                        "text-[12px] px-4 py-2.5 rounded-2xl border font-semibold shadow-sm transition-all duration-200 active:scale-95",
                         dark
-                          ? "border-white/15 text-white/70 hover:border-white/40 hover:text-white bg-white/5"
-                          : "border-gray-200 text-gray-600 hover:border-gray-400 bg-white hover:bg-gray-50",
+                          ? "border-white/10 text-white/80 hover:border-white/30 hover:bg-white/10 bg-white/5"
+                          : "border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50/50 bg-white",
                       )}
                     >
                       {t(q)}
@@ -624,25 +634,25 @@ function EmbedWidget() {
         {/* ── Input ──────────────────────────────────────────────── */}
         <div
           className={cn(
-            "p-4 border-t flex-shrink-0 relative",
-            dark ? "bg-slate-900/50 border-white/5" : "bg-white border-slate-100",
+            "p-5 flex-shrink-0 relative transition-all duration-300",
+            dark ? "bg-[#0b0e14] border-t border-white/5" : "bg-white border-t border-slate-100",
           )}
         >
           {!hasCapturedInfo && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 backdrop-blur-[2px] transition-all">
-              <div className="bg-slate-900/90 backdrop-blur-md text-white px-4 py-2 rounded-2xl flex items-center gap-2 text-[12px] font-bold tracking-tight shadow-xl ring-1 ring-white/10">
-                <Lock className="w-3.5 h-3.5 text-emerald-400" />
-                {t("Information Required")}
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] transition-all">
+              <div className="bg-slate-900/90 backdrop-blur-md text-white px-5 py-2.5 rounded-2xl flex items-center gap-2.5 text-[13px] font-bold tracking-tight shadow-2xl ring-1 ring-white/10 animate-bounce">
+                <Lock className="w-4 h-4 text-emerald-400" />
+                {t("Complete sign-in to chat")}
               </div>
             </div>
           )}
 
           <div
             className={cn(
-              "flex items-center gap-2 pl-4 pr-1.5 py-1.5 rounded-2xl transition-all shadow-inner ring-1",
+              "flex items-center gap-2 pl-5 pr-2 py-2 rounded-[22px] transition-all shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] border-2",
               dark
-                ? "bg-white/5 ring-white/10 focus-within:ring-white/25 focus-within:bg-white/10"
-                : "bg-slate-50 ring-slate-200 focus-within:ring-slate-300 focus-within:bg-white",
+                ? "bg-white/5 border-white/10 focus-within:border-white/20 focus-within:bg-white/10"
+                : "bg-slate-50 border-slate-100 focus-within:border-indigo-500/20 focus-within:bg-white focus-within:shadow-[0_8px_20px_-5px_rgba(0,0,0,0.1)]",
             )}
           >
             <input
@@ -655,20 +665,23 @@ function EmbedWidget() {
                   send();
                 }
               }}
-              placeholder={t("Type a message…")}
+              placeholder={t("How can I help you today?")}
               disabled={!hasCapturedInfo}
               className={cn(
-                "flex-1 bg-transparent outline-none text-[14px] font-medium placeholder:text-slate-400 min-w-0 disabled:opacity-50",
+                "flex-1 bg-transparent outline-none text-[15px] font-semibold placeholder:text-slate-400 min-w-0 disabled:opacity-50",
                 dark ? "text-white" : "text-slate-900",
               )}
             />
             <button
               onClick={() => send()}
               disabled={!draft.trim() || typing || sending || !hasCapturedInfo}
-              className="h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-200 shadow-md hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:grayscale"
-              style={{ background: `linear-gradient(135deg, ${color} 0%, ${darken(color)} 100%)` }}
+              className="h-11 w-11 rounded-[18px] flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-lg hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:grayscale group"
+              style={{ background: headerGrad }}
             >
-              <Send className="h-4 w-4 text-white translate-x-px" />
+              <Send className={cn(
+                "h-5 w-5 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+                isRtl && "rotate-180"
+              )} />
             </button>
           </div>
         </div>
@@ -676,12 +689,14 @@ function EmbedWidget() {
         {/* ── Powered by ─────────────────────────────────────────── */}
         <div
           className={cn(
-            "text-center py-1 text-[10px] flex items-center justify-center gap-1 flex-shrink-0",
-            dark ? "text-white/25" : "text-gray-400",
+            "text-center py-2.5 text-[10px] flex items-center justify-center gap-1.5 flex-shrink-0 uppercase tracking-[0.15em] font-black opacity-40 hover:opacity-100 transition-opacity cursor-default bg-transparent",
+            dark ? "text-white" : "text-slate-900",
           )}
         >
-          <Sparkles className="h-2.5 w-2.5" />
-          {t("Powered by")}&nbsp;<span className="font-semibold">Stratos Hub</span>
+          <div className="flex items-center gap-1 bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full border border-black/5 dark:border-white/5">
+            <Sparkles className="h-2.5 w-2.5 text-indigo-500" />
+            <span>{t("Powered by")} Stratos Hub</span>
+          </div>
         </div>
       </div>
     </>

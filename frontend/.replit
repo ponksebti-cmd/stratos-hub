@@ -14,7 +14,7 @@ VITE_API_BASE_URL = ""
 PORT = "3001"
 JWT_SECRET = "147f32c4309f876d43deaf38a517b6df0cd1a1d0d93d19db9bda98549952a9e0eed6ecaf0a56083d1e3fedd37b6d0dce9b06b56989cc8675c716d4eebfa039ff"
 MASTER_SECRET = "dc01895087afffc2f901ea05ca3924c153a76bc5a089185fddc92c2a58442430"
-GEMINI_MODEL = "gemini-1.5-flash"
+GEMINI_MODEL = "gemini-3.5-flash"
 
 [workflows]
 runButton = "Project"
