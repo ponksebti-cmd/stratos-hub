@@ -15,28 +15,28 @@ const cfHeaders = `
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
   Cache-Control: public, max-age=31536000, immutable
 
-*.js
+/*.js
   Cache-Control: public, max-age=31536000, immutable
 
-*.css
+/*.css
   Cache-Control: public, max-age=31536000, immutable
 
-*.png
+/*.png
   Cache-Control: public, max-age=31536000, immutable
 
-*.jpg
+/*.jpg
   Cache-Control: public, max-age=31536000, immutable
 
-*.svg
+/*.svg
   Cache-Control: public, max-age=31536000, immutable
 
-*.woff
+/*.woff
   Cache-Control: public, max-age=31536000, immutable
 
-*.woff2
+/*.woff2
   Cache-Control: public, max-age=31536000, immutable
 
-index.html
+/index.html
   Cache-Control: public, max-age=0, must-revalidate
 `;
 
