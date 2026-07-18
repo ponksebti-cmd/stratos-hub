@@ -1,4 +1,11 @@
 {
+  // Cloudflare Pages — frontend only (see README "Deployment" section)
+  //
+  // Pages build settings (set in Cloudflare dashboard):
+  //   Root directory: frontend
+  //   Build command:  npm ci && npm run build
+  //   Build output:   dist/client
+  //   Env var:        VITE_API_BASE_URL = https://your-app.up.railway.app
   "name": "stratos-hub-frontend",
   "compatibility_date": "2026-07-17",
   "assets": {

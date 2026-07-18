@@ -86,16 +86,16 @@ async function serveStatic(pathname) {
 }
 
 // ── Response helpers ──────────────────────────────────────────────────────────
-function withCORS(response, pathname) {
+function withCORS(response, pathname, requestOrigin) {
   const headers = new Headers(response.headers);
-  for (const [k, v] of Object.entries(getCORSHeaders(pathname))) {
+  for (const [k, v] of Object.entries(getCORSHeaders(pathname, requestOrigin))) {
     headers.set(k, v);
   }
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
-function finalise(response, pathname) {
-  return applySecurityHeaders(withCORS(response, pathname));
+function finalise(response, pathname, requestOrigin) {
+  return applySecurityHeaders(withCORS(response, pathname, requestOrigin));
 }
 
 // ── URL pattern matching ──────────────────────────────────────────────────────
@@ -121,12 +121,13 @@ const server = Bun.serve({
     const path = url.pathname;
     const method = req.method;
     const ip = getClientIP(req);
+    const requestOrigin = req.headers.get("Origin") ?? undefined;
 
     // ── CORS preflight ──
     if (method === "OPTIONS") {
       return new Response(null, {
         status: 204,
-        headers: getCORSHeaders(path),
+        headers: getCORSHeaders(path, requestOrigin),
       });
     }
 
@@ -134,7 +135,8 @@ const server = Bun.serve({
     if (path === "/health") {
       return finalise(
         Response.json({ status: "ok", timestamp: new Date().toISOString() }),
-        path
+        path,
+        requestOrigin
       );
     }
 
@@ -142,22 +144,22 @@ const server = Bun.serve({
     // Auth endpoints: strict limit
     if (path === "/auth/login" || path === "/auth/register") {
       const { limited, retryAfter } = authLimiter(ip);
-      if (limited) return finalise(rateLimitResponse(retryAfter), path);
+      if (limited) return finalise(rateLimitResponse(retryAfter), path, requestOrigin);
     }
     // Widget chat: moderate public limit
     else if (path === "/chat/widget") {
       const { limited, retryAfter } = widgetLimiter(ip);
-      if (limited) return finalise(rateLimitResponse(retryAfter), path);
+      if (limited) return finalise(rateLimitResponse(retryAfter), path, requestOrigin);
     }
     // Webhook endpoints: moderate limit
     else if (isWebhookRoute(path)) {
       const { limited, retryAfter } = webhookLimiter(ip);
-      if (limited) return finalise(rateLimitResponse(retryAfter), path);
+      if (limited) return finalise(rateLimitResponse(retryAfter), path, requestOrigin);
     }
     // All other API routes: standard per-IP limit
     else if (isApiRoute(path)) {
       const { limited, retryAfter } = apiLimiter(ip);
-      if (limited) return finalise(rateLimitResponse(retryAfter), path);
+      if (limited) return finalise(rateLimitResponse(retryAfter), path, requestOrigin);
     }
 
     let response;
@@ -241,7 +243,7 @@ const server = Bun.serve({
 
     if (!response) response = Response.json({ error: "Not found" }, { status: 404 });
 
-    return finalise(response, path);
+    return finalise(response, path, requestOrigin);
   },
 
   error(err) {

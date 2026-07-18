@@ -3,13 +3,13 @@ FROM oven/bun:1-alpine
 WORKDIR /app
 
 # Copy package files first for better layer caching
-COPY package.json ./
+COPY backend/package.json backend/bun.lock ./
 
 # Install dependencies using bun
 RUN bun install --production
 
 # Copy the rest of the application
-COPY . .
+COPY backend/ .
 
 # Expose the default port
 EXPOSE 3001

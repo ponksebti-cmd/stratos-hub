@@ -23,16 +23,8 @@ This is a monorepo containing:
    ```
 
 2. Set up environment variables:
-   - Create a `.env` file in `/backend` based on `/backend/.env.example` (if it exists) or ensure the following are set:
-     ```env
-     DATABASE_URL=your_postgres_uri
-     JWT_SECRET=your_random_secret
-     GEMINI_API_KEY=your_google_ai_key
-     ```
-   - (Optional) Create a `.env` in `/frontend`:
-     ```env
-     VITE_API_BASE_URL=http://localhost:3001
-     ```
+   - Copy `backend/.env.example` → `backend/.env`
+   - Copy `frontend/.env.example` → `frontend/.env` (optional for local dev)
 
 3. Run migrations:
    The backend auto-migrates the database on startup.
@@ -45,14 +37,87 @@ npm run dev
 - Frontend: `http://localhost:5173`
 - Backend: `http://localhost:3001`
 
-### Production
-Build the frontend and start the Bun server:
-```bash
-npm run build:frontend
-cd backend
-bun run start
+Leave `VITE_API_BASE_URL` empty locally — Vite proxies API calls to the backend automatically.
+
+### Deployment (split: Railway + Cloudflare Pages)
+
+Production uses **two separate hosts** that must point at each other:
+
 ```
-In production, the backend serves the built frontend assets from the `/dist` directory.
+Browser  →  Cloudflare Pages (frontend UI)
+                ↓  API calls (VITE_API_BASE_URL)
+           Railway (backend API + Postgres)
+```
+
+| What | Host | Config file |
+|------|------|-------------|
+| **Backend API** | Railway | `backend/.env.example` → Railway Variables |
+| **Frontend UI** | Cloudflare Pages | `frontend/.env.example` → Pages env vars |
+
+#### Step 1 — Deploy backend on Railway
+
+1. [railway.app](https://railway.app) → **New Project** → deploy from GitHub repo.
+2. Set the service **Root Directory** to `backend` (or rely on `railway.json` at repo root).
+3. Add **PostgreSQL** (Railway injects `DATABASE_URL`).
+4. Add variables from `backend/.env.example`:
+   - `JWT_SECRET`, `MASTER_SECRET`, `GEMINI_API_KEY`
+   - `ALLOWED_ORIGINS` — your Cloudflare Pages URL (see step 2)
+5. **Settings → Networking → Generate Domain** → copy the URL, e.g.  
+   `https://stratos-hub-production.up.railway.app`
+6. Confirm it works: open `https://YOUR-RAILWAY-URL/health` → should return `{"status":"ok",...}`
+
+#### Step 2 — Deploy frontend on Cloudflare Pages
+
+1. [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** → **Create** → **Pages** → connect GitHub repo.
+2. Build settings:
+
+   | Setting | Value |
+   |---------|-------|
+   | Root directory | `frontend` |
+   | Build command | `npm ci && npm run build` |
+   | Build output | `dist/client` |
+
+3. **Environment variables (Production)**:
+   - `VITE_API_BASE_URL` = your Railway URL from step 1 (no trailing slash)
+4. Deploy → copy your Pages URL, e.g.  
+   `https://stratos-hub.pages.dev`
+
+#### Step 3 — Link them together
+
+Go back to **Railway → Variables** and set:
+
+```
+ALLOWED_ORIGINS=https://stratos-hub.pages.dev,http://localhost:5173
+```
+
+(Railway redeploys automatically. The `localhost` entry lets you test split-deploy locally.)
+
+#### Test checklist
+
+| Test | Expected |
+|------|----------|
+| `https://YOUR-RAILWAY-URL/health` | JSON `{ "status": "ok" }` |
+| Open Cloudflare Pages URL | Login/signup page loads |
+| Sign up / log in on Pages | Works (no CORS errors in browser console) |
+| Browser DevTools → Network | API calls go to Railway URL, not Pages URL |
+
+#### Test split deploy locally (optional)
+
+```bash
+# Terminal 1 — backend
+cd backend
+ALLOWED_ORIGINS=http://localhost:5173 bun run dev
+
+# Terminal 2 — frontend (simulates Cloudflare)
+cd frontend
+VITE_API_BASE_URL=http://localhost:3001 npm run dev
+```
+
+#### Google Sign-In (optional)
+
+In [Google Cloud Console](https://console.cloud.google.com/apis/credentials), add:
+- **Authorized JavaScript origins**: your Cloudflare Pages URL
+- Set `GOOGLE_CLIENT_ID` on both Railway and Cloudflare (`VITE_GOOGLE_CLIENT_ID`)
 
 ## Core Features
 - **AI Chat Widget**: Embeddable widget for agency websites.

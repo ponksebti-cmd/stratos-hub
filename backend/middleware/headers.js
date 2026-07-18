@@ -39,8 +39,11 @@ export function applySecurityHeaders(response) {
 }
 
 // CORS — public widget/webhook endpoints get wildcard,
-// protected API endpoints only allow the configured origin.
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN ?? "*";
+// protected API endpoints only allow configured frontend origins.
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? process.env.ALLOWED_ORIGIN ?? "*")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 const PUBLIC_CORS_PATHS = [
   "/chat/widget",
@@ -58,8 +61,15 @@ function isPublicCorsRoute(pathname) {
   );
 }
 
-export function getCORSHeaders(pathname) {
-  const origin = isPublicCorsRoute(pathname) ? "*" : ALLOWED_ORIGIN;
+function resolveCorsOrigin(pathname, requestOrigin) {
+  if (isPublicCorsRoute(pathname)) return "*";
+  if (ALLOWED_ORIGINS.includes("*")) return "*";
+  if (requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin)) return requestOrigin;
+  return ALLOWED_ORIGINS[0] ?? "*";
+}
+
+export function getCORSHeaders(pathname, requestOrigin) {
+  const origin = resolveCorsOrigin(pathname, requestOrigin);
   return {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
