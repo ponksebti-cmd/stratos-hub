@@ -1,0 +1,116 @@
+modules = ["nodejs-20", "web"]
+[agent]
+expertMode = true
+stack = "BEST_EFFORT_FALLBACK"
+integrations = ["javascript_gemini_ai_integrations:2.0.0"]
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+VITE_API_BASE_URL = ""
+PORT = "3001"
+JWT_SECRET = "147f32c4309f876d43deaf38a517b6df0cd1a1d0d93d19db9bda98549952a9e0eed6ecaf0a56083d1e3fedd37b6d0dce9b06b56989cc8675c716d4eebfa039ff"
+MASTER_SECRET = "dc01895087afffc2f901ea05ca3924c153a76bc5a089185fddc92c2a58442430"
+GEMINI_MODEL = "gemini-3.5-flash"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Backend API"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow]]
+name = "Backend API"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd backend && bun run index.js"
+waitForPort = 3001
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "rando"
+mode = "sequential"
+author = 57506094
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git add ."
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git commit -m \"my commit message\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git remote add origin https://github.com/ponksebti-cmd/stratos-hub.git && git push -u origin main"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git push -u origin main"
+
+[[workflows.workflow]]
+name = "please"
+mode = "sequential"
+author = 57506094
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git config --global user.name \"ponksebti-cmd\" && git config --global user.email \"ponksebti@gmail.com\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git add . && git commit -m \"Initial commit\""
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git remote set-url origin https://github.com/ponksebti-cmd/stratos-hub.git && git push -u origin main"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "git push origin main"
+
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["bash", "-c", "cd /home/runner/workspace && bun run backend/index.js"]
+build = ["bash", "-c", "cd /home/runner/workspace && npm run build"]

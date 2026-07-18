@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stratos Hub</title>
+    <meta name="description" content="AI Powered Real Estate Agent" />
+    <link rel="icon" type="image/png" href="/logo-dark.png" media="(prefers-color-scheme: light)" />
+    <link rel="icon" type="image/png" href="/logo.png" media="(prefers-color-scheme: dark)" />
+    <script>
+      (function () {
+        var observer = new MutationObserver(function () {
+          var isDark = document.documentElement.classList.contains("dark");
+          var lightIcon = document.querySelector("link[href='/logo-dark.png']");
+          var darkIcon = document.querySelector("link[href='/logo.png']");
+          if (isDark) {
+            if (lightIcon) lightIcon.removeAttribute("rel");
+            if (darkIcon) darkIcon.setAttribute("rel", "icon");
+          } else {
+            if (darkIcon) darkIcon.removeAttribute("rel");
+            if (lightIcon) lightIcon.setAttribute("rel", "icon");
+          }
+        });
+        observer.observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ["class"],
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

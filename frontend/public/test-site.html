@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>External Website Test</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        margin: 0;
+        padding: 0;
+        background: #f3f4f6;
+      }
+      header {
+        background: #111827;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      main {
+        padding: 40px;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+      .hero {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Fake Real Estate Co.</h1>
+    </header>
+    <main>
+      <div class="hero">
+        <h2>Welcome to our test site!</h2>
+        <p>
+          This is a completely separate HTML file to simulate what happens when a client embeds your
+          widget on their own WordPress, Shopify, or custom HTML website.
+        </p>
+        <p>You should see the floating chat bubble in the bottom right corner.</p>
+      </div>
+    </main>
+
+    <!-- Paste the Stratos Hub Embed Script Here -->
+    <script
+      src="http://localhost:8080/widget.js"
+      data-key="951571e4-f4c1-4660-b4ac-3c433d79c55c"
+      data-color="#10b981"
+      data-name="Sarah - Real Estate Agent"
+      data-greeting="Hi there! Looking for a new home?"
+      data-theme="light"
+      data-position="right"
+    ></script>
+  </body>
+</html>

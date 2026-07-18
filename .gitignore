@@ -1,0 +1,43 @@
+# Global
+node_modules
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# Frontend artifacts
+frontend/node_modules
+frontend/dist
+frontend/dist-ssr
+frontend/.output
+frontend/.vinxi
+frontend/.tanstack
+frontend/.nitro
+frontend/*.local
+
+# Backend artifacts
+backend/node_modules
+backend/uploads/
+backend/dev
+backend/vite
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+backend/*.sqlite
+
+# Secrets & Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+client_secret*.json
+frontend/client_secret*.json
+
+# Wrangler / Cloudflare
+.wrangler/
+.dev.vars

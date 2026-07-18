@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443" # Prepared for SSL
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # Ports are not mapped to host, accessed only via frontend's Nginx proxy
+    expose:
+      - "3001"
+    volumes:
+      - stratos_db:/app # Persistent storage for SQLite DB
+      - stratos_uploads:/app/uploads # Persistent storage for uploaded files
+    environment:
+      # These must be set securely on the VPS
+      - JWT_SECRET=${JWT_SECRET}
+      - MASTER_SECRET=${MASTER_SECRET}
+    restart: always
+
+volumes:
+  stratos_db:
+  stratos_uploads:
