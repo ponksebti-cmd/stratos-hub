@@ -249,9 +249,12 @@ const server = Bun.serve({
   error(err) {
     console.error("[server error]", err?.message ?? err);
     // Never expose internal error details to clients
-    return applySecurityHeaders(
-      Response.json({ error: "Internal server error" }, { status: 500 })
-    );
+    const res = Response.json({ error: "Internal server error" }, { status: 500 });
+    // Attach wildcard CORS so the browser can read the 500 response
+    res.headers.set("Access-Control-Allow-Origin", "*");
+    res.headers.set("Access-Control-Allow-Methods", "GET, POST, PATCH, PUT, DELETE, OPTIONS");
+    res.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    return applySecurityHeaders(res);
   },
 });
 
