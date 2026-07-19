@@ -13,6 +13,7 @@ const cfHeaders = `
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
   Cache-Control: public, max-age=31536000, immutable
 
 /*.js

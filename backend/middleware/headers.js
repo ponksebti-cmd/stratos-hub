@@ -42,7 +42,7 @@ export function applySecurityHeaders(response) {
 // protected API endpoints only allow configured frontend origins.
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? process.env.ALLOWED_ORIGIN ?? "*")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/$/, ""))
   .filter(Boolean);
 
 const PUBLIC_CORS_PATHS = [
