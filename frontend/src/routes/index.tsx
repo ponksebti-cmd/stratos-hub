@@ -271,8 +271,9 @@ function Landing() {
         </div>
       </section>
 
-      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground">
-        © 2026 {t("Stratos Hub. Built for real-estate teams.")}
+      <footer className="border-t border-border py-8 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+        <div>© 2026 {t("Stratos Hub. Built for real-estate teams.")}</div>
+        <Link to="/privacy" className="hover:underline opacity-80">{t("Privacy Policy")}</Link>
       </footer>
     </div>
   );
