@@ -95,9 +95,11 @@ function Chat() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [draft, setDraft] = useState("");
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
+  const [creatingSession, setCreatingSession] = useState(false);
 
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
     queryKey: ["chat-sessions"],
@@ -105,10 +107,11 @@ function Chat() {
   });
 
   useEffect(() => {
-    if (sessions.length > 0 && !activeId) {
+    if (isInitialLoad && sessions.length > 0) {
       setActiveId(sessions[0].id);
+      setIsInitialLoad(false);
     }
-  }, [sessions, activeId]);
+  }, [sessions, isInitialLoad]);
 
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ["messages", activeId],
@@ -138,11 +141,36 @@ function Chat() {
     setDraft("");
   };
 
+  const startNewChat = () => {
+    setActiveId(null);
+    setLocalMessages([]);
+    setDraft("");
+  };
+
   const send = async (text?: string) => {
     const content = (text ?? draft).trim();
-    if (!content || !activeId || sending) return;
+    if (!content || sending || creatingSession) return;
     setDraft("");
     setSending(true);
+
+    let currentActiveId = activeId;
+
+    if (!currentActiveId) {
+      setCreatingSession(true);
+      try {
+        const session = await api.chat.createSession(content.slice(0, 50));
+        queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
+        currentActiveId = session.id;
+        setActiveId(session.id);
+      } catch (err) {
+        toast.error("Failed to create conversation");
+        setSending(false);
+        setCreatingSession(false);
+        return;
+      } finally {
+        setCreatingSession(false);
+      }
+    }
 
     const optimisticUser: Message = {
       id: crypto.randomUUID(),
@@ -163,7 +191,7 @@ function Chat() {
     setLocalMessages((m) => [...m, optimisticUser, optimisticAi]);
 
     try {
-      const reply = await api.chat.streamSend(activeId, content, (chunk) => {
+      const reply = await api.chat.streamSend(currentActiveId, content, (chunk) => {
         setLocalMessages((m) =>
           m.map((msg) => (msg.id === aiMessageId ? { ...msg, content: msg.content + chunk } : msg)),
         );
@@ -194,15 +222,11 @@ function Chat() {
           <Button
             size="icon"
             variant="ghost"
-            className="h-7 w-7"
-            onClick={() => createSessionMutation.mutate()}
-            disabled={createSessionMutation.isPending}
+            className="h-7 w-7 transition-all duration-200 hover:bg-accent hover:text-accent-foreground active:scale-90"
+            onClick={startNewChat}
+            title={t("New Chat")}
           >
-            {createSessionMutation.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Plus className="h-3 w-3" />
-            )}
+            <Plus className="h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent className="p-2 flex-1 overflow-y-auto">
@@ -225,15 +249,27 @@ function Chat() {
                 key={s.id}
                 onClick={() => switchSession(s.id)}
                 className={cn(
-                  "w-full text-start rounded-md px-3 py-2 text-sm transition-all duration-150 active:scale-[0.98]",
+                  "w-full text-start rounded-lg px-3 py-2.5 text-sm transition-all duration-200 active:scale-[0.97] mb-1 group border border-transparent",
                   activeId === s.id
-                    ? "bg-accent text-accent-foreground translate-x-0.5"
-                    : "hover:bg-muted hover:translate-x-0.5",
+                    ? "bg-primary/10 text-primary border-l-2 border-primary/80 pl-2.5 shadow-xs font-medium"
+                    : "hover:bg-muted/80 pl-3 hover:translate-x-0.5 hover:border-border/30",
                 )}
               >
-                <div className="font-medium truncate">{s.title}</div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {new Date(s.updatedAt).toLocaleDateString()}
+                <div
+                  className={cn(
+                    "font-medium truncate transition-colors duration-200",
+                    activeId === s.id
+                      ? "text-primary"
+                      : "text-foreground/90 group-hover:text-primary/95",
+                  )}
+                >
+                  {s.title}
+                </div>
+                <div className="text-xs text-muted-foreground truncate mt-0.5">
+                  {new Date(s.updatedAt).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                  })}
                 </div>
               </button>
             ))
@@ -275,7 +311,7 @@ function Chat() {
                     <button
                       key={s.key}
                       style={{ animationDelay: `${i * 80}ms` }}
-                      onClick={() => (activeId ? send(t(s.title)) : createSessionMutation.mutate())}
+                      onClick={() => send(t(s.title))}
                       className="group card-pop text-start rounded-xl border border-border bg-card p-4 hover:bg-accent/40 hover:border-primary/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 active:scale-[0.97]"
                     >
                       <Icon className="h-4 w-4 text-primary mb-2 transition-transform duration-150 group-hover:scale-110" />
@@ -288,13 +324,15 @@ function Chat() {
               {!activeId && (
                 <Button
                   size="sm"
-                  onClick={() => createSessionMutation.mutate()}
-                  disabled={createSessionMutation.isPending}
+                  variant="outline"
+                  onClick={() => {
+                    const input = document.querySelector("input[placeholder*='message']");
+                    if (input instanceof HTMLInputElement) input.focus();
+                  }}
+                  className="transition-all duration-200 active:scale-95 border-primary/20 hover:border-primary/40 hover:bg-primary/5"
                 >
-                  {createSessionMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                  ) : null}
-                  {t("New conversation")}
+                  <Sparkles className="h-3.5 w-3.5 text-primary mr-1 animate-pulse" />
+                  {t("Type a message to start")}
                 </Button>
               )}
             </div>
@@ -305,32 +343,36 @@ function Chat() {
                 <div
                   key={m.id}
                   className={cn(
-                    "flex",
+                    "flex w-full mb-1",
                     m.role === "user" ? "justify-end msg-user" : "justify-start msg-ai",
                   )}
                 >
                   <div
                     className={cn(
-                      "max-w-[80%] rounded-2xl px-4 py-2 text-sm flex flex-col gap-2",
+                      "max-w-[85%] sm:max-w-[75%] rounded-2xl px-4.5 py-3 text-sm flex flex-col gap-2 transition-all duration-300",
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground",
+                        ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md rounded-tr-xs border border-primary/20"
+                        : "bg-card border border-border/80 text-foreground shadow-xs rounded-tl-xs",
                     )}
                   >
                     {m.role === "assistant" && (
-                      <div className="flex items-center gap-1 text-xs opacity-70">
-                        <Sparkles className="h-3 w-3" /> {t("Assistant")}
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-primary/95 tracking-wide uppercase">
+                        <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />{" "}
+                        {t("Assistant")}
                       </div>
                     )}
 
                     {thoughtProcess && (
-                      <details className="text-xs border border-border/60 rounded-lg bg-background/50 overflow-hidden group/tp transition-all duration-200 open:shadow-sm">
-                        <summary className="px-3 py-2 cursor-pointer font-medium opacity-80 hover:opacity-100 flex items-center gap-1.5 select-none bg-background/30 hover:bg-background/80">
-                          <Sparkles className="h-3 w-3 text-primary" />
+                      <details className="text-xs border border-border/60 rounded-xl bg-muted/40 overflow-hidden group/tp transition-all duration-200 open:shadow-xs">
+                        <summary className="px-3 py-2 cursor-pointer font-medium opacity-80 hover:opacity-100 flex items-center gap-1.5 select-none bg-muted/20 hover:bg-muted/60 transition-colors">
+                          <Sparkles
+                            className="h-3 w-3 text-primary animate-spin"
+                            style={{ animationDuration: "3s" }}
+                          />
                           {t("Thinking...")}
                           <ChevronDown className="h-3 w-3 ml-auto transition-transform duration-200 group-open/tp:rotate-180" />
                         </summary>
-                        <div className="px-3 pb-3 pt-1 opacity-80 whitespace-pre-wrap font-mono text-[11px] leading-relaxed border-t border-border/30 bg-background/40">
+                        <div className="px-3 pb-3 pt-1 opacity-80 whitespace-pre-wrap font-mono text-[11px] leading-relaxed border-t border-border/30 bg-card/50">
                           {thoughtProcess}
                         </div>
                       </details>
@@ -350,13 +392,14 @@ function Chat() {
           {sending && <TypingDots />}
           <div ref={bottomRef} />
         </div>
-        <div className="border-t border-border p-3 space-y-2">
-          <div className="flex gap-2 flex-wrap">
+        <div className="border-t border-border p-4.5 bg-card/65 space-y-3">
+          <div className="flex gap-2 flex-wrap pb-1">
             {suggestions.map((s) => (
               <button
                 key={s}
+                type="button"
                 onClick={() => send(s)}
-                className="text-xs px-2.5 py-1 rounded-full border border-border hover:bg-muted hover:border-primary/40 transition-all duration-150 hover:scale-105 active:scale-95"
+                className="text-xs px-3 py-1.5 rounded-full border border-border bg-card text-foreground hover:bg-accent hover:border-primary/40 transition-all duration-200 hover:-translate-y-0.5 active:scale-95 shadow-2xs hover:shadow-xs cursor-pointer"
               >
                 {s}
               </button>
@@ -373,12 +416,16 @@ function Chat() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={t("Type a message…")}
-              disabled={!activeId || sending}
+              disabled={sending || creatingSession}
+              className={cn(
+                "transition-all duration-300",
+                (sending || creatingSession) && "opacity-70 animate-pulse border-primary/30",
+              )}
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!activeId || sending || !draft.trim()}
+              disabled={sending || creatingSession || !draft.trim()}
               className="transition-transform active:scale-90"
             >
               <Send className="h-4 w-4 transition-transform duration-150 group-hover:-rotate-12" />
