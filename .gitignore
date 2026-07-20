@@ -42,3 +42,4 @@ frontend/client_secret*.json
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+stratos-fefe/
