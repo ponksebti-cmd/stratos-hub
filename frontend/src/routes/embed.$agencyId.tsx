@@ -250,7 +250,7 @@ function EmbedWidget() {
           setMessages((m) => {
             if (m.length === 1 && m[0].id === "welcome") {
               return [
-                { ...m[0], content: data.greeting || config.greeting, createdAt: m[0].createdAt },
+                { ...m[0], content: data.greeting || prevGreeting, createdAt: m[0].createdAt },
               ];
             }
             return m;
@@ -259,7 +259,7 @@ function EmbedWidget() {
             window.parent.postMessage(
               {
                 type: "stratos_widget_config",
-                color: data.color || color,
+                color: data.color || prevColor,
                 position: data.position || "right",
               },
               "*",
@@ -363,20 +363,27 @@ function EmbedWidget() {
                   try {
                     const audio = new Audio("/notify.mp3");
                     audio.volume = 0.5;
-                    audio.play().catch(() => {});
-                  } catch {}
+                    audio.play().catch((err) => {
+                      console.warn("Audio play failed:", err);
+                    });
+                  } catch (err) {
+                    console.warn("Audio initialization failed:", err);
+                  }
                   setMessages((m) =>
                     m.map((msg) =>
                       msg.id === assistantMsgId ? { ...msg, content: data.message } : msg,
                     ),
                   );
                 }
-              } catch (e) {}
+              } catch (err) {
+                console.error("Failed to parse data line:", err);
+              }
             }
           }
         }
       }
-    } catch {
+    } catch (err) {
+      console.error("Fetch/Stream failed:", err);
       await new Promise((r) => setTimeout(r, 900));
       setMessages((m) =>
         m.map((msg) =>
@@ -438,11 +445,7 @@ function EmbedWidget() {
         >
           <div className="relative flex-shrink-0 group">
             <div className="h-12 w-12 rounded-[14px] bg-white/15 backdrop-blur-xl flex items-center justify-center ring-1 ring-white/30 overflow-hidden shadow-inner transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
-              <img
-                src="/logo.png"
-                alt="Logo"
-                className="h-7 w-7 object-contain"
-              />
+              <img src="/logo.png" alt="Logo" className="h-7 w-7 object-contain" />
             </div>
             <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-white shadow-lg" />
           </div>
@@ -678,10 +681,12 @@ function EmbedWidget() {
               className="h-11 w-11 rounded-[18px] flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-lg hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:grayscale group"
               style={{ background: headerGrad }}
             >
-              <Send className={cn(
-                "h-5 w-5 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
-                isRtl && "rotate-180"
-              )} />
+              <Send
+                className={cn(
+                  "h-5 w-5 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+                  isRtl && "rotate-180",
+                )}
+              />
             </button>
           </div>
         </div>

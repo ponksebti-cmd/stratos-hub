@@ -16,14 +16,15 @@
   "use strict";
 
   // ── Origin validation ────────────────────────────────────────────────────
-  var allowedOrigins = [
-    "http://localhost:8080",
-    "https://yourdomain.com", // Add your production domain here
-  ];
-
+  // Permissive logic: Always allow localhost/127.0.0.1 on any port or any https origin to ensure frictionless testing and smooth embed integration
   var currentOrigin = window.location.origin;
-  if (allowedOrigins.indexOf(currentOrigin) === -1) {
-    console.warn("Stratos Widget: Blocked from " + currentOrigin);
+  var isLocalhost = /^(http:\/\/localhost|http:\/\/127\.0\.0\.1)(:\d+)?$/.test(currentOrigin);
+  var isHttps = /^https:\/\//.test(currentOrigin);
+
+  if (!isLocalhost && !isHttps) {
+    console.warn(
+      "Stratos Widget: Origin blocked. Only secure https contexts or local servers are allowed.",
+    );
     return;
   }
 

@@ -220,7 +220,9 @@ export const api = {
                   } else if (data.type === "done") {
                     finalMessage = data.message;
                   }
-                } catch (e) {}
+                } catch (err) {
+                  console.error("Failed to parse event stream line:", err);
+                }
               }
             }
           }

@@ -23,8 +23,15 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { z } from "zod";
+
+const chatSearchSchema = z.object({
+  sessionId: z.string().optional(),
+  initialMessage: z.string().optional(),
+});
 
 export const Route = createFileRoute("/_app/chat")({
+  validateSearch: chatSearchSchema,
   head: () => ({ meta: [{ title: "Chat — Stratos Hub" }] }),
   component: Chat,
 });
@@ -86,6 +93,8 @@ function parseMessage(content: string) {
 function Chat() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { sessionId: paramSessionId, initialMessage: paramInitialMessage } = Route.useSearch();
+
   const suggestions = [
     t("Schedule a site visit"),
     t("Send pricing PDF"),
@@ -105,10 +114,12 @@ function Chat() {
   });
 
   useEffect(() => {
-    if (sessions.length > 0 && !activeId) {
+    if (paramSessionId) {
+      setActiveId(paramSessionId);
+    } else if (sessions.length > 0 && !activeId) {
       setActiveId(sessions[0].id);
     }
-  }, [sessions, activeId]);
+  }, [sessions, activeId, paramSessionId]);
 
   const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ["messages", activeId],
@@ -140,9 +151,24 @@ function Chat() {
 
   const send = async (text?: string) => {
     const content = (text ?? draft).trim();
-    if (!content || !activeId || sending) return;
+    if (!content || sending) return;
+
     setDraft("");
     setSending(true);
+
+    let targetSessionId = activeId;
+
+    if (!targetSessionId) {
+      try {
+        const newSession = await createSessionMutation.mutateAsync();
+        targetSessionId = newSession.id;
+        setActiveId(newSession.id);
+      } catch (err) {
+        toast.error("Failed to auto-create conversation");
+        setSending(false);
+        return;
+      }
+    }
 
     const optimisticUser: Message = {
       id: crypto.randomUUID(),
@@ -163,7 +189,7 @@ function Chat() {
     setLocalMessages((m) => [...m, optimisticUser, optimisticAi]);
 
     try {
-      const reply = await api.chat.streamSend(activeId, content, (chunk) => {
+      const reply = await api.chat.streamSend(targetSessionId, content, (chunk) => {
         setLocalMessages((m) =>
           m.map((msg) => (msg.id === aiMessageId ? { ...msg, content: msg.content + chunk } : msg)),
         );
@@ -184,6 +210,20 @@ function Chat() {
       setSending(false);
     }
   };
+
+  // Auto-send initial message if passed from Dashboard
+  useEffect(() => {
+    if (paramInitialMessage && activeId) {
+      // Clear initialMessage by resetting the search parameters so it doesn't trigger on reload
+      send(paramInitialMessage);
+      // Remove query parameters from URL
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + (paramSessionId ? `?sessionId=${paramSessionId}` : ""),
+      );
+    }
+  }, [paramInitialMessage, activeId]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4 h-[calc(100vh-9rem)]">
@@ -259,7 +299,7 @@ function Chat() {
                 <Skeleton className="h-12 w-56 rounded-2xl" />
               </div>
             </div>
-          ) : !activeId || localMessages.length === 0 ? (
+          ) : !activeId || (localMessages.length === 0 && !sending) ? (
             <div className="flex flex-col items-center justify-center h-full gap-6 px-4">
               <div className="text-center">
                 <Sparkles className="h-10 w-10 opacity-30 mx-auto mb-3" />
@@ -275,7 +315,7 @@ function Chat() {
                     <button
                       key={s.key}
                       style={{ animationDelay: `${i * 80}ms` }}
-                      onClick={() => (activeId ? send(t(s.title)) : createSessionMutation.mutate())}
+                      onClick={() => send(t(s.title))}
                       className="group card-pop text-start rounded-xl border border-border bg-card p-4 hover:bg-accent/40 hover:border-primary/30 hover:shadow-sm hover:-translate-y-0.5 transition-all duration-150 active:scale-[0.97]"
                     >
                       <Icon className="h-4 w-4 text-primary mb-2 transition-transform duration-150 group-hover:scale-110" />
@@ -373,12 +413,12 @@ function Chat() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               placeholder={t("Type a message…")}
-              disabled={!activeId || sending}
+              disabled={sending}
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!activeId || sending || !draft.trim()}
+              disabled={sending || !draft.trim()}
               className="transition-transform active:scale-90"
             >
               <Send className="h-4 w-4 transition-transform duration-150 group-hover:-rotate-12" />

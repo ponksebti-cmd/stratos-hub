@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   ArrowUpRight,
   MessageSquare,
@@ -8,12 +9,17 @@ import {
   TrendingUp,
   TrendingDown,
   Loader2,
+  Sparkles,
+  Send,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Stratos Hub" }] }),
@@ -30,6 +36,9 @@ const statusColor: Record<string, string> = {
 
 function Dashboard() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [quickDraft, setQuickDraft] = useState("");
 
   const { data: leads = [], isLoading: leadsLoading } = useQuery({
     queryKey: ["leads"],
@@ -40,6 +49,34 @@ function Dashboard() {
     queryKey: ["chat-sessions"],
     queryFn: () => api.chat.sessions(),
   });
+
+  const createSessionMutation = useMutation({
+    mutationFn: () => api.chat.createSession(),
+    onError: () => toast.error("Failed to create conversation"),
+  });
+
+  const handleQuickChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const content = quickDraft.trim();
+    if (!content) return;
+
+    try {
+      let activeSessionId = sessions[0]?.id;
+      if (!activeSessionId) {
+        const newSession = await createSessionMutation.mutateAsync();
+        activeSessionId = newSession.id;
+        queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
+      }
+
+      // Navigate to /chat and set the search parameters or state for immediate sending
+      navigate({
+        to: "/chat",
+        search: { sessionId: activeSessionId, initialMessage: content },
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -114,16 +151,20 @@ function Dashboard() {
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
-            <Card key={k.label}>
+            <Card
+              key={k.label}
+              className="card-pop card-hover shadow-sm border-border/40 overflow-hidden relative group"
+            >
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary/80 scale-y-0 group-hover:scale-y-100 transition-transform duration-200" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">{k.label}</div>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-sm text-muted-foreground font-medium">{k.label}</div>
+                  <Icon className="h-4 w-4 text-muted-foreground/80 group-hover:text-primary transition-colors duration-200" />
                 </div>
-                <div className="mt-2 text-2xl font-semibold">{k.value}</div>
+                <div className="mt-2 text-2xl font-bold tracking-tight">{k.value}</div>
                 {k.trend !== undefined && k.trend !== 0 ? (
                   <div
-                    className={`mt-1 text-xs flex items-center gap-0.5 ${k.trend > 0 ? "text-success" : "text-destructive"}`}
+                    className={`mt-1 text-xs flex items-center gap-0.5 font-medium ${k.trend > 0 ? "text-success" : "text-destructive"}`}
                   >
                     {k.trend > 0 ? (
                       <TrendingUp className="h-3 w-3" />
@@ -133,7 +174,7 @@ function Dashboard() {
                     {Math.abs(k.trend)}% {t("vs prior period")}
                   </div>
                 ) : (
-                  <div className="mt-1 text-xs text-muted-foreground">{k.delta}</div>
+                  <div className="mt-1 text-xs text-muted-foreground font-medium">{k.delta}</div>
                 )}
               </CardContent>
             </Card>
@@ -141,12 +182,51 @@ function Dashboard() {
         })}
       </div>
 
+      {/* Quick AI Copilot Chat */}
+      <Card className="card-pop card-hover shadow-sm border-border/40 overflow-hidden">
+        <CardHeader className="flex flex-row items-center gap-2 pb-2 bg-gradient-to-r from-primary/5 to-transparent">
+          <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+          <CardTitle className="text-base font-semibold">{t("AI Copilot Quick Chat")}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <form onSubmit={handleQuickChatSubmit} className="flex gap-2">
+            <Input
+              value={quickDraft}
+              onChange={(e) => setQuickDraft(e.target.value)}
+              placeholder={t(
+                "Ask me about property listings, draft lead messages, qualify details...",
+              )}
+              className="flex-1 bg-muted/30 border-border/60 focus:border-primary/40 focus:bg-background transition-all duration-200 rounded-xl font-medium text-sm"
+              disabled={createSessionMutation.isPending}
+            />
+            <Button
+              type="submit"
+              size="sm"
+              disabled={!quickDraft.trim() || createSessionMutation.isPending}
+              className="gap-1.5 transition-all duration-200 active:scale-95 rounded-xl px-4 font-semibold shadow-sm"
+            >
+              {createSessionMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <>
+                  <span>{t("Chat")}</span>
+                  <Send className="h-3.5 w-3.5" />
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
       <div className="grid lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">{t("Recent conversations")}</CardTitle>
-            <Link to="/chat" className="text-xs text-primary inline-flex items-center gap-1">
-              {t("View all")} <ArrowUpRight className="h-3 w-3" />
+        <Card className="card-pop card-hover shadow-sm border-border/40">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base font-semibold">{t("Recent conversations")}</CardTitle>
+            <Link
+              to="/chat"
+              className="text-xs text-primary font-bold hover:underline inline-flex items-center gap-1 transition-all"
+            >
+              {t("View all")} <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -155,7 +235,7 @@ function Dashboard() {
                 {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className="flex items-start justify-between border-b last:border-0 pb-3 last:pb-0"
+                    className="flex items-start justify-between border-b border-border/30 last:border-0 pb-3 last:pb-0"
                   >
                     <div className="space-y-1.5 flex-1">
                       <Skeleton className="h-4 w-3/4" />
@@ -171,18 +251,27 @@ function Dashboard() {
               </p>
             ) : (
               sessions.slice(0, 4).map((s) => (
-                <div
+                <Link
                   key={s.id}
-                  className="flex items-start justify-between border-b last:border-0 pb-3 last:pb-0"
+                  to="/chat"
+                  search={{ sessionId: s.id }}
+                  className="flex items-start justify-between border-b border-border/10 hover:border-transparent last:border-0 pb-3 last:pb-0 group/session hover:bg-muted/30 p-2 -mx-2 rounded-xl transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.99]"
                 >
                   <div>
-                    <div className="text-sm font-medium">{s.title}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">
+                    <div className="text-sm font-semibold text-foreground group-hover/session:text-primary transition-colors duration-150 truncate max-w-[220px] sm:max-w-[320px]">
+                      {s.title}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5 font-medium">
                       {new Date(s.updatedAt).toLocaleString()}
                     </div>
                   </div>
-                  <Badge variant="outline">{t("Active")}</Badge>
-                </div>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] font-bold tracking-wide uppercase group-hover/session:bg-primary group-hover/session:text-primary-foreground group-hover/session:border-transparent transition-all duration-200"
+                  >
+                    {t("Active")}
+                  </Badge>
+                </Link>
               ))
             )}
           </CardContent>
