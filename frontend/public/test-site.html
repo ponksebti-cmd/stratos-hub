@@ -3,59 +3,160 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>External Website Test</title>
+    <title>Luxury Homes — Test Site</title>
     <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-        margin: 0;
-        padding: 0;
-        background: #f3f4f6;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #f8f7f4;
+        color: #1a1a1a;
       }
       header {
         background: #111827;
         color: white;
-        padding: 20px;
-        text-align: center;
+        padding: 18px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
       }
-      main {
-        padding: 40px;
-        max-width: 800px;
-        margin: 0 auto;
-        line-height: 1.6;
+      header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
+      header nav a {
+        color: #9ca3af;
+        text-decoration: none;
+        margin-left: 24px;
+        font-size: 0.9rem;
       }
       .hero {
+        background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+        color: white;
+        padding: 80px 40px;
+        text-align: center;
+      }
+      .hero h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 16px; }
+      .hero p { font-size: 1.1rem; color: #9ca3af; max-width: 500px; margin: 0 auto 32px; }
+      .hero button {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .listings {
+        padding: 60px 40px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .listings h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 32px; }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+      }
+      .card {
         background: white;
-        padding: 40px;
         border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      }
+      .card-img {
+        height: 180px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+      }
+      .card-body { padding: 20px; }
+      .card-body h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+      .card-body .price { color: #10b981; font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
+      .card-body p { color: #6b7280; font-size: 0.85rem; }
+      .badge {
+        display: inline-block;
+        background: #d1fae5;
+        color: #065f46;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 99px;
+        margin-bottom: 8px;
+      }
+      .notice {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 16px 20px;
+        margin: 0 40px 40px;
+        font-size: 0.88rem;
+        color: #92400e;
+        max-width: 1100px;
+        margin: 0 auto 32px;
       }
     </style>
   </head>
   <body>
     <header>
-      <h1>Fake Real Estate Co.</h1>
+      <h1>🏡 Luxury Homes</h1>
+      <nav>
+        <a href="#">Buy</a>
+        <a href="#">Rent</a>
+        <a href="#">Sell</a>
+        <a href="#">Contact</a>
+      </nav>
     </header>
-    <main>
-      <div class="hero">
-        <h2>Welcome to our test site!</h2>
-        <p>
-          This is a completely separate HTML file to simulate what happens when a client embeds your
-          widget on their own WordPress, Shopify, or custom HTML website.
-        </p>
-        <p>You should see the floating chat bubble in the bottom right corner.</p>
-      </div>
-    </main>
 
-    <!-- Paste the Stratos Hub Embed Script Here -->
+    <div class="hero">
+      <h2>Find Your Dream Home</h2>
+      <p>Explore premium listings with our AI-powered assistant available 24/7.</p>
+      <button>Browse Listings</button>
+    </div>
+
+    <div class="listings">
+      <div class="notice">
+        💡 <strong>Widget Test Page</strong> — The chat bubble (bottom right) is powered by Stratos Hub. Click it to test the AI assistant live.
+      </div>
+
+      <h3>Featured Properties</h3>
+      <div class="grid">
+        <div class="card">
+          <div class="card-img" style="background:#dbeafe">🏠</div>
+          <div class="card-body">
+            <span class="badge">For Sale</span>
+            <h4>4 Bed Villa, Marbella</h4>
+            <div class="price">€1,250,000</div>
+            <p>4 beds · 3 baths · 320 m² · Sea views</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-img" style="background:#d1fae5">🏢</div>
+          <div class="card-body">
+            <span class="badge">For Rent</span>
+            <h4>Modern Apt, Dubai Marina</h4>
+            <div class="price">AED 12,000/mo</div>
+            <p>2 beds · 2 baths · 110 m² · Marina view</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-img" style="background:#fce7f3">🏡</div>
+          <div class="card-body">
+            <span class="badge">For Sale</span>
+            <h4>3 Bed Townhouse, Lisbon</h4>
+            <div class="price">€580,000</div>
+            <p>3 beds · 2 baths · 190 m² · City centre</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stratos Hub Widget — production ready, works on any website -->
     <script
-      src="http://localhost:5000/widget.js"
+      src="https://stratos-hub.pages.dev/widget.js"
       data-key="951571e4-f4c1-4660-b4ac-3c433d79c55c"
+      data-api="https://stratos-fefe-production.up.railway.app"
       data-color="#10b981"
       data-name="Sarah - Real Estate Agent"
-      data-greeting="Hi there! Looking for a new home?"
+      data-greeting="Hi there! Looking for a new home? I can help you find the perfect property 🏡"
       data-theme="light"
       data-position="right"
     ></script>
