@@ -115,6 +115,8 @@ const server = Bun.serve({
   hostname: "::",
   // Global request body size limit: 20 MB (file uploads can be up to 10 MB per file)
   maxRequestBodySize: 20 * 1024 * 1024,
+  // Pass idleTimeout (in seconds) to prevent 10s timeout during slow tool calls or agent operations
+  idleTimeout: 300,
 
   async fetch(req) {
     const url = new URL(req.url);

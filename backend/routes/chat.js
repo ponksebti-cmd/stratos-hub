@@ -419,7 +419,11 @@ export async function handleSendMessage(req, sessionId) {
         let success = false;
 
         const sendChunk = (text) => {
-          controller.enqueue(`data: ${JSON.stringify({ type: "chunk", text })}\n\n`);
+          try {
+            controller.enqueue(`data: ${JSON.stringify({ type: "chunk", text })}\n\n`);
+          } catch (e) {
+            console.warn("[stream] Failed to send chunk (controller closed/inactive):", e.message);
+          }
         };
 
         try {
@@ -474,9 +478,13 @@ export async function handleSendMessage(req, sessionId) {
 
         if (success) await deductCredits(user.company_id);
 
-        controller.enqueue(`data: ${JSON.stringify({ type: "done", message: { id: assistantMsgId, role: "assistant", content: finalContent, createdAt: replyAt } })}\n\n`);
-        controller.enqueue(`data: [DONE]\n\n`);
-        controller.close();
+        try {
+          controller.enqueue(`data: ${JSON.stringify({ type: "done", message: { id: assistantMsgId, role: "assistant", content: finalContent, createdAt: replyAt } })}\n\n`);
+          controller.enqueue(`data: [DONE]\n\n`);
+          controller.close();
+        } catch (e) {
+          console.warn("[stream] Failed to finalise stream (controller closed):", e.message);
+        }
       }
     });
 
@@ -663,7 +671,11 @@ export async function handleWidgetChat(req) {
     const stream = new ReadableStream({
       async start(controller) {
         const sendEvent = (data) => {
-          controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
+          try {
+            controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
+          } catch (e) {
+            console.warn("[widget stream] Failed to send event (controller closed/inactive):", e.message);
+          }
         };
 
         try {
@@ -739,7 +751,11 @@ export async function handleWidgetChat(req) {
           message: cleanReply,
           sessionId: activeSessionId
         });
-        controller.close();
+        try {
+          controller.close();
+        } catch (e) {
+          console.warn("[widget stream] Failed to close controller:", e.message);
+        }
       }
     });
 
