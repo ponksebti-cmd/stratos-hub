@@ -40,11 +40,6 @@ const cfHeaders = `
   Cache-Control: public, max-age=0, must-revalidate
 `;
 
-// Cloudflare Pages redirects for SPA routing
-const cfRedirects = `
-/* /index.html 200
-`;
-
 export default defineConfig({
   plugins: [
     TanStackRouterVite({ target: "react", autoCodeSplitting: true }),
@@ -56,9 +51,6 @@ export default defineConfig({
       writeBundle() {
         const headersPath = resolve(__dirname, "dist/client/_headers");
         writeFileSync(headersPath, cfHeaders.trim());
-
-        const redirectsPath = resolve(__dirname, "dist/client/_redirects");
-        writeFileSync(redirectsPath, cfRedirects.trim());
       },
     },
   ],
