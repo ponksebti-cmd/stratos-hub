@@ -44,13 +44,8 @@
   var THEME = script.getAttribute("data-theme") || "light";
   var POSITION = script.getAttribute("data-position") || "right";
 
-  var BASE_URL;
-  try {
-    BASE_URL = new URL(script.src).origin;
-  } catch (_) {
-    BASE_URL = window.location.origin;
-  }
-  if (!BASE_URL) BASE_URL = window.location.origin;
+  var API_URL = script.getAttribute("data-api");
+  var BASE_URL = API_URL || "https://stratos-fefe-production.up.railway.app";
 
   // ── Color helpers ────────────────────────────────────────────────────────
   function hexToRgb(h) {

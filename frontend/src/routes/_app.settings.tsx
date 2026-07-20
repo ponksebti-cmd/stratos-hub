@@ -272,8 +272,9 @@ function Settings() {
   const embedCode = [
     `<!-- Stratos Hub Widget — paste before </body> -->`,
     `<script`,
-    `  src="${typeof window !== "undefined" ? window.location.origin : ""}/widget.js"`,
+    `  src="https://stratos-hub.pages.dev/widget.js"`,
     `  data-key="${widgetKey}"`,
+    `  data-api="https://stratos-fefe-production.up.railway.app"`,
     `  data-color="${wColor}"`,
     `  data-name="${wName}"`,
     `  data-greeting="${wGreeting}"`,
