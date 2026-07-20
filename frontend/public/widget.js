@@ -44,13 +44,13 @@
   var THEME = script.getAttribute("data-theme") || "light";
   var POSITION = script.getAttribute("data-position") || "right";
 
-  var BASE_URL;
+  var BASE_URL = "https://stratos-hub.pages.dev";
   try {
-    BASE_URL = new URL(script.src).origin;
-  } catch (_) {
-    BASE_URL = window.location.origin;
-  }
-  if (!BASE_URL) BASE_URL = window.location.origin;
+    var origin = new URL(script.src).origin;
+    if (origin && (origin.indexOf("localhost") !== -1 || origin.indexOf("127.0.0.1") !== -1)) {
+      BASE_URL = origin;
+    }
+  } catch (_) {}
 
   // ── Color helpers ────────────────────────────────────────────────────────
   function hexToRgb(h) {
