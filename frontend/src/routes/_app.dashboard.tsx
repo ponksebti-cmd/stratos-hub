@@ -68,6 +68,7 @@ function Dashboard() {
         queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
       }
 
+      setQuickDraft("");
       // Navigate to /chat and set the search parameters or state for immediate sending
       navigate({
         to: "/chat",
@@ -153,9 +154,9 @@ function Dashboard() {
           return (
             <Card
               key={k.label}
-              className="card-pop card-hover shadow-sm border-border/40 overflow-hidden relative group"
+              className="card-pop shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-border/40 overflow-hidden relative group"
             >
-              <div className="absolute top-0 left-0 w-1 h-full bg-primary/80 scale-y-0 group-hover:scale-y-100 transition-transform duration-200" />
+              <div className="absolute top-0 left-0 w-1 h-full bg-primary/80 -translate-x-full group-hover:translate-x-0 transition-transform duration-200" />
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-muted-foreground font-medium">{k.label}</div>
@@ -267,7 +268,7 @@ function Dashboard() {
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-[10px] font-bold tracking-wide uppercase group-hover/session:bg-primary group-hover/session:text-primary-foreground group-hover/session:border-transparent transition-all duration-200"
+                    className="text-[10px] font-bold tracking-wide uppercase hover:bg-primary/10 hover:text-primary group-hover/session:bg-primary group-hover/session:text-primary-foreground group-hover/session:border-transparent transition-all duration-200"
                   >
                     {t("Active")}
                   </Badge>

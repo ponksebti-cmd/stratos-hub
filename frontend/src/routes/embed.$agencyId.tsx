@@ -246,28 +246,35 @@ function EmbedWidget() {
       .then((res) => res.json())
       .then((data) => {
         if (!data.error) {
-          setConfig((prev) => ({ ...prev, ...data }));
-          setMessages((m) => {
-            if (m.length === 1 && m[0].id === "welcome") {
-              return [
-                { ...m[0], content: data.greeting || prevGreeting, createdAt: m[0].createdAt },
-              ];
+          setConfig((prev) => {
+            const nextColor = data.color || prev.color;
+            const nextGreeting = data.greeting || prev.greeting;
+
+            setMessages((m) => {
+              if (m.length === 1 && m[0].id === "welcome") {
+                return [{ ...m[0], content: nextGreeting, createdAt: m[0].createdAt }];
+              }
+              return m;
+            });
+
+            if (window.parent) {
+              window.parent.postMessage(
+                {
+                  type: "stratos_widget_config",
+                  color: nextColor,
+                  position: data.position || "right",
+                },
+                "*",
+              );
             }
-            return m;
+
+            return { ...prev, ...data };
           });
-          if (window.parent) {
-            window.parent.postMessage(
-              {
-                type: "stratos_widget_config",
-                color: data.color || prevColor,
-                position: data.position || "right",
-              },
-              "*",
-            );
-          }
         }
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error("Failed to load widget config:", err);
+      });
 
     const savedSessionId = localStorage.getItem(`sh_session_${agencyId}`);
     if (savedSessionId) {
@@ -479,7 +486,7 @@ function EmbedWidget() {
         <div className="flex-1 min-h-0 overflow-hidden relative">
           {!hasCapturedInfo ? (
             <div className="h-full overflow-y-auto px-6 py-4 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
-              <div className="w-full max-w-[340px] bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-white/5 flex flex-col items-center">
+              <div className="w-full max-w-[340px] bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.15)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.2)] hover:-translate-y-1 transition-all duration-500 border border-slate-100 dark:border-white/5 flex flex-col items-center">
                 <div className="text-center space-y-4 mb-8">
                   <div
                     className="w-16 h-16 rounded-[22px] mx-auto flex items-center justify-center shadow-lg rotate-3 hover:rotate-0 transition-all duration-500"
@@ -605,9 +612,9 @@ function EmbedWidget() {
               {scrolled && (
                 <button
                   onClick={() => bottomRef.current?.scrollIntoView({ behavior: "smooth" })}
-                  className="absolute bottom-4 right-4 h-7 w-7 rounded-full bg-white shadow-md border border-black/10 flex items-center justify-center z-10 hover:scale-110 transition-transform"
+                  className="absolute bottom-4 right-4 h-8 w-8 rounded-full bg-white dark:bg-slate-800 shadow-lg border border-slate-200/60 dark:border-white/10 flex items-center justify-center z-10 hover:scale-110 active:scale-95 transition-all animate-bounce"
                 >
-                  <ChevronDown className="h-4 w-4 text-gray-600" />
+                  <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                 </button>
               )}
 
@@ -619,10 +626,10 @@ function EmbedWidget() {
                       key={q}
                       onClick={() => send(t(q))}
                       className={cn(
-                        "text-[12px] px-4 py-2.5 rounded-2xl border font-semibold shadow-sm transition-all duration-200 active:scale-95",
+                        "text-[12px] px-4 py-2.5 rounded-2xl border font-semibold shadow-sm transition-all duration-200 active:scale-95 hover:scale-105 hover:-translate-y-0.5 hover:shadow-md hover:border-indigo-400 dark:hover:border-white/40",
                         dark
-                          ? "border-white/10 text-white/80 hover:border-white/30 hover:bg-white/10 bg-white/5"
-                          : "border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50/50 bg-white",
+                          ? "border-white/10 text-white/80 hover:bg-white/10 bg-white/5"
+                          : "border-slate-200 text-slate-600 hover:bg-indigo-50/50 bg-white",
                       )}
                     >
                       {t(q)}

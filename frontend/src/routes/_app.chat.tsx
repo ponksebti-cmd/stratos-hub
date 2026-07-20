@@ -10,6 +10,7 @@ import {
   DollarSign,
   FileText,
   GitCompareArrows,
+  AlertCircle,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -65,13 +66,13 @@ const starterSuggestions = [
 
 function TypingDots() {
   return (
-    <div className="flex justify-start msg-ai">
-      <div className="bg-muted rounded-2xl px-4 py-3.5 flex items-center gap-1.5">
+    <div className="flex justify-start msg-ai animate-in fade-in slide-in-from-left-2 duration-300">
+      <div className="bg-muted rounded-2xl px-4 py-3.5 flex items-center gap-1.5 shadow-sm border border-border/10">
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="w-2 h-2 rounded-full bg-muted-foreground/70 animate-bounce"
-            style={{ animationDelay: `${i * 0.18}s`, animationDuration: "1s" }}
+            className="w-2.5 h-2.5 rounded-full bg-primary/60 animate-bounce"
+            style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
           />
         ))}
       </div>
@@ -204,8 +205,17 @@ function Chat() {
       queryClient.invalidateQueries({ queryKey: ["leads"] });
       queryClient.invalidateQueries({ queryKey: ["usage"] });
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Failed to send message");
-      setLocalMessages((m) => m.filter((x) => x.id !== optimisticUser.id && x.id !== aiMessageId));
+      const errorMessage = (err as Error).message ?? "Failed to send message";
+      toast.error(errorMessage);
+      const errorMsgId = crypto.randomUUID();
+      const errorAi: Message & { isError?: boolean } = {
+        id: errorMsgId,
+        role: "assistant",
+        content: errorMessage,
+        createdAt: new Date().toISOString(),
+        isError: true,
+      };
+      setLocalMessages((m) => [...m.filter((x) => x.id !== aiMessageId), errorAi]);
     } finally {
       setSending(false);
     }
@@ -223,7 +233,8 @@ function Chat() {
         window.location.pathname + (paramSessionId ? `?sessionId=${paramSessionId}` : ""),
       );
     }
-  }, [paramInitialMessage, activeId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramInitialMessage, activeId, paramSessionId]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4 h-[calc(100vh-9rem)]">
@@ -341,11 +352,12 @@ function Chat() {
           ) : (
             localMessages.map((m) => {
               const { thoughtProcess, cleanContent } = parseMessage(m.content);
+              const isError = (m as Message & { isError?: boolean }).isError;
               return (
                 <div
                   key={m.id}
                   className={cn(
-                    "flex",
+                    "flex animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out",
                     m.role === "user" ? "justify-end msg-user" : "justify-start msg-ai",
                   )}
                 >
@@ -354,10 +366,12 @@ function Chat() {
                       "max-w-[80%] rounded-2xl px-4 py-2 text-sm flex flex-col gap-2",
                       m.role === "user"
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-foreground",
+                        : isError
+                          ? "bg-destructive/10 border border-destructive/20 text-destructive"
+                          : "bg-muted text-foreground",
                     )}
                   >
-                    {m.role === "assistant" && (
+                    {m.role === "assistant" && !isError && (
                       <div className="flex items-center gap-1 text-xs opacity-70">
                         <Sparkles className="h-3 w-3" /> {t("Assistant")}
                       </div>
@@ -376,12 +390,43 @@ function Chat() {
                       </details>
                     )}
 
-                    <div
-                      dir="auto"
-                      className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:my-2 prose-p:my-2"
-                    >
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent}</ReactMarkdown>
-                    </div>
+                    {isError ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2 font-semibold text-sm">
+                          <AlertCircle className="h-4 w-4" />
+                          <span>{t("Message failed to send")}</span>
+                        </div>
+                        <p className="text-xs opacity-90">{m.content}</p>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            // Find the preceding user message to retry
+                            const index = localMessages.indexOf(m);
+                            const prevUserMsg = index > 0 ? localMessages[index - 1] : null;
+                            if (prevUserMsg && prevUserMsg.role === "user") {
+                              // Remove error message and retry
+                              setLocalMessages((curr) => curr.filter((x) => x.id !== m.id));
+                              send(prevUserMsg.content);
+                            } else {
+                              // Retry with the same input draft or content
+                              setLocalMessages((curr) => curr.filter((x) => x.id !== m.id));
+                              send(cleanContent);
+                            }
+                          }}
+                          className="self-start text-xs font-bold h-7 border-destructive/20 hover:bg-destructive/15 text-destructive mt-1 bg-background active:scale-95 transition-transform"
+                        >
+                          {t("Retry sending")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div
+                        dir="auto"
+                        className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:my-2 prose-p:my-2"
+                      >
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent}</ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

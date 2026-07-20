@@ -80,7 +80,7 @@ function RootComponent() {
   useEffect(() => {
     document.documentElement.lang = i18n.language;
     document.documentElement.dir = i18n.dir();
-  }, [i18n.language]);
+  }, [i18n.language, i18n]);
 
   return (
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
