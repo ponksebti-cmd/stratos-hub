@@ -57,9 +57,6 @@ export default defineConfig({
       writeBundle() {
         const headersPath = resolve(__dirname, "dist/client/_headers");
         writeFileSync(headersPath, cfHeaders.trim());
-
-        const redirectsPath = resolve(__dirname, "dist/client/_redirects");
-        writeFileSync(redirectsPath, cfRedirects.trim());
       },
     },
   ],
