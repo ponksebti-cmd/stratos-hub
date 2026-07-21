@@ -199,36 +199,52 @@ export const api = {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let done = false;
-      let finalMessage = null;
+      let finalMessage: Message | null = null;
+      let accumulatedText = "";
+      let buffer = "";
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
-          const chunkStr = decoder.decode(value, { stream: true });
-          const lines = chunkStr.split("\n");
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          // Keep last incomplete line in the buffer
+          buffer = lines.pop() ?? "";
           for (const line of lines) {
             if (line.startsWith("data: ")) {
-              const dataStr = line.replace("data: ", "").trim();
+              const dataStr = line.slice(6).trim();
               if (dataStr === "[DONE]") {
-                // Done
+                // stream finished
               } else {
                 try {
                   const data = JSON.parse(dataStr);
                   if (data.type === "chunk") {
+                    accumulatedText += data.text;
                     onChunk(data.text);
-                  } else if (data.type === "done") {
+                  } else if (data.type === "done" && data.message) {
                     finalMessage = data.message;
                   }
-                } catch (err) {
-                  console.error("Failed to parse event stream line:", err);
+                } catch {
+                  // ignore malformed SSE lines
                 }
               }
             }
           }
         }
       }
-      return finalMessage as Message;
+
+      // If backend never sent a `done` event, reconstruct from streamed chunks
+      if (!finalMessage) {
+        finalMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: accumulatedText,
+          createdAt: new Date().toISOString(),
+        } as Message;
+      }
+
+      return finalMessage;
     },
   },
   leads: {

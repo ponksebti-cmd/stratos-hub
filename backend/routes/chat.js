@@ -488,7 +488,13 @@ export async function handleSendMessage(req, sessionId) {
       }
     });
 
-    return new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    return new Response(stream, { 
+      headers: { 
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive"
+      } 
+    });
   }
 
   // --- Non-streaming code path ---
@@ -589,7 +595,13 @@ export async function handleWidgetChat(req) {
   const [company] = await db`SELECT credits FROM companies WHERE id = ${agencyId} LIMIT 1`;
   if (!company || company.credits < CREDITS_PER_CHAT) {
     if (isStream) {
-      return new Response("data: {\"type\":\"done\",\"message\":\"I'm currently unavailable. Please contact the agency directly.\"}\n\n", { headers: { "Content-Type": "text/event-stream" } });
+      return new Response("data: {\"type\":\"done\",\"message\":\"I'm currently unavailable. Please contact the agency directly.\"}\n\n", { 
+        headers: { 
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache, no-transform",
+          "Connection": "keep-alive"
+        } 
+      });
     }
     return Response.json({ reply: "I'm currently unavailable. Please contact the agency directly." });
   }
@@ -613,7 +625,13 @@ export async function handleWidgetChat(req) {
 
   if (!apiKey) {
     if (isStream) {
-      return new Response("data: {\"type\":\"done\",\"message\":\"AI is not configured for this agency.\"}\n\n", { headers: { "Content-Type": "text/event-stream" } });
+      return new Response("data: {\"type\":\"done\",\"message\":\"AI is not configured for this agency.\"}\n\n", { 
+        headers: { 
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache, no-transform",
+          "Connection": "keep-alive"
+        } 
+      });
     }
     return Response.json({ reply: "AI is not configured for this agency." });
   }
@@ -759,7 +777,13 @@ export async function handleWidgetChat(req) {
       }
     });
 
-    return new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
+    return new Response(stream, { 
+      headers: { 
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive"
+      } 
+    });
   }
 
   // --- Non-streaming code path ---
