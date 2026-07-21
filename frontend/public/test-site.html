@@ -3,160 +3,473 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Luxury Homes — Test Site</title>
+    <title>Luxury Homes — Stratos Hub Widget Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body {
-        font-family: system-ui, -apple-system, sans-serif;
-        background: #f8f7f4;
-        color: #1a1a1a;
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --brand: #6366f1;
+        --brand-dark: #4f46e5;
+        --emerald: #10b981;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --text: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
       }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      /* ── Header ───────────────────────────────────────────────────────── */
       header {
-        background: #111827;
-        color: white;
-        padding: 18px 40px;
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: 0 40px;
+        height: 64px;
         display: flex;
         align-items: center;
         justify-content: space-between;
       }
-      header h1 { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.5px; }
-      header nav a {
-        color: #9ca3af;
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: var(--text);
         text-decoration: none;
-        margin-left: 24px;
-        font-size: 0.9rem;
       }
-      .hero {
-        background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+      .logo-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
         color: white;
-        padding: 80px 40px;
-        text-align: center;
+        font-size: 16px;
       }
-      .hero h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 16px; }
-      .hero p { font-size: 1.1rem; color: #9ca3af; max-width: 500px; margin: 0 auto 32px; }
-      .hero button {
-        background: #10b981;
+      nav { display: flex; align-items: center; gap: 28px; }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: color 0.15s;
+      }
+      nav a:hover { color: var(--text); }
+      .nav-cta {
+        background: var(--brand);
+        color: white !important;
+        padding: 8px 18px;
+        border-radius: 8px;
+        font-size: 0.8rem !important;
+        font-weight: 600 !important;
+        transition: background 0.15s !important;
+      }
+      .nav-cta:hover { background: var(--brand-dark) !important; }
+
+      /* ── Hero ─────────────────────────────────────────────────────────── */
+      .hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        color: white;
+        padding: 90px 40px 100px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 0%, rgba(99,102,241,0.3) 0%, transparent 70%);
+        pointer-events: none;
+      }
+      .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(99,102,241,0.2);
+        border: 1px solid rgba(99,102,241,0.4);
+        color: #a5b4fc;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 99px;
+        margin-bottom: 24px;
+        letter-spacing: 0.02em;
+      }
+      .hero h1 {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        font-weight: 800;
+        line-height: 1.12;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero p {
+        font-size: 1.1rem;
+        color: rgba(255,255,255,0.6);
+        max-width: 520px;
+        margin: 0 auto 36px;
+        line-height: 1.7;
+      }
+      .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
         color: white;
         border: none;
-        padding: 14px 32px;
-        border-radius: 8px;
-        font-size: 1rem;
+        padding: 13px 28px;
+        border-radius: 10px;
+        font-size: 0.95rem;
         font-weight: 600;
         cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s;
+        box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+        font-family: inherit;
       }
+      .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 28px rgba(99,102,241,0.5); }
+      .btn-secondary {
+        background: rgba(255,255,255,0.08);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.15);
+        padding: 13px 28px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+        backdrop-filter: blur(8px);
+        font-family: inherit;
+      }
+      .btn-secondary:hover { background: rgba(255,255,255,0.14); }
+
+      /* ── Stats bar ────────────────────────────────────────────────────── */
+      .stats-bar {
+        background: white;
+        border-bottom: 1px solid var(--border);
+        padding: 18px 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 48px;
+      }
+      .stat { text-align: center; }
+      .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--text); }
+      .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+      /* ── Demo notice ──────────────────────────────────────────────────── */
+      .demo-notice {
+        background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(79,70,229,0.06) 100%);
+        border: 1px solid rgba(99,102,241,0.2);
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin: 40px auto;
+        max-width: 1100px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.875rem;
+        color: #4338ca;
+      }
+      .demo-notice-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 14px;
+      }
+
+      /* ── Listings ─────────────────────────────────────────────────────── */
       .listings {
-        padding: 60px 40px;
+        padding: 0 40px 80px;
         max-width: 1100px;
         margin: 0 auto;
       }
-      .listings h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 32px; }
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 28px;
+      }
+      .section-title { font-size: 1.4rem; font-weight: 700; }
+      .section-link { font-size: 0.875rem; color: var(--brand); font-weight: 500; text-decoration: none; }
       .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 24px;
       }
       .card {
         background: white;
-        border-radius: 12px;
+        border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        border: 1px solid var(--border);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
       }
+      .card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
       .card-img {
-        height: 180px;
+        height: 190px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3rem;
+        font-size: 3.5rem;
+        position: relative;
       }
-      .card-body { padding: 20px; }
-      .card-body h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
-      .card-body .price { color: #10b981; font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
-      .card-body p { color: #6b7280; font-size: 0.85rem; }
+      .card-badges {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        display: flex;
+        gap: 6px;
+      }
       .badge {
         display: inline-block;
-        background: #d1fae5;
-        color: #065f46;
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         font-weight: 600;
-        padding: 2px 8px;
+        padding: 3px 10px;
         border-radius: 99px;
-        margin-bottom: 8px;
+        letter-spacing: 0.01em;
       }
-      .notice {
-        background: #fffbeb;
-        border: 1px solid #fde68a;
-        border-radius: 10px;
-        padding: 16px 20px;
-        margin: 0 40px 40px;
-        font-size: 0.88rem;
-        color: #92400e;
-        max-width: 1100px;
-        margin: 0 auto 32px;
+      .badge-sale { background: #dcfce7; color: #15803d; }
+      .badge-rent { background: #dbeafe; color: #1d4ed8; }
+      .badge-featured { background: #fef3c7; color: #b45309; }
+      .card-body { padding: 18px 20px; }
+      .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+      .card-price { color: var(--brand); font-weight: 700; font-size: 1.1rem; margin-bottom: 8px; }
+      .card-meta { color: var(--muted); font-size: 0.8rem; display: flex; align-items: center; gap: 10px; }
+      .card-meta span { display: flex; align-items: center; gap: 4px; }
+
+      /* ── Footer ───────────────────────────────────────────────────────── */
+      footer {
+        background: #0f172a;
+        color: rgba(255,255,255,0.5);
+        text-align: center;
+        padding: 24px 40px;
+        font-size: 0.8rem;
+      }
+      footer strong { color: rgba(255,255,255,0.8); }
+
+      @media (max-width: 640px) {
+        header { padding: 0 20px; }
+        .hero { padding: 60px 20px 70px; }
+        .stats-bar { gap: 24px; padding: 16px 20px; }
+        .listings { padding: 0 20px 60px; }
+        nav { display: none; }
       }
     </style>
   </head>
   <body>
+
+    <!-- Header -->
     <header>
-      <h1>🏡 Luxury Homes</h1>
+      <a class="logo" href="#">
+        <div class="logo-icon">🏡</div>
+        Luxury Homes
+      </a>
       <nav>
         <a href="#">Buy</a>
         <a href="#">Rent</a>
         <a href="#">Sell</a>
-        <a href="#">Contact</a>
+        <a href="#">About</a>
+        <a href="#" class="nav-cta">Contact Us</a>
       </nav>
     </header>
 
+    <!-- Hero -->
     <div class="hero">
-      <h2>Find Your Dream Home</h2>
-      <p>Explore premium listings with our AI-powered assistant available 24/7.</p>
-      <button>Browse Listings</button>
+      <div class="hero-badge">✨ AI-Powered Real Estate</div>
+      <h1>Find Your Perfect<br/>Dream Property</h1>
+      <p>Explore thousands of premium listings with our intelligent AI assistant available 24/7. Get instant answers, personalized recommendations, and more.</p>
+      <div class="hero-buttons">
+        <button class="btn-primary">Browse Listings</button>
+        <button class="btn-secondary">How It Works</button>
+      </div>
     </div>
 
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-value">2,400+</div>
+        <div class="stat-label">Active Listings</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">98%</div>
+        <div class="stat-label">Client Satisfaction</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">12k+</div>
+        <div class="stat-label">Happy Families</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">24/7</div>
+        <div class="stat-label">AI Support</div>
+      </div>
+    </div>
+
+    <!-- Listings -->
     <div class="listings">
-      <div class="notice">
-        💡 <strong>Widget Test Page</strong> — The chat bubble (bottom right) is powered by Stratos Hub. Click it to test the AI assistant live.
+
+      <!-- Demo Notice -->
+      <div class="demo-notice">
+        <div class="demo-notice-icon">💬</div>
+        <div>
+          <strong>Stratos Hub Widget Demo</strong> — The chat bubble in the <strong>bottom right corner</strong> is powered by Stratos Hub AI. Click it to test the live AI assistant!
+        </div>
       </div>
 
-      <h3>Featured Properties</h3>
+      <div class="section-header">
+        <div class="section-title">Featured Properties</div>
+        <a class="section-link" href="#">View all →</a>
+      </div>
+
       <div class="grid">
         <div class="card">
-          <div class="card-img" style="background:#dbeafe">🏠</div>
+          <div class="card-img" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
+            🏠
+            <div class="card-badges">
+              <span class="badge badge-sale">For Sale</span>
+              <span class="badge badge-featured">⭐ Featured</span>
+            </div>
+          </div>
           <div class="card-body">
-            <span class="badge">For Sale</span>
-            <h4>4 Bed Villa, Marbella</h4>
-            <div class="price">€1,250,000</div>
-            <p>4 beds · 3 baths · 320 m² · Sea views</p>
+            <div class="card-title">4 Bed Villa, Marbella</div>
+            <div class="card-price">€1,250,000</div>
+            <div class="card-meta">
+              <span>🛏 4 beds</span>
+              <span>🚿 3 baths</span>
+              <span>📐 320 m²</span>
+            </div>
           </div>
         </div>
+
         <div class="card">
-          <div class="card-img" style="background:#d1fae5">🏢</div>
+          <div class="card-img" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
+            🏢
+            <div class="card-badges">
+              <span class="badge badge-rent">For Rent</span>
+            </div>
+          </div>
           <div class="card-body">
-            <span class="badge">For Rent</span>
-            <h4>Modern Apt, Dubai Marina</h4>
-            <div class="price">AED 12,000/mo</div>
-            <p>2 beds · 2 baths · 110 m² · Marina view</p>
+            <div class="card-title">Modern Apt, Dubai Marina</div>
+            <div class="card-price">AED 12,000/mo</div>
+            <div class="card-meta">
+              <span>🛏 2 beds</span>
+              <span>🚿 2 baths</span>
+              <span>📐 110 m²</span>
+            </div>
           </div>
         </div>
+
         <div class="card">
-          <div class="card-img" style="background:#fce7f3">🏡</div>
+          <div class="card-img" style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);">
+            🏡
+            <div class="card-badges">
+              <span class="badge badge-sale">For Sale</span>
+            </div>
+          </div>
           <div class="card-body">
-            <span class="badge">For Sale</span>
-            <h4>3 Bed Townhouse, Lisbon</h4>
-            <div class="price">€580,000</div>
-            <p>3 beds · 2 baths · 190 m² · City centre</p>
+            <div class="card-title">3 Bed Townhouse, Lisbon</div>
+            <div class="card-price">€580,000</div>
+            <div class="card-meta">
+              <span>🛏 3 beds</span>
+              <span>🚿 2 baths</span>
+              <span>📐 190 m²</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-img" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
+            🏰
+            <div class="card-badges">
+              <span class="badge badge-sale">For Sale</span>
+              <span class="badge badge-featured">⭐ Featured</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">Penthouse, Monaco</div>
+            <div class="card-price">€8,500,000</div>
+            <div class="card-meta">
+              <span>🛏 5 beds</span>
+              <span>🚿 4 baths</span>
+              <span>📐 650 m²</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-img" style="background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);">
+            🏗
+            <div class="card-badges">
+              <span class="badge badge-rent">For Rent</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">Studio Loft, Paris</div>
+            <div class="card-price">€2,800/mo</div>
+            <div class="card-meta">
+              <span>🛏 Studio</span>
+              <span>🚿 1 bath</span>
+              <span>📐 48 m²</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-img" style="background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);">
+            🌴
+            <div class="card-badges">
+              <span class="badge badge-sale">For Sale</span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">Beachfront Villa, Bali</div>
+            <div class="card-price">$920,000</div>
+            <div class="card-meta">
+              <span>🛏 3 beds</span>
+              <span>🚿 3 baths</span>
+              <span>📐 280 m²</span>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Stratos Hub Widget — production ready, works on any website -->
+    <!-- Footer -->
+    <footer>
+      © 2025 <strong>Luxury Homes</strong> · AI chat powered by <strong>Stratos Hub</strong> · Demo page
+    </footer>
+
+    <!-- ✅ Stratos Hub Widget — loads from Cloudflare Pages CDN, works globally -->
     <script
       src="https://stratos-hub.pages.dev/widget.js"
       data-key="951571e4-f4c1-4660-b4ac-3c433d79c55c"
       data-api="https://stratos-fefe-production.up.railway.app"
-      data-color="#10b981"
-      data-name="Sarah - Real Estate Agent"
-      data-greeting="Hi there! Looking for a new home? I can help you find the perfect property 🏡"
+      data-color="#6366f1"
+      data-name="Sarah - Property Assistant"
+      data-greeting="Hi there! 👋 Looking for your dream home? I can help you find the perfect property, answer questions about listings, and more!"
       data-theme="light"
       data-position="right"
     ></script>
