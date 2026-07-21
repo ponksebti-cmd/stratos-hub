@@ -23,10 +23,19 @@ export const SECURITY_HEADERS = {
     : {}),
 };
 
-export function applySecurityHeaders(response) {
+export function applySecurityHeaders(response, pathname) {
+  const isEmbed = pathname && pathname.startsWith("/embed/");
   const headers = new Headers(response.headers);
   for (const [k, v] of Object.entries(SECURITY_HEADERS)) {
+    // Skip frame-blocking headers for embed routes (they need to load inside iframes)
+    if (isEmbed && (k === "X-Frame-Options" || k === "Content-Security-Policy")) continue;
     if (!headers.has(k)) headers.set(k, v);
+  }
+  if (isEmbed) {
+    // Allow embedding from any origin
+    headers.set("Content-Security-Policy",
+      "default-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; connect-src *; img-src * data:; frame-ancestors *;"
+    );
   }
   // Remove server fingerprinting headers
   headers.delete("Server");
@@ -52,6 +61,7 @@ const PUBLIC_CORS_PATHS = [
   "/chat/instagram/webhook",
   "/chat/tiktok/webhook",
   "/widget/",
+  "/embed/",
   "/health",
 ];
 

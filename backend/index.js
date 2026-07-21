@@ -16,6 +16,7 @@ import { handleInstagramVerification, handleInstagramMessage } from "./routes/in
 import { handleTikTokVerification, handleTikTokMessage } from "./routes/tiktok.js";
 import { handleListLeads, handleCreateLead, handleUpdateLead, handleDeleteLead } from "./routes/leads.js";
 import { handleGetUsage } from "./routes/usage.js";
+import { handleEmbed } from "./routes/embed.js";
 import {
   handleGetSettings, handleUpdateSettings,
   handleSaveOpenAIKey, handleDeleteOpenAIKey,
@@ -95,7 +96,7 @@ function withCORS(response, pathname, requestOrigin) {
 }
 
 function finalise(response, pathname, requestOrigin) {
-  return applySecurityHeaders(withCORS(response, pathname, requestOrigin));
+  return applySecurityHeaders(withCORS(response, pathname, requestOrigin), pathname);
 }
 
 // ── URL pattern matching ──────────────────────────────────────────────────────
@@ -217,6 +218,12 @@ const server = Bun.serve({
 
     // ── Usage ──
     else if (method === "GET" && path === "/usage") response = await handleGetUsage(req);
+
+    // ── Embed iframe ──
+    else if (method === "GET" && match(path, "/embed/:id")) {
+      const [id] = match(path, "/embed/:id");
+      response = await handleEmbed(req, id);
+    }
 
     // ── Settings ──
     else if (method === "GET"    && path === "/settings")               response = await handleGetSettings(req);
