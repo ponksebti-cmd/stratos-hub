@@ -583,10 +583,12 @@ export async function handleSendMessage(req, sessionId) {
 
 export async function handleWidgetChat(req) {
   const url = new URL(req.url);
-  const isStream = url.searchParams.get("stream") === "true";
 
   let body;
   try { body = await req.json(); } catch { return Response.json({ error: "Invalid JSON" }, { status: 400 }); }
+
+  // isStream can be sent as a URL query param OR in the request body
+  const isStream = url.searchParams.get("stream") === "true" || body?.stream === true;
 
   const { agencyId, message, sessionId: clientSessionId, leadInfo } = body ?? {};
   if (!agencyId || !message?.trim()) {
@@ -595,7 +597,23 @@ export async function handleWidgetChat(req) {
 
   // 1. Get company API keys and check credits
   const [company] = await db`SELECT credits FROM companies WHERE id = ${agencyId} LIMIT 1`;
-  if (!company || company.credits < CREDITS_PER_CHAT) {
+  if (!company) {
+    console.warn(`[widget] Agency not found: ${agencyId}`);
+    if (isStream) {
+      return new Response("data: {\"type\":\"done\",\"message\":\"Agency not found. Please check the widget configuration.\"}\n\n", { 
+        headers: { 
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache, no-transform",
+          "Connection": "keep-alive",
+          "X-Accel-Buffering": "no",
+          "Content-Encoding": "none"
+        } 
+      });
+    }
+    return Response.json({ reply: "Agency not found. Please check the widget configuration." });
+  }
+  if (company.credits < CREDITS_PER_CHAT) {
+    console.warn(`[widget] Insufficient credits for agency ${agencyId}: ${company.credits}`);
     if (isStream) {
       return new Response("data: {\"type\":\"done\",\"message\":\"I'm currently unavailable. Please contact the agency directly.\"}\n\n", { 
         headers: { 
