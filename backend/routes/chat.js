@@ -492,7 +492,9 @@ export async function handleSendMessage(req, sessionId) {
       headers: { 
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
-        "Connection": "keep-alive"
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+        "Content-Encoding": "none"
       } 
     });
   }
@@ -599,7 +601,9 @@ export async function handleWidgetChat(req) {
         headers: { 
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache, no-transform",
-          "Connection": "keep-alive"
+          "Connection": "keep-alive",
+          "X-Accel-Buffering": "no",
+          "Content-Encoding": "none"
         } 
       });
     }
@@ -629,7 +633,9 @@ export async function handleWidgetChat(req) {
         headers: { 
           "Content-Type": "text/event-stream",
           "Cache-Control": "no-cache, no-transform",
-          "Connection": "keep-alive"
+          "Connection": "keep-alive",
+          "X-Accel-Buffering": "no",
+          "Content-Encoding": "none"
         } 
       });
     }
@@ -706,9 +712,7 @@ export async function handleWidgetChat(req) {
             isFinalIteration = attempts === 5; // Safety fallback, though usually we break early
 
             const onChunk = (chunk) => {
-              if (isFinalIteration) {
-                sendEvent({ type: "chunk", text: chunk });
-              }
+              sendEvent({ type: "chunk", text: chunk });
             };
 
             const responseMessage = await callLLM(apiKey, currentHistory, modelName, onChunk, customPrompt);
@@ -781,7 +785,9 @@ export async function handleWidgetChat(req) {
       headers: { 
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache, no-transform",
-        "Connection": "keep-alive"
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+        "Content-Encoding": "none"
       } 
     });
   }
