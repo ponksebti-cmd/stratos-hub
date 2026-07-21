@@ -595,37 +595,47 @@ export async function handleWidgetChat(req) {
     return Response.json({ error: "agencyId and message required" }, { status: 400 });
   }
 
-  // 1. Get company API keys and check credits
-  const [company] = await db`SELECT credits FROM companies WHERE id = ${agencyId} LIMIT 1`;
-  if (!company) {
-    console.warn(`[widget] Agency not found: ${agencyId}`);
-    if (isStream) {
-      return new Response("data: {\"type\":\"done\",\"message\":\"Agency not found. Please check the widget configuration.\"}\n\n", { 
-        headers: { 
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache, no-transform",
-          "Connection": "keep-alive",
-          "X-Accel-Buffering": "no",
-          "Content-Encoding": "none"
-        } 
-      });
+  // 1. Handle "demo" mode for the test-site preview
+  if (agencyId === "demo") {
+    if (!process.env.GEMINI_API_KEY) {
+      if (isStream) {
+        return new Response("data: {\"type\":\"done\",\"message\":\"Demo mode unavailable (no global API key).\"}\n\n", { headers: { "Content-Type": "text/event-stream" } });
+      }
+      return Response.json({ reply: "Demo mode unavailable (no global API key)." });
     }
-    return Response.json({ reply: "Agency not found. Please check the widget configuration." });
-  }
-  if (company.credits < CREDITS_PER_CHAT) {
-    console.warn(`[widget] Insufficient credits for agency ${agencyId}: ${company.credits}`);
-    if (isStream) {
-      return new Response("data: {\"type\":\"done\",\"message\":\"I'm currently unavailable. Please contact the agency directly.\"}\n\n", { 
-        headers: { 
-          "Content-Type": "text/event-stream",
-          "Cache-Control": "no-cache, no-transform",
-          "Connection": "keep-alive",
-          "X-Accel-Buffering": "no",
-          "Content-Encoding": "none"
-        } 
-      });
+  } else {
+    // Regular agency flow: Get company API keys and check credits
+    const [company] = await db`SELECT credits FROM companies WHERE id = ${agencyId} LIMIT 1`;
+    if (!company) {
+      console.warn(`[widget] Agency not found: ${agencyId}`);
+      if (isStream) {
+        return new Response("data: {\"type\":\"done\",\"message\":\"Agency not found. Please check the widget configuration.\"}\n\n", { 
+          headers: { 
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Content-Encoding": "none"
+          } 
+        });
+      }
+      return Response.json({ reply: "Agency not found. Please check the widget configuration." });
     }
-    return Response.json({ reply: "I'm currently unavailable. Please contact the agency directly." });
+    if (company.credits < CREDITS_PER_CHAT) {
+      console.warn(`[widget] Insufficient credits for agency ${agencyId}: ${company.credits}`);
+      if (isStream) {
+        return new Response("data: {\"type\":\"done\",\"message\":\"I'm currently unavailable. Please contact the agency directly.\"}\n\n", { 
+          headers: { 
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+            "Content-Encoding": "none"
+          } 
+        });
+      }
+      return Response.json({ reply: "I'm currently unavailable. Please contact the agency directly." });
+    }
   }
 
   // 2. Fetch API keys
@@ -633,17 +643,19 @@ export async function handleWidgetChat(req) {
   let apiKey = process.env.GEMINI_API_KEY;
   let modelName = process.env.GEMINI_MODEL ?? "gemini-3.5-flash";
 
-  const [settings] = await db`SELECT openai_key_enc, openai_key_iv, openai_key_tag, system_prompt FROM settings WHERE company_id = ${agencyId} LIMIT 1`;
-  
-  if (!apiKey && settings?.openai_key_enc) {
-    try {
-      apiKey = await decryptKey({
-        enc: settings.openai_key_enc, iv: settings.openai_key_iv, tag: settings.openai_key_tag,
-      });
-    } catch {}
+  let customPrompt = null;
+  if (agencyId !== "demo") {
+    const [settings] = await db`SELECT openai_key_enc, openai_key_iv, openai_key_tag, system_prompt FROM settings WHERE company_id = ${agencyId} LIMIT 1`;
+    
+    if (!apiKey && settings?.openai_key_enc) {
+      try {
+        apiKey = await decryptKey({
+          enc: settings.openai_key_enc, iv: settings.openai_key_iv, tag: settings.openai_key_tag,
+        });
+      } catch {}
+    }
+    customPrompt = settings?.system_prompt;
   }
-
-  const customPrompt = settings?.system_prompt;
 
   if (!apiKey) {
     if (isStream) {
@@ -783,7 +795,8 @@ export async function handleWidgetChat(req) {
 
         await db`UPDATE chat_sessions SET updated_at = ${new Date().toISOString()} WHERE id = ${activeSessionId}`;
         
-        if (success) await deductCredits(agencyId);
+        // Final credit deduction
+        if (success && agencyId !== "demo") await deductCredits(agencyId);
 
         // Send the final message payload down
         sendEvent({
@@ -853,7 +866,7 @@ export async function handleWidgetChat(req) {
 
   await db`UPDATE chat_sessions SET updated_at = ${new Date().toISOString()} WHERE id = ${activeSessionId}`;
 
-  if (success) await deductCredits(agencyId);
+  if (success && agencyId !== "demo") await deductCredits(agencyId);
 
   return Response.json({ reply: cleanReply, sessionId: activeSessionId });
 }

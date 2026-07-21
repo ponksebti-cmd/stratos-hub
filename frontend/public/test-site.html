@@ -462,30 +462,17 @@
       © 2025 <strong>Luxury Homes</strong> · AI chat powered by <strong>Stratos Hub</strong> · Demo page
     </footer>
 
-    <!-- ✅ Stratos Hub Widget — dynamically loaded using ?key= from URL -->
+    <!-- ✅ Stratos Hub Widget — dynamically loaded with demo fallback -->
     <script>
       (function() {
         var params = new URLSearchParams(window.location.search);
-        var key = params.get('key');
+        var key = params.get('key') || 'demo';
         var api = params.get('api') || 'https://stratos-fefe-production.up.railway.app';
         var color = params.get('color') || '#6366f1';
         var name = params.get('name') || 'Sarah - Property Assistant';
         var theme = params.get('theme') || 'light';
         var greeting = params.get('greeting') || 'Hi there! 👋 Looking for your dream home? I can help you find the perfect property, answer questions about listings, and more!';
 
-        if (!key) {
-          // Show a warning and instructions
-          var notice = document.getElementById('demo-notice');
-          var noticeText = document.getElementById('demo-notice-text');
-          if (notice) notice.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)';
-          if (notice) notice.style.borderColor = 'rgba(239,68,68,0.25)';
-          if (notice) notice.style.color = '#b91c1c';
-          if (notice) document.querySelector('.demo-notice-icon').textContent = '⚠️';
-          if (noticeText) noticeText.innerHTML = '<strong>No widget key provided!</strong> Add your agency key to the URL: <br/><code style="background:rgba(0,0,0,0.06);padding:2px 8px;border-radius:4px;font-size:0.85em">?key=YOUR-AGENCY-ID</code><br/><br/>Find your key in the Stratos Hub dashboard under <strong>Settings → Widget</strong>.';
-          return;
-        }
-
-        // Dynamically inject the widget script with the correct key
         var script = document.createElement('script');
         script.src = 'https://stratos-hub.pages.dev/widget.js';
         script.setAttribute('data-key', key);
