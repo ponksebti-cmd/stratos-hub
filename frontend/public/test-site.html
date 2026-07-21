@@ -332,9 +332,9 @@
     <div class="listings">
 
       <!-- Demo Notice -->
-      <div class="demo-notice">
+      <div class="demo-notice" id="demo-notice">
         <div class="demo-notice-icon">💬</div>
-        <div>
+        <div id="demo-notice-text">
           <strong>Stratos Hub Widget Demo</strong> — The chat bubble in the <strong>bottom right corner</strong> is powered by Stratos Hub AI. Click it to test the live AI assistant!
         </div>
       </div>
@@ -462,16 +462,41 @@
       © 2025 <strong>Luxury Homes</strong> · AI chat powered by <strong>Stratos Hub</strong> · Demo page
     </footer>
 
-    <!-- ✅ Stratos Hub Widget — loads from Cloudflare Pages CDN, works globally -->
-    <script
-      src="https://stratos-hub.pages.dev/widget.js"
-      data-key="951571e4-f4c1-4660-b4ac-3c433d79c55c"
-      data-api="https://stratos-fefe-production.up.railway.app"
-      data-color="#6366f1"
-      data-name="Sarah - Property Assistant"
-      data-greeting="Hi there! 👋 Looking for your dream home? I can help you find the perfect property, answer questions about listings, and more!"
-      data-theme="light"
-      data-position="right"
-    ></script>
+    <!-- ✅ Stratos Hub Widget — dynamically loaded using ?key= from URL -->
+    <script>
+      (function() {
+        var params = new URLSearchParams(window.location.search);
+        var key = params.get('key');
+        var api = params.get('api') || 'https://stratos-fefe-production.up.railway.app';
+        var color = params.get('color') || '#6366f1';
+        var name = params.get('name') || 'Sarah - Property Assistant';
+        var theme = params.get('theme') || 'light';
+        var greeting = params.get('greeting') || 'Hi there! 👋 Looking for your dream home? I can help you find the perfect property, answer questions about listings, and more!';
+
+        if (!key) {
+          // Show a warning and instructions
+          var notice = document.getElementById('demo-notice');
+          var noticeText = document.getElementById('demo-notice-text');
+          if (notice) notice.style.background = 'linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)';
+          if (notice) notice.style.borderColor = 'rgba(239,68,68,0.25)';
+          if (notice) notice.style.color = '#b91c1c';
+          if (notice) document.querySelector('.demo-notice-icon').textContent = '⚠️';
+          if (noticeText) noticeText.innerHTML = '<strong>No widget key provided!</strong> Add your agency key to the URL: <br/><code style="background:rgba(0,0,0,0.06);padding:2px 8px;border-radius:4px;font-size:0.85em">?key=YOUR-AGENCY-ID</code><br/><br/>Find your key in the Stratos Hub dashboard under <strong>Settings → Widget</strong>.';
+          return;
+        }
+
+        // Dynamically inject the widget script with the correct key
+        var script = document.createElement('script');
+        script.src = 'https://stratos-hub.pages.dev/widget.js';
+        script.setAttribute('data-key', key);
+        script.setAttribute('data-api', api);
+        script.setAttribute('data-color', color);
+        script.setAttribute('data-name', name);
+        script.setAttribute('data-greeting', greeting);
+        script.setAttribute('data-theme', theme);
+        script.setAttribute('data-position', 'right');
+        document.body.appendChild(script);
+      })();
+    </script>
   </body>
 </html>

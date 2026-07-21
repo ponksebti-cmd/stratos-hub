@@ -1348,6 +1348,15 @@ function Settings() {
               <p className="text-[11px] text-muted-foreground text-center">
                 {t("Looks exactly like this on any website")}
               </p>
+              <a
+                href={`https://stratos-hub.pages.dev/test-site?key=${widgetKey}&color=${encodeURIComponent(wColor)}&name=${encodeURIComponent(wName)}&theme=${wTheme}&greeting=${encodeURIComponent(wGreeting)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-1.5 w-full text-xs text-primary font-medium py-2 px-3 rounded-lg border border-primary/20 hover:bg-primary/5 transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+                {t("Test live on demo page")}
+              </a>
             </div>
           </div>
         </TabsContent>
