@@ -9,7 +9,10 @@ export async function handleEmbed(req, agencyId) {
   const greeting = url.searchParams.get("greeting") || "Hi! How can I help you today?";
 
   // Derive the base API URL from the request itself so it always points to the right backend
-  const baseUrl = `${url.protocol}//${url.host}`;
+  // Railway proxies requests internally over http, but externally serves https.
+  // Use X-Forwarded-Proto to get the real protocol the client connected with.
+  const proto = req.headers.get("x-forwarded-proto") || url.protocol.replace(":", "");
+  const baseUrl = `${proto}://${url.host}`;
 
   const dark = theme === "dark";
   const bg        = dark ? "#0f172a"  : "#ffffff";
