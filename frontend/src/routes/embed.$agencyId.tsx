@@ -290,6 +290,9 @@ function EmbedWidget() {
       if (ev.data.type === "stratos_send_prompt" && ev.data.prompt) {
         send(ev.data.prompt);
       }
+      if (ev.data.type === "stratos_set_theme") {
+        setIsDark(ev.data.theme === "dark");
+      }
     };
     window.addEventListener("message", handleMsg);
     return () => window.removeEventListener("message", handleMsg);

@@ -53,8 +53,14 @@ function RouteComponent() {
     document.documentElement.classList.toggle("dark", next);
   };
 
-  // ── Mount the live embed widget on the landing page (re-mounts on language/theme change)
+  // ── Live demo widget on the landing page ──────────────────────────────────
+  // Language changes remount the script (greeting + RTL side must flip).
+  // Theme changes are pushed via postMessage so the widget doesn't reset
+  // (re-mounting would replay the toast notification every toggle).
   const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+  const postWidgetConfig = (theme: "dark" | "light") => {
+    window.postMessage({ type: "stratos_widget_config", color: "#6366f1", theme }, "*");
+  };
   useEffect(() => {
     const scriptId = "stratos-landing-widget";
     const existing = document.getElementById(scriptId);
@@ -75,7 +81,12 @@ function RouteComponent() {
     s.setAttribute("data-theme", isDark ? "dark" : "light");
     s.setAttribute("data-position", isRtl ? "left" : "right");
     document.body.appendChild(s);
-  }, [isDark, lang, isRtl]);
+  }, [lang, isRtl]);
+
+  useEffect(() => {
+    postWidgetConfig(isDark ? "dark" : "light");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDark, lang]);
 
   // ── Interactive demo conversation (honest preview of chat + lead capture) ──
   const demoScript = {

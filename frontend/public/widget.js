@@ -5,6 +5,10 @@
 (function () {
   "use strict";
 
+  // Bump this when you edit the widget — visible via `console.debug` filter "Stratos Widget"
+  var WIDGET_VERSION = "1.1.0";
+  try { console.debug("[Stratos Widget] v" + WIDGET_VERSION); } catch (e) {}
+
   // Clean up any previous widget instance on reload/HMR
   try {
     var prevRoot = document.getElementById("sw-root") || document.getElementById("sh-root");
@@ -109,6 +113,7 @@
   var DARK = THEME === "dark";
 
   // ── Bulletproof Isolated CSS with Zero Host Leaks ─────────────────────────
+  function buildCss() {
   var css = [
     "/* Stratos Hub Widget Isolated System */",
     "#sw-root, #sw-panel, #sw-root *, #sw-panel * {",
@@ -281,10 +286,12 @@
     "  #sw-fab { width: 54px !important; height: 54px !important; border-radius: 16px !important; }",
     "}",
   ].join("\n");
+  return css;
+  }
 
   var styleEl = document.createElement("style");
   styleEl.id = "sw-styles";
-  styleEl.textContent = css;
+  styleEl.textContent = buildCss();
   document.head.appendChild(styleEl);
 
   // ── DOM Construction ───────────────────────────────────────────────────────
@@ -424,21 +431,34 @@
     if (!ev.data) return;
     if (ev.data.type === "stratos_close_widget") closeWidget();
     if (ev.data.type === "stratos_open_widget") openWidget(ev.data.prompt);
-    if (ev.data.type === "stratos_widget_config" && ev.data.color) {
-      var c = ev.data.color;
-      var newGrad =
-        "linear-gradient(135deg, " +
-        lighten(c, 0.18) +
-        " 0%, " +
-        c +
-        " 60%, " +
-        darken(c, 0.75) +
-        " 100%)";
-      fab.style.background = newGrad;
-      fab.style.boxShadow =
-        "0 12px 28px -4px " + rgba(c, 0.55) + ", 0 4px 10px -2px " + rgba(c, 0.3);
-      var avatar = document.getElementById("sw-toast-icon");
-      if (avatar) avatar.style.background = newGrad;
+    if (ev.data.type === "stratos_widget_config") {
+      if (ev.data.color) {
+        var c = ev.data.color;
+        var newGrad =
+          "linear-gradient(135deg, " +
+          lighten(c, 0.18) +
+          " 0%, " +
+          c +
+          " 60%, " +
+          darken(c, 0.75) +
+          " 100%)";
+        fab.style.background = newGrad;
+        fab.style.boxShadow =
+          "0 12px 28px -4px " + rgba(c, 0.55) + ", 0 4px 10px -2px " + rgba(c, 0.3);
+        var avatar = document.getElementById("sw-toast-icon");
+        if (avatar) avatar.style.background = newGrad;
+      }
+      // Live theme switch without re-executing the script (keeps widget state)
+      if (ev.data.theme === "dark" || ev.data.theme === "light") {
+        DARK = ev.data.theme === "dark";
+        styleEl.textContent = buildCss();
+        if (iframe.contentWindow) {
+          iframe.contentWindow.postMessage(
+            { type: "stratos_set_theme", theme: ev.data.theme },
+            "*"
+          );
+        }
+      }
     }
   });
 

@@ -6,39 +6,20 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import { writeFileSync } from "fs";
 import { resolve } from "path";
 
-// Cloudflare Pages headers for optimization
+// Cloudflare Pages headers
+// NOTE: Cloudflare _headers rules do NOT override each other — when a path
+// matches multiple rules, headers from ALL matching rules are joined together.
+// So keep rules non-overlapping: never combine a broad `/*` Cache-Control with
+// more specific ones, or values get concatenated and browsers behave oddly.
 const cfHeaders = `
 /*
   X-Content-Type-Options: nosniff
-  X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
   Cross-Origin-Opener-Policy: same-origin-allow-popups
-  Cache-Control: public, max-age=31536000, immutable
 
-/*.js
+/assets/*
   Cache-Control: public, max-age=31536000, immutable
-
-/*.css
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.png
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.jpg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.svg
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.woff
-  Cache-Control: public, max-age=31536000, immutable
-
-/*.woff2
-  Cache-Control: public, max-age=31536000, immutable
-
-/index.html
-  Cache-Control: public, max-age=0, must-revalidate
 `;
 
 export default defineConfig({
