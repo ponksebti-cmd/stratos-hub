@@ -1,6 +1,6 @@
-@import "tailwindcss" source(none);
-@source "../src";
+@import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/plus-jakarta-sans/index.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -88,37 +88,112 @@
 }
 
 .dark {
-  --background: oklch(0.14 0.02 250);
-  --foreground: oklch(0.98 0.003 250);
-  --card: oklch(0.18 0.02 250);
-  --card-foreground: oklch(0.98 0.003 250);
-  --popover: oklch(0.18 0.02 250);
-  --popover-foreground: oklch(0.98 0.003 250);
-  --primary: oklch(0.7 0.18 264);
-  --primary-foreground: oklch(0.14 0.02 250);
-  --secondary: oklch(0.24 0.02 250);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.24 0.02 250);
-  --muted-foreground: oklch(0.68 0.02 250);
-  --accent: oklch(0.28 0.05 264);
-  --accent-foreground: oklch(0.9 0.05 264);
-  --destructive: oklch(0.65 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --success: oklch(0.7 0.16 155);
-  --success-foreground: oklch(0.14 0.02 250);
-  --warning: oklch(0.78 0.15 75);
-  --warning-foreground: oklch(0.14 0.02 250);
-  --border: oklch(0.28 0.02 250);
-  --input: oklch(0.28 0.02 250);
-  --ring: oklch(0.7 0.18 264);
-  --sidebar: oklch(0.16 0.02 250);
-  --sidebar-foreground: oklch(0.95 0.003 250);
-  --sidebar-primary: oklch(0.7 0.18 264);
-  --sidebar-primary-foreground: oklch(0.14 0.02 250);
-  --sidebar-accent: oklch(0.24 0.02 250);
-  --sidebar-accent-foreground: oklch(0.95 0.003 250);
-  --sidebar-border: oklch(0.28 0.02 250);
-  --sidebar-ring: oklch(0.7 0.18 264);
+  --background: #06070b;
+  --foreground: #f3f5fa;
+  --card: #0c0e17;
+  --card-foreground: #f3f5fa;
+  --popover: #0c0e17;
+  --popover-foreground: #f3f5fa;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --secondary: #131722;
+  --secondary-foreground: #e2e8f0;
+  --muted: #111420;
+  --muted-foreground: #8e98a8;
+  --accent: #1e2235;
+  --accent-foreground: #ffffff;
+  --destructive: #f43f5e;
+  --destructive-foreground: #ffffff;
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #000000;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.09);
+  --ring: #6366f1;
+  --sidebar: #090b12;
+  --sidebar-foreground: #f3f5fa;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #131722;
+  --sidebar-accent-foreground: #f3f5fa;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #6366f1;
+}
+
+html, body {
+  font-family: 'Plus Jakarta Sans Variable', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
+  letter-spacing: -0.012em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Grid & Column Helpers for Tailwind v4 ───────────────────────── */
+.grid-cols-12 {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.col-span-12 { grid-column: span 12 / span 12; }
+.col-span-7 { grid-column: span 7 / span 7; }
+.col-span-6 { grid-column: span 6 / span 6; }
+.col-span-5 { grid-column: span 5 / span 5; }
+.col-span-4 { grid-column: span 4 / span 4; }
+.col-span-3 { grid-column: span 3 / span 3; }
+
+@media (min-width: 768px) {
+  .md\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .md\:col-span-7 { grid-column: span 7 / span 7; }
+  .md\:col-span-6 { grid-column: span 6 / span 6; }
+  .md\:col-span-5 { grid-column: span 5 / span 5; }
+  .md\:col-span-4 { grid-column: span 4 / span 4; }
+  .md\:col-span-3 { grid-column: span 3 / span 3; }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .lg\:col-span-7 { grid-column: span 7 / span 7; }
+  .lg\:col-span-6 { grid-column: span 6 / span 6; }
+  .lg\:col-span-5 { grid-column: span 5 / span 5; }
+  .lg\:col-span-4 { grid-column: span 4 / span 4; }
+  .lg\:col-span-3 { grid-column: span 3 / span 3; }
+}
+
+/* ── Obsidian Luxury & Spatial Utilities ────────────────────────────── */
+.obsidian-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(16, 20, 31, 0.72) 0%, rgba(9, 11, 18, 0.88) 100%);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+}
+
+.luxury-text-gradient {
+  background: linear-gradient(180deg, #ffffff 15%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.aurora-text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 35%, #818cf8 75%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.specular-highlight {
+  position: relative;
+}
+.specular-highlight::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  pointer-events: none;
 }
 
 @layer base {
@@ -261,3 +336,202 @@
   animation: sparkle-spin 400ms ease-in-out;
 }
 @plugin "@tailwindcss/typography";
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   iOS 26ish Spatial & Motion-Blur Design System
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Motion-blur entry keyframes (ultra-subtle, tasteful easing) */
+@keyframes motion-blur-in {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes motion-blur-slide-left {
+  0% {
+    opacity: 0;
+    transform: translateX(12px);
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes motion-blur-slide-right {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px);
+    filter: blur(1.5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes spatial-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(0.4deg);
+  }
+}
+
+@keyframes spatial-glow {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(1) translate(0px, 0px);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.1) translate(10px, -15px);
+  }
+}
+
+@keyframes glass-sheen {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+@keyframes neural-pulse {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.35;
+  }
+  50% {
+    height: 18px;
+    opacity: 1;
+  }
+}
+
+@keyframes dynamic-island-morph {
+  0% {
+    transform: scale(0.96);
+    filter: blur(3px);
+  }
+  100% {
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Glassmorphism & Spatial Surfaces */
+.ios-glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.08), inset 0 1px 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.dark .ios-glass {
+  background: rgba(18, 22, 34, 0.65);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px -15px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ios-glass-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios-glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  pointer-events: none;
+}
+
+.ios-glass-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 24px 50px -12px rgba(99, 102, 241, 0.18);
+}
+
+.dark .ios-glass-card:hover {
+  box-shadow: 0 24px 60px -12px rgba(99, 102, 241, 0.3);
+}
+
+/* Dynamic Island Capsule */
+.dynamic-island {
+  animation: dynamic-island-morph 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dynamic-island:hover {
+  transform: scale(1.02);
+  box-shadow: 0 12px 35px -8px rgba(99, 102, 241, 0.35);
+}
+
+/* Motion-blur transitions */
+.motion-blur-enter {
+  animation: motion-blur-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.motion-blur-slide {
+  animation: motion-blur-slide-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.spatial-floating {
+  animation: spatial-float 6s ease-in-out infinite;
+}
+
+.ambient-glow-orb {
+  animation: spatial-glow 8s ease-in-out infinite;
+}
+
+/* Sheen effect on hover */
+.sheen-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.sheen-sweep::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  bottom: -50%;
+  left: 0;
+  width: 50%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-150%) skewX(-20deg);
+  transition: none;
+  pointer-events: none;
+}
+
+.sheen-sweep:hover::after {
+  animation: glass-sheen 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Neural sound wave / waveform animation */
+.neural-wave-bar {
+  animation: neural-pulse 1.2s ease-in-out infinite;
+}

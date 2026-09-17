@@ -269,12 +269,13 @@ function Settings() {
   });
 
   const widgetKey = settings?.company?.id ?? "your-agency-id";
+  const widgetOrigin = typeof window !== "undefined" ? window.location.origin : "https://stratos-hub.pages.dev";
   const embedCode = [
     `<!-- Stratos Hub Widget — paste before </body> -->`,
     `<script`,
-    `  src="https://stratos-hub.pages.dev/widget.js"`,
+    `  src="${widgetOrigin}/widget.js"`,
     `  data-key="${widgetKey}"`,
-    `  data-api="https://stratos-fefe-production.up.railway.app"`,
+    `  data-api="${widgetOrigin}"`,
     `  data-color="${wColor}"`,
     `  data-name="${wName}"`,
     `  data-greeting="${wGreeting}"`,
@@ -1349,7 +1350,7 @@ function Settings() {
                 {t("Looks exactly like this on any website")}
               </p>
               <a
-                href={`https://stratos-hub.pages.dev/test-site?key=${widgetKey}&color=${encodeURIComponent(wColor)}&name=${encodeURIComponent(wName)}&theme=${wTheme}&greeting=${encodeURIComponent(wGreeting)}`}
+                href={`/test-site.html?key=${widgetKey}&color=${encodeURIComponent(wColor)}&name=${encodeURIComponent(wName)}&theme=${wTheme}&greeting=${encodeURIComponent(wGreeting)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-1.5 w-full text-xs text-primary font-medium py-2 px-3 rounded-lg border border-primary/20 hover:bg-primary/5 transition-colors"
@@ -1425,7 +1426,7 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
               <Sparkles className="h-2.5 w-2.5 text-white" />
             </div>
             <div
-              className="max-w-[80%] px-2.5 py-1.5 rounded-xl rounded-bl-sm text-[10px] leading-relaxed"
+              className="max-w-[80%] px-2.5 py-1.5 rounded-xl rounded-bl-sm text-[10px] leading-relaxed shadow-sm"
               style={{
                 background: msgBg,
                 color: dark ? "#f1f5f9" : "#1e293b",
@@ -1437,10 +1438,10 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
           </div>
           <div className="flex items-end justify-end">
             <div
-              className="max-w-[65%] px-2.5 py-1.5 rounded-xl rounded-br-sm text-[10px] text-white leading-relaxed"
+              className="max-w-[65%] px-2.5 py-1.5 rounded-xl rounded-br-sm text-[10px] text-white leading-relaxed shadow-sm"
               style={{ background: color }}
             >
-              I'm looking for a 3-bedroom villa
+              I'm looking for a 3-bedroom luxury villa
             </div>
           </div>
           <div className="flex items-end gap-1.5">
@@ -1465,6 +1466,18 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
               </div>
             </div>
           </div>
+          {/* Quick chips preview */}
+          <div className="flex gap-1 overflow-x-auto pt-1 pb-0.5" style={{ scrollbarWidth: "none" }}>
+            <span className="text-[9px] px-2 py-0.5 rounded-full border border-indigo-200/50 bg-indigo-50/50 text-indigo-600 font-semibold whitespace-nowrap">
+              🏡 Luxury Villas
+            </span>
+            <span className="text-[9px] px-2 py-0.5 rounded-full border border-slate-200 bg-white/50 text-slate-600 font-semibold whitespace-nowrap">
+              🏢 Penthouses
+            </span>
+            <span className="text-[9px] px-2 py-0.5 rounded-full border border-slate-200 bg-white/50 text-slate-600 font-semibold whitespace-nowrap">
+              📅 Book Tour
+            </span>
+          </div>
         </div>
         {/* Input bar */}
         <div
@@ -1474,9 +1487,9 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
             borderColor: dark ? "rgba(255,255,255,0.08)" : "#f0f0f0",
           }}
         >
-          <span className="flex-1 text-[10px] text-gray-400">Type a message…</span>
+          <span className="flex-1 text-[10px] text-gray-400">Ask about listings, pricing...</span>
           <div
-            className="h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0"
+            className="h-6 w-6 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
             style={{ background: grad }}
           >
             <Send className="h-2.5 w-2.5 text-white translate-x-px" />
@@ -1484,23 +1497,29 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
         </div>
         {/* Footer */}
         <div
-          className="text-center py-1 text-[9px] flex items-center justify-center gap-1"
+          className="text-center py-1 text-[9px] flex items-center justify-center gap-1 border-t"
           style={{
-            color: dark ? "rgba(255,255,255,0.2)" : "#9ca3af",
-            background: dark ? "#0f172a" : "#f8fafc",
+            color: dark ? "rgba(255,255,255,0.3)" : "#9ca3af",
+            background: dark ? "#0a0e17" : "#f8fafc",
+            borderColor: dark ? "rgba(255,255,255,0.05)" : "#f1f5f9",
           }}
         >
-          <Sparkles className="h-2 w-2" />
+          <Sparkles className="h-2 w-2 text-indigo-500" />
           Powered by <span className="font-semibold ms-0.5">Stratos Hub</span>
         </div>
       </div>
       {/* FAB preview */}
-      <div
-        className="h-11 w-11 rounded-[14px] flex items-center justify-center shadow-xl transition-transform hover:scale-110 cursor-pointer"
-        style={{ background: grad, boxShadow: `0 6px 20px ${color}66` }}
-        title="Widget button"
-      >
-        <MessageSquare className="h-5 w-5 text-white" />
+      <div className="relative group">
+        <div
+          className="h-12 w-12 rounded-[18px] flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative"
+          style={{ background: grad, boxShadow: `0 10px 24px -4px ${color}66` }}
+          title="Stratos Spatial FAB"
+        >
+          <MessageSquare className="h-5 w-5 text-white" />
+          <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm flex items-center justify-center">
+            <span className="h-1 w-1 rounded-full bg-white" />
+          </span>
+        </div>
       </div>
     </div>
   );

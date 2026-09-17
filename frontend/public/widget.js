@@ -1,32 +1,19 @@
 /**
- * Stratos Hub — Embeddable Chat Widget v3
- *
- * Usage:
- *   <script
- *     src="https://yourdomain.com/widget.js"
- *     data-key="YOUR_AGENCY_ID"
- *     data-color="#6366f1"
- *     data-name="Property Assistant"
- *     data-greeting="Hi! How can I help?"
- *     data-theme="light"
- *     data-position="right"
- *   ></script>
+ * Stratos Hub — Universal Real Estate AI Chat Widget
+ * Apple-grade iOS Toast Notification & Spatial Drawer
  */
 (function () {
   "use strict";
 
-  // ── Origin validation ────────────────────────────────────────────────────
-  // Permissive logic: Always allow localhost/127.0.0.1 on any port or any https origin to ensure frictionless testing and smooth embed integration
-  var currentOrigin = window.location.origin;
-  var isLocalhost = /^(http:\/\/localhost|http:\/\/127\.0\.0\.1)(:\d+)?$/.test(currentOrigin);
-  var isHttps = /^https:\/\//.test(currentOrigin);
-
-  if (!isLocalhost && !isHttps) {
-    console.warn(
-      "Stratos Widget: Origin blocked. Only secure https contexts or local servers are allowed.",
-    );
-    return;
-  }
+  // Clean up any previous widget instance on reload/HMR
+  try {
+    var prevRoot = document.getElementById("sw-root") || document.getElementById("sh-root");
+    if (prevRoot && prevRoot.parentNode) prevRoot.parentNode.removeChild(prevRoot);
+    var prevPanel = document.getElementById("sw-panel") || document.getElementById("sh-panel");
+    if (prevPanel && prevPanel.parentNode) prevPanel.parentNode.removeChild(prevPanel);
+    var prevStyle = document.getElementById("sw-styles");
+    if (prevStyle && prevStyle.parentNode) prevStyle.parentNode.removeChild(prevStyle);
+  } catch (e) {}
 
   var script =
     document.currentScript ||
@@ -35,19 +22,18 @@
       return s[s.length - 1] || null;
     })();
 
-  if (!script) return;
+  var KEY = (script && script.getAttribute("data-key")) || "demo";
+  var COLOR = (script && script.getAttribute("data-color")) || "#6366f1";
+  var NAME = (script && script.getAttribute("data-name")) || "Sarah - Property Concierge";
+  var GREETING =
+    (script && script.getAttribute("data-greeting")) ||
+    "Hi there! 👋 Looking for your dream property? I can help you find exclusive listings, calculate yields, and book private viewings.";
+  var THEME = (script && script.getAttribute("data-theme")) || "light";
+  var POSITION = (script && script.getAttribute("data-position")) || "right";
 
-  var KEY = script.getAttribute("data-key") || "demo";
-  var COLOR = script.getAttribute("data-color") || "#6366f1";
-  var NAME = script.getAttribute("data-name") || "Property Assistant";
-  var GREETING = script.getAttribute("data-greeting") || "";
-  var THEME = script.getAttribute("data-theme") || "light";
-  var POSITION = script.getAttribute("data-position") || "right";
+  var API_URL = script ? script.getAttribute("data-api") : null;
+  var BASE_URL = API_URL || (typeof window !== "undefined" ? window.location.origin : "");
 
-  var API_URL = script.getAttribute("data-api");
-  var BASE_URL = API_URL || "https://stratos-fefe-production.up.railway.app";
-
-  // ── Color helpers ────────────────────────────────────────────────────────
   function hexToRgb(h) {
     var r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
     if (!r) return [99, 102, 241];
@@ -82,240 +68,207 @@
     );
   }
 
-  var GRAD =
-    "linear-gradient(135deg, " +
-    lighten(COLOR, 0.15) +
-    " 0%, " +
-    COLOR +
-    " 50%, " +
-    darken(COLOR, 0.78) +
-    " 100%)";
+  var GRAD = "linear-gradient(135deg, " + lighten(COLOR, 0.15) + " 0%, " + COLOR + " 65%, " + darken(COLOR, 0.75) + " 100%)";
   var SIDE = POSITION === "left" ? "left" : "right";
   var DARK = THEME === "dark";
-  var ORIGIN = "bottom " + SIDE;
 
-  // ── CSS ────────────────────────────────────────────────────────────────────
+  // ── Bulletproof Isolated CSS with Zero Host Leaks ─────────────────────────
   var css = [
-    "#sh-root*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}",
-
-    /* Root container */
-    "#sh-root{",
-    "position:fixed;" + SIDE + ":20px;bottom:20px;",
-    "z-index:2147483647;",
-    "display:flex;flex-direction:column;",
-    "align-items:" + (SIDE === "right" ? "flex-end" : "flex-start") + ";",
-    "gap:12px;",
-    "pointer-events:none;",
-    "}",
-    "#sh-root>*{pointer-events:auto;}",
-
-    /* ── Teaser bubble ───────────────────────────────────────────────────── */
-    "#sh-teaser{",
-    "display:flex;align-items:center;gap:10px;",
-    "padding:10px 10px 10px 12px;",
-    "max-width:280px;",
-    "border-radius:20px;",
-    "border-" + (SIDE === "right" ? "bottom-right" : "bottom-left") + "-radius:6px;",
-    "background:" + (DARK ? "rgba(15,23,42,0.96)" : "rgba(255,255,255,0.98)") + ";",
-    "backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);",
-    "box-shadow:0 8px 40px -8px rgba(0,0,0,0.18),0 2px 12px -2px rgba(0,0,0,0.1),0 0 0 1px " +
-      (DARK ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") +
-      ";",
-    "cursor:pointer;",
-    "opacity:0;transform:translateY(16px) scale(0.9);",
-    "transition:opacity 0.4s cubic-bezier(0.34,1.4,0.64,1),transform 0.4s cubic-bezier(0.34,1.4,0.64,1),box-shadow 0.2s ease;",
-    "}",
-    "#sh-teaser.sh-in{opacity:1;transform:translateY(0) scale(1);}",
-    "#sh-teaser:hover{transform:translateY(-3px) scale(1.015);box-shadow:0 16px 48px -8px rgba(0,0,0,0.22),0 4px 16px -2px rgba(0,0,0,0.1),0 0 0 1px " +
-      (DARK ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)") +
-      ";}",
-
-    "#sh-teaser-avatar{",
-    "position:relative;flex-shrink:0;",
-    "width:38px;height:38px;",
-    "border-radius:12px;",
-    "background:" + GRAD + ";",
-    "display:flex;align-items:center;justify-content:center;",
-    "box-shadow:0 4px 12px " + rgba(COLOR, 0.4) + ";",
-    "}",
-    "#sh-teaser-avatar svg{width:18px;height:18px;fill:none;stroke:white;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}",
-    "#sh-teaser-online{",
-    "position:absolute;bottom:-2px;right:-2px;",
-    "width:11px;height:11px;border-radius:50%;",
-    "background:#22c55e;border:2px solid " + (DARK ? "#0f172a" : "#fff") + ";",
+    "/* Stratos Hub Widget Isolated System */",
+    "#sw-root, #sw-panel, #sw-root *, #sw-panel * {",
+    "  box-sizing: border-box !important;",
+    "  -webkit-font-smoothing: antialiased !important;",
+    "  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Inter', system-ui, sans-serif !important;",
+    "  margin: 0; padding: 0; border: 0; font-size: 100%; vertical-align: baseline; line-height: 1.4;",
     "}",
 
-    "#sh-teaser-body{flex:1;min-width:0;}",
-    "#sh-teaser-name{",
-    "font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;",
-    "opacity:" + (DARK ? "0.5" : "0.45") + ";",
-    "margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;",
-    "color:" + (DARK ? "#f1f5f9" : "#0f172a") + ";",
+    "#sw-root {",
+    "  position: fixed !important; " + SIDE + ": 20px !important; bottom: 20px !important;",
+    "  z-index: 2147483647 !important;",
+    "  display: flex !important; flex-direction: column !important;",
+    "  align-items: " + (SIDE === "right" ? "flex-end" : "flex-start") + " !important;",
+    "  gap: 12px !important;",
+    "  pointer-events: none !important;",
     "}",
-    "#sh-teaser-msg{",
-    "font-size:13.5px;font-weight:500;line-height:1.45;",
-    "color:" + (DARK ? "#e2e8f0" : "#1e293b") + ";",
-    "display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;",
+    "#sw-root > * { pointer-events: auto !important; }",
+
+    /* ── Apple iOS Notification Toast Banner ──────────────────────────── */
+    "#sw-toast {",
+    "  position: relative !important;",
+    "  display: flex !important; align-items: flex-start !important; gap: 11px !important;",
+    "  padding: 12px 14px 12px 12px !important;",
+    "  width: 326px !important; max-width: calc(100vw - 40px) !important;",
+    "  border-radius: 18px !important;",
+    "  background: " + (DARK ? "rgba(30, 32, 42, 0.94)" : "rgba(255, 255, 255, 0.95)") + " !important;",
+    "  backdrop-filter: blur(30px) saturate(190%) !important;",
+    "  -webkit-backdrop-filter: blur(30px) saturate(190%) !important;",
+    "  border: 1px solid " + (DARK ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)") + " !important;",
+    "  box-shadow:",
+    "    0 16px 36px -6px rgba(0, 0, 0, " + (DARK ? "0.6" : "0.14") + "),",
+    "    0 4px 12px -2px rgba(0, 0, 0, 0.06),",
+    "    inset 0 1px 1px rgba(255, 255, 255, " + (DARK ? "0.15" : "0.9") + ") !important;",
+    "  cursor: pointer !important;",
+    "  opacity: 0 !important; transform: translateY(14px) scale(0.96) !important;",
+    "  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;",
+    "}",
+    "#sw-toast.sw-in { opacity: 1 !important; transform: translateY(0) scale(1) !important; }",
+    "#sw-toast:hover { transform: translateY(-2px) scale(1.01) !important; box-shadow: 0 20px 42px -6px rgba(0,0,0," + (DARK ? "0.65" : "0.18") + ") !important; }",
+
+    "#sw-toast-icon {",
+    "  position: relative !important; flex-shrink: 0 !important;",
+    "  width: 38px !important; height: 38px !important; border-radius: 12px !important;",
+    "  background: " + GRAD + " !important;",
+    "  display: flex !important; align-items: center !important; justify-content: center !important;",
+    "  box-shadow: 0 4px 10px " + rgba(COLOR, 0.35) + " !important;",
+    "}",
+    "#sw-toast-icon svg { width: 19px !important; height: 19px !important; fill: none !important; stroke: white !important; stroke-width: 2 !important; stroke-linecap: round !important; stroke-linejoin: round !important; }",
+    "#sw-toast-online {",
+    "  position: absolute !important; bottom: -2px !important; right: -2px !important;",
+    "  width: 10px !important; height: 10px !important; border-radius: 50% !important;",
+    "  background: #10b981 !important; border: 2px solid " + (DARK ? "#1e202a" : "#ffffff") + " !important;",
     "}",
 
-    "#sh-dismiss{",
-    "flex-shrink:0;width:22px;height:22px;",
-    "border:none;background:" + (DARK ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)") + ";",
-    "border-radius:50%;padding:0;cursor:pointer;",
-    "display:flex;align-items:center;justify-content:center;",
-    "opacity:0.6;transition:opacity 0.15s,background 0.15s,transform 0.15s;",
-    "color:" + (DARK ? "#94a3b8" : "#64748b") + ";",
-    "}",
-    "#sh-dismiss:hover{opacity:1;background:" +
-      (DARK ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)") +
-      ";transform:scale(1.1);}",
-    "#sh-dismiss svg{width:10px;height:10px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;}",
-
-    /* ── FAB ───────────────────────────────────────────────────────────── */
-    "#sh-fab{",
-    "position:relative;",
-    "width:58px;height:58px;border-radius:18px;",
-    "background:" + GRAD + ";",
-    "cursor:pointer;border:none;outline:none;padding:0;margin:0;",
-    "box-shadow:",
-    "0 12px 32px -6px " + rgba(COLOR, 0.6) + ",",
-    "0 4px 12px -2px " + rgba(COLOR, 0.35) + ",",
-    "0 0 0 0 " + rgba(COLOR, 0.3) + ";",
-    "display:flex;align-items:center;justify-content:center;",
-    "transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),box-shadow 0.3s ease,border-radius 0.3s ease;",
-    "animation:sh-pulse 3.5s ease-in-out infinite;",
-    "}",
-    "#sh-fab:hover{",
-    "transform:scale(1.08) translateY(-3px);",
-    "box-shadow:",
-    "0 20px 40px -8px " + rgba(COLOR, 0.65) + ",",
-    "0 8px 16px -4px " + rgba(COLOR, 0.4) + ";",
-    "border-radius:20px;",
-    "}",
-    "#sh-fab:active{transform:scale(0.92);animation:none;}",
-    "#sh-fab.sh-open{",
-    "animation:none;",
-    "border-radius:14px;",
-    "box-shadow:0 8px 24px -4px " + rgba(COLOR, 0.45) + ";",
+    "#sw-toast-body { flex: 1 !important; min-width: 0 !important; }",
+    "#sw-toast-header { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 2px !important; }",
+    "#sw-toast-title { font-size: 12px !important; font-weight: 700 !important; color: " + (DARK ? "#f8fafc" : "#0f172a") + " !important; letter-spacing: -0.01em !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }",
+    "#sw-toast-time { font-size: 11px !important; font-weight: 500 !important; color: " + (DARK ? "#94a3b8" : "#64748b") + " !important; margin-left: 6px !important; flex-shrink: 0 !important; }",
+    "#sw-toast-msg {",
+    "  font-size: 13px !important; font-weight: 450 !important; line-height: 1.38 !important;",
+    "  color: " + (DARK ? "#cbd5e1" : "#334155") + " !important;",
+    "  display: -webkit-box !important; -webkit-line-clamp: 2 !important; -webkit-box-orient: vertical !important; overflow: hidden !important;",
     "}",
 
-    /* Icons */
-    ".sh-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:opacity 0.25s ease,transform 0.35s cubic-bezier(0.34,1.56,0.64,1);}",
-    "#sh-icon-chat{opacity:1;transform:scale(1) rotate(0deg);}",
-    "#sh-icon-chat svg{width:26px;height:26px;fill:none;stroke:white;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.2));}",
-    "#sh-icon-close{opacity:0;transform:scale(0.5) rotate(-180deg);}",
-    "#sh-icon-close svg{width:22px;height:22px;fill:none;stroke:white;stroke-width:2.5;stroke-linecap:round;}",
-    "#sh-fab.sh-open #sh-icon-chat{opacity:0;transform:scale(0.5) rotate(180deg);}",
-    "#sh-fab.sh-open #sh-icon-close{opacity:1;transform:scale(1) rotate(0deg);}",
+    "#sw-toast-close {",
+    "  flex-shrink: 0 !important; width: 20px !important; height: 20px !important; margin-left: 2px !important;",
+    "  border: none !important; background: " + (DARK ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") + " !important;",
+    "  border-radius: 50% !important; padding: 0 !important; cursor: pointer !important;",
+    "  display: flex !important; align-items: center !important; justify-content: center !important;",
+    "  opacity: 0.65 !important; transition: opacity 0.15s, transform 0.15s !important;",
+    "  color: " + (DARK ? "#cbd5e1" : "#64748b") + " !important;",
+    "}",
+    "#sw-toast-close:hover { opacity: 1 !important; transform: scale(1.1) !important; }",
+    "#sw-toast-close svg { width: 10px !important; height: 10px !important; fill: none !important; stroke: currentColor !important; stroke-width: 2.5 !important; stroke-linecap: round !important; }",
 
-    /* Notification dot */
-    "#sh-dot{",
-    "position:absolute;top:-4px;" + (SIDE === "right" ? "right:-4px;" : "left:-4px;"),
-    "width:16px;height:16px;border-radius:50%;",
-    "background:linear-gradient(135deg,#f97316,#ef4444);",
-    "border:2.5px solid white;",
-    "display:flex;align-items:center;justify-content:center;",
-    "font-size:8px;font-weight:700;color:white;",
-    "animation:sh-dot-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;",
-    "transition:opacity 0.2s,transform 0.2s;",
+    /* ── Floating Action Button (FAB) ─────────────────────────────────── */
+    "#sw-fab {",
+    "  position: relative !important;",
+    "  width: 58px !important; height: 58px !important; border-radius: 18px !important;",
+    "  background: " + GRAD + " !important;",
+    "  cursor: pointer !important; border: none !important; outline: none !important; padding: 0 !important; margin: 0 !important;",
+    "  box-shadow:",
+    "    0 12px 28px -4px " + rgba(COLOR, 0.55) + ",",
+    "    0 4px 10px -2px " + rgba(COLOR, 0.3) + ",",
+    "    inset 0 1px 1px rgba(255, 255, 255, 0.45) !important;",
+    "  display: flex !important; align-items: center !important; justify-content: center !important;",
+    "  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-radius 0.25s ease !important;",
+    "}",
+    "#sw-fab:hover {",
+    "  transform: scale(1.07) translateY(-2px) !important;",
+    "  box-shadow: 0 16px 34px -4px " + rgba(COLOR, 0.65) + ", 0 6px 14px -2px " + rgba(COLOR, 0.35) + ", inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;",
+    "}",
+    "#sw-fab:active { transform: scale(0.93) !important; }",
+    "#sw-fab.sw-open { border-radius: 16px !important; box-shadow: 0 8px 20px -2px " + rgba(COLOR, 0.45) + " !important; }",
+
+    ".sw-fab-icon { position: absolute !important; inset: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; }",
+    "#sw-icon-chat { opacity: 1 !important; transform: scale(1) rotate(0deg) !important; }",
+    "#sw-icon-chat svg { width: 26px !important; height: 26px !important; fill: none !important; stroke: white !important; stroke-width: 2 !important; stroke-linecap: round !important; stroke-linejoin: round !important; }",
+    "#sw-icon-close { opacity: 0 !important; transform: scale(0.4) rotate(-180deg) !important; }",
+    "#sw-icon-close svg { width: 22px !important; height: 22px !important; fill: none !important; stroke: white !important; stroke-width: 2.5 !important; stroke-linecap: round !important; }",
+    "#sw-fab.sw-open #sw-icon-chat { opacity: 0 !important; transform: scale(0.4) rotate(180deg) !important; }",
+    "#sw-fab.sw-open #sw-icon-close { opacity: 1 !important; transform: scale(1) rotate(0deg) !important; }",
+
+    "#sw-dot {",
+    "  position: absolute !important; top: -2px !important; " + (SIDE === "right" ? "right: -2px;" : "left: -2px;") + " !important;",
+    "  width: 13px !important; height: 13px !important; border-radius: 50% !important;",
+    "  background: #10b981 !important; border: 2.5px solid white !important;",
+    "  box-shadow: 0 0 6px #10b981 !important;",
     "}",
 
-    /* Panel */
-    "#sh-panel{",
-    "position:fixed;" + SIDE + ":18px;bottom:92px;",
-    "width:400px;",
-    "height:620px;",
-    "max-height:calc(100svh - 130px);",
-    "border-radius:24px;overflow:hidden;",
-    "background:" + (DARK ? "#0f172a" : "#f8fafc") + ";",
-    "border:1px solid " + (DARK ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.07)") + ";",
-    "box-shadow:",
-    "0 32px 80px -20px rgba(0,0,0,0.35),",
-    "0 12px 32px -8px rgba(0,0,0,0.15),",
-    "0 0 0 1px " + rgba(COLOR, 0.08) + ";",
-    "z-index:2147483646;",
-    "transform-origin:" + ORIGIN + ";",
-    "transform:scale(0.85) translateY(28px);",
-    "opacity:0;pointer-events:none;",
-    "transition:transform 0.45s cubic-bezier(0.32,1.25,0.64,1),opacity 0.3s ease;",
-    "display:flex;flex-direction:column;",
+    /* ── Apple Spatial Chat Drawer ─────────────────────────────────────── */
+    "#sw-panel {",
+    "  position: fixed !important; " + SIDE + ": 20px !important; bottom: 88px !important;",
+    "  width: 384px !important; height: 600px !important;",
+    "  max-width: calc(100vw - 32px) !important;",
+    "  max-height: calc(100svh - 105px) !important;",
+    "  border-radius: 22px !important; overflow: hidden !important;",
+    "  background: " + (DARK ? "#0f172a" : "#ffffff") + " !important;",
+    "  border: 1px solid " + (DARK ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)") + " !important;",
+    "  box-shadow:",
+    "    0 24px 60px -12px rgba(0, 0, 0, " + (DARK ? "0.6" : "0.2") + "),",
+    "    0 6px 20px -4px rgba(0, 0, 0, 0.08) !important;",
+    "  z-index: 2147483646 !important;",
+    "  transform-origin: bottom " + SIDE + " !important;",
+    "  transform: translateY(16px) scale(0.96) !important;",
+    "  opacity: 0 !important; pointer-events: none !important;",
+    "  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease !important;",
+    "  display: flex !important; flex-direction: column !important;",
     "}",
-    "#sh-panel.sh-open{transform:scale(1) translateY(0);opacity:1;pointer-events:auto;}",
+    "#sw-panel.sw-open { transform: translateY(0) scale(1) !important; opacity: 1 !important; pointer-events: auto !important; }",
+    "#sw-iframe { width: 100% !important; flex: 1 !important; border: none !important; display: block !important; min-height: 0 !important; background: transparent !important; }",
 
-    "#sh-iframe{width:100%;flex:1;border:none;display:block;min-height:0;}",
-
-    /* Keyframes */
-    "@keyframes sh-pulse{",
-    "0%,100%{box-shadow:0 12px 32px -6px " +
-      rgba(COLOR, 0.6) +
-      ",0 0 0 0 " +
-      rgba(COLOR, 0.35) +
-      ";}",
-    "50%{box-shadow:0 12px 32px -6px " + rgba(COLOR, 0.6) + ",0 0 0 10px " + rgba(COLOR, 0) + ";}",
+    /* Mobile Sheet Adaptation */
+    "@media(max-width: 480px) {",
+    "  #sw-root { " + SIDE + ": 14px !important; bottom: 14px !important; }",
+    "  #sw-panel {",
+    "    " + SIDE + ": 0 !important; bottom: 0 !important; right: 0 !important; left: 0 !important;",
+    "    width: 100% !important; height: 100dvh !important; max-height: 100dvh !important; max-width: 100vw !important;",
+    "    border-radius: 0 !important; border: none !important;",
+    "    transform-origin: bottom center !important;",
+    "  }",
+    "  #sw-fab { width: 54px !important; height: 54px !important; border-radius: 16px !important; }",
     "}",
-    "@keyframes sh-dot-pop{from{transform:scale(0);}to{transform:scale(1);}}",
-
-    /* Mobile */
-    "@media(max-width:480px){",
-    "#sh-root{" + SIDE + ":14px;bottom:14px;}",
-    "#sh-panel{",
-    SIDE + ":0;bottom:0;right:0;left:0;",
-    "width:100%;height:100dvh;max-height:100dvh;",
-    "border-radius:0;border:none;",
-    "transform-origin:bottom center;",
-    "}",
-    "#sh-fab{width:54px;height:54px;border-radius:16px;}",
-    "}",
-  ].join("");
+  ].join("\n");
 
   var styleEl = document.createElement("style");
+  styleEl.id = "sw-styles";
   styleEl.textContent = css;
   document.head.appendChild(styleEl);
 
-  // ── DOM ────────────────────────────────────────────────────────────────────
+  // ── DOM Construction ───────────────────────────────────────────────────────
   var root = document.createElement("div");
-  root.id = "sh-root";
+  root.id = "sw-root";
 
-  // Teaser
-  var teaser = document.createElement("div");
-  teaser.id = "sh-teaser";
-  teaser.setAttribute("role", "button");
-  teaser.setAttribute("aria-label", "Chat with " + NAME);
-  teaser.innerHTML =
-    '<div id="sh-teaser-avatar">' +
-    '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-    '<div id="sh-teaser-online"></div>' +
-    "</div>" +
-    '<div id="sh-teaser-body">' +
-    '<div id="sh-teaser-name">' +
-    NAME +
-    "</div>" +
-    '<div id="sh-teaser-msg">' +
-    (GREETING || "👋 Hi there! Any questions about properties? I'm here to help.") +
-    "</div>" +
-    "</div>" +
-    '<button id="sh-dismiss" aria-label="Dismiss" title="Dismiss">' +
-    '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-    "</button>";
-  root.appendChild(teaser);
+  // iOS Toast Notification
+  var toast = document.createElement("div");
+  toast.id = "sw-toast";
+  toast.setAttribute("role", "button");
+  toast.setAttribute("aria-label", "Notification from " + NAME);
+  toast.innerHTML = [
+    '<div id="sw-toast-icon">',
+    '  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    '  <div id="sw-toast-online"></div>',
+    "</div>",
+    '<div id="sw-toast-body">',
+    '  <div id="sw-toast-header">',
+    '    <span id="sw-toast-title">' + NAME + "</span>",
+    '    <span id="sw-toast-time">now</span>',
+    "  </div>",
+    '  <div id="sw-toast-msg">' + GREETING + "</div>",
+    "</div>",
+    '<button id="sw-toast-close" aria-label="Dismiss" title="Dismiss">',
+    '  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    "</button>",
+  ].join("");
+  root.appendChild(toast);
 
   // FAB
   var fab = document.createElement("button");
-  fab.id = "sh-fab";
+  fab.id = "sw-fab";
   fab.setAttribute("aria-label", "Chat with " + NAME);
-  fab.innerHTML =
-    '<div class="sh-icon" id="sh-icon-chat">' +
-    '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
-    "</div>" +
-    '<div class="sh-icon" id="sh-icon-close">' +
-    '<svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
-    "</div>" +
-    '<div id="sh-dot">1</div>';
+  fab.innerHTML = [
+    '<div class="sw-fab-icon" id="sw-icon-chat">',
+    '  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg>',
+    "</div>",
+    '<div class="sw-fab-icon" id="sw-icon-close">',
+    '  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    "</div>",
+    '<div id="sw-dot"></div>',
+  ].join("");
   root.appendChild(fab);
 
-  // Panel + iframe
+  // Panel
   var panel = document.createElement("div");
-  panel.id = "sh-panel";
+  panel.id = "sw-panel";
 
   var iframeSrc =
     BASE_URL +
@@ -330,34 +283,42 @@
     (GREETING ? "&greeting=" + encodeURIComponent(GREETING) : "");
 
   var iframe = document.createElement("iframe");
-  iframe.id = "sh-iframe";
+  iframe.id = "sw-iframe";
   iframe.src = iframeSrc;
-  iframe.setAttribute("allow", "clipboard-write");
+  iframe.setAttribute("allow", "clipboard-write; microphone");
   iframe.setAttribute("title", NAME + " Chat");
   panel.appendChild(iframe);
 
-  // ── State ────────────────────────────────────────────────────────────────────
+  // ── State & Interactions ───────────────────────────────────────────────────
   var isOpen = false;
 
-  function openWidget() {
-    if (isOpen) return;
-    isOpen = true;
-    panel.classList.add("sh-open");
-    fab.classList.add("sh-open");
-    teaser.classList.remove("sh-in");
-    var dot = document.getElementById("sh-dot");
-    if (dot) {
-      dot.style.opacity = "0";
-      dot.style.transform = "scale(0)";
+  function openWidget(promptText) {
+    if (isOpen) {
+      if (promptText && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: "stratos_send_prompt", prompt: promptText }, "*");
+      }
+      return;
     }
+    isOpen = true;
+    panel.classList.add("sw-open");
+    fab.classList.add("sw-open");
+    toast.classList.remove("sw-in");
+    var dot = document.getElementById("sw-dot");
+    if (dot) dot.style.display = "none";
     if (window.innerWidth <= 480) document.body.style.overflow = "hidden";
+
+    if (promptText && iframe.contentWindow) {
+      setTimeout(function () {
+        iframe.contentWindow.postMessage({ type: "stratos_send_prompt", prompt: promptText }, "*");
+      }, 350);
+    }
   }
 
   function closeWidget() {
     if (!isOpen) return;
     isOpen = false;
-    panel.classList.remove("sh-open");
-    fab.classList.remove("sh-open");
+    panel.classList.remove("sw-open");
+    fab.classList.remove("sw-open");
     if (window.innerWidth <= 480) document.body.style.overflow = "";
   }
 
@@ -365,59 +326,54 @@
     e.stopPropagation();
     isOpen ? closeWidget() : openWidget();
   };
-  teaser.onclick = function (e) {
-    if (e.target.closest("#sh-dismiss")) return;
+
+  toast.onclick = function (e) {
+    if (e.target.closest("#sw-toast-close")) return;
     openWidget();
   };
 
-  var dismissBtn = teaser.querySelector("#sh-dismiss");
+  var dismissBtn = toast.querySelector("#sw-toast-close");
   if (dismissBtn) {
     dismissBtn.onclick = function (e) {
       e.stopPropagation();
-      teaser.classList.remove("sh-in");
+      toast.classList.remove("sw-in");
       setTimeout(function () {
-        teaser.style.display = "none";
-      }, 400);
+        toast.style.display = "none";
+      }, 350);
     };
   }
 
-  // Show teaser after 2.5s
+  // Show toast notification after 2 seconds
   setTimeout(function () {
-    if (!isOpen) teaser.classList.add("sh-in");
-  }, 2500);
+    if (!isOpen) toast.classList.add("sw-in");
+  }, 2000);
 
-  // Auto-hide after 12s
+  // Auto-hide toast after 14 seconds
   setTimeout(function () {
-    if (!isOpen) teaser.classList.remove("sh-in");
-  }, 14500);
+    if (!isOpen) toast.classList.remove("sw-in");
+  }, 14000);
 
-  // ── postMessage bridge ──────────────────────────────────────────────────────
+  // ── PostMessage Bridge ─────────────────────────────────────────────────────
   window.addEventListener("message", function (ev) {
     if (!ev.data) return;
     if (ev.data.type === "stratos_close_widget") closeWidget();
+    if (ev.data.type === "stratos_open_widget") openWidget(ev.data.prompt);
     if (ev.data.type === "stratos_widget_config" && ev.data.color) {
       var c = ev.data.color;
-      var newGrad =
-        "linear-gradient(135deg," +
-        lighten(c, 0.15) +
-        " 0%," +
-        c +
-        " 50%," +
-        darken(c, 0.78) +
-        " 100%)";
+      var newGrad = "linear-gradient(135deg, " + lighten(c, 0.18) + " 0%, " + c + " 60%, " + darken(c, 0.75) + " 100%)";
       fab.style.background = newGrad;
-      fab.style.boxShadow =
-        "0 12px 32px -6px " + rgba(c, 0.6) + ",0 4px 12px -2px " + rgba(c, 0.35);
-      var avatar = document.getElementById("sh-teaser-avatar");
+      fab.style.boxShadow = "0 12px 28px -4px " + rgba(c, 0.55) + ", 0 4px 10px -2px " + rgba(c, 0.3);
+      var avatar = document.getElementById("sw-toast-icon");
       if (avatar) avatar.style.background = newGrad;
     }
   });
 
-  // ── Mount ────────────────────────────────────────────────────────────────────
+  // ── Mount ──────────────────────────────────────────────────────────────────
   function mount() {
     document.body.appendChild(panel);
     document.body.appendChild(root);
   }
+
   document.readyState === "loading"
     ? document.addEventListener("DOMContentLoaded", mount)
     : mount();

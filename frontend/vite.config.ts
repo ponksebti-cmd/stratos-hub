@@ -71,13 +71,55 @@ export default defineConfig({
       "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
     },
     proxy: {
-      "/auth": { target: "http://localhost:3001", changeOrigin: false },
-      "/files": { target: "http://localhost:3001", changeOrigin: false },
-      "/chat": { target: "http://localhost:3001", changeOrigin: false },
-      "/leads": { target: "http://localhost:3001", changeOrigin: false },
-      "/usage": { target: "http://localhost:3001", changeOrigin: false },
-      "/settings": { target: "http://localhost:3001", changeOrigin: false },
-      "/widget": { target: "http://localhost:3001", changeOrigin: false },
+      "^/auth/": {
+        target: "http://localhost:3001",
+        changeOrigin: false,
+        bypass: (req) => (req.headers.accept?.includes("text/html") ? "/index.html" : undefined),
+      },
+      "/files": {
+        target: "http://localhost:3001",
+        changeOrigin: false,
+        bypass: (req) =>
+          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+            ? "/index.html"
+            : undefined,
+      },
+      "/chat": {
+        target: "http://localhost:3001",
+        changeOrigin: false,
+        bypass: (req) =>
+          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+            ? "/index.html"
+            : undefined,
+      },
+      "/leads": {
+        target: "http://localhost:3001",
+        changeOrigin: false,
+        bypass: (req) =>
+          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+            ? "/index.html"
+            : undefined,
+      },
+      "/usage": {
+        target: "http://localhost:3001",
+        changeOrigin: false,
+        bypass: (req) =>
+          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+            ? "/index.html"
+            : undefined,
+      },
+      "/settings": {
+        target: "http://localhost:3001",
+        changeOrigin: false,
+        bypass: (req) =>
+          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+            ? "/index.html"
+            : undefined,
+      },
+      "/widget/config": {
+        target: "http://localhost:3001",
+        changeOrigin: false,
+      },
       "/health": { target: "http://localhost:3001", changeOrigin: false },
     },
   },
