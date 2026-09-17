@@ -80,7 +80,8 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: false,
         bypass: (req) =>
-          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+          req.headers.accept?.includes("text/html") ||
+          (!req.headers.accept?.includes("application/json") && req.method === "GET")
             ? "/index.html"
             : undefined,
       },
@@ -88,7 +89,8 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: false,
         bypass: (req) =>
-          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+          req.headers.accept?.includes("text/html") ||
+          (!req.headers.accept?.includes("application/json") && req.method === "GET")
             ? "/index.html"
             : undefined,
       },
@@ -96,7 +98,8 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: false,
         bypass: (req) =>
-          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+          req.headers.accept?.includes("text/html") ||
+          (!req.headers.accept?.includes("application/json") && req.method === "GET")
             ? "/index.html"
             : undefined,
       },
@@ -104,7 +107,8 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: false,
         bypass: (req) =>
-          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+          req.headers.accept?.includes("text/html") ||
+          (!req.headers.accept?.includes("application/json") && req.method === "GET")
             ? "/index.html"
             : undefined,
       },
@@ -112,7 +116,8 @@ export default defineConfig({
         target: "http://localhost:3001",
         changeOrigin: false,
         bypass: (req) =>
-          req.headers.accept?.includes("text/html") || (!req.headers.accept?.includes("application/json") && req.method === "GET")
+          req.headers.accept?.includes("text/html") ||
+          (!req.headers.accept?.includes("application/json") && req.method === "GET")
             ? "/index.html"
             : undefined,
       },

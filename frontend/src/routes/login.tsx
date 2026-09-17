@@ -63,12 +63,12 @@ function Login() {
         toast.success(t("Welcome back"));
         navigate({ to: "/dashboard" });
       } catch (err: unknown) {
-        toast.error((err as Error).message ?? "Google login failed");
+        toast.error((err as Error).message ?? t("Google login failed"));
       } finally {
         setLoading(false);
       }
     },
-    onError: () => toast.error("Google Login Failed"),
+    onError: () => toast.error(t("Google login failed")),
   });
 
   const onSubmit = async (data: LoginForm) => {
@@ -80,18 +80,14 @@ function Login() {
       toast.success(t("Welcome back"));
       navigate({ to: "/dashboard" });
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Login failed");
+      toast.error((err as Error).message ?? t("Login failed"));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthShell
-      mode="login"
-      title="Welcome back"
-      subtitle="Sign in to your agency workspace"
-    >
+    <AuthShell mode="login" title="Welcome back" subtitle="Sign in to your agency workspace">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Email Field */}
         <div className="space-y-1.5">
@@ -99,7 +95,7 @@ function Login() {
             {t("Work email")}
           </Label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               id="email"
               type="email"
@@ -128,7 +124,7 @@ function Login() {
             </Link>
           </div>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Lock className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -140,14 +136,16 @@ function Login() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+              className="absolute end-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
               title={showPassword ? t("Hide password") : t("Show password")}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {errors.password && (
-            <p className="text-[11px] text-destructive mt-1 font-medium">{errors.password.message}</p>
+            <p className="text-[11px] text-destructive mt-1 font-medium">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
@@ -259,7 +257,10 @@ export function AuthShell({
 
       {/* ── Ambient Motion-Blur Color Orbs ────────────────────────────────── */}
       <div className="fixed top-1/4 left-1/2 -translate-x-1/2 w-[580px] h-[340px] bg-primary/20 blur-[130px] rounded-full pointer-events-none -z-10 ambient-glow-orb" />
-      <div className="fixed bottom-10 right-10 w-[380px] h-[260px] bg-cyan-500/15 blur-[120px] rounded-full pointer-events-none -z-10 ambient-glow-orb" style={{ animationDelay: "-3s" }} />
+      <div
+        className="fixed bottom-10 right-10 w-[380px] h-[260px] bg-cyan-500/15 blur-[120px] rounded-full pointer-events-none -z-10 ambient-glow-orb"
+        style={{ animationDelay: "-3s" }}
+      />
 
       {/* ── Top Apple-Grade Nav Bar (So user NEVER gets lost) ─────────────── */}
       <header className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex items-center justify-between relative z-30">
@@ -268,7 +269,9 @@ export function AuthShell({
           to="/"
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ios-glass border border-black/5 dark:border-white/10 text-xs font-medium text-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-all active:scale-95 shadow-sm group"
         >
-          <ArrowLeft className={`h-3.5 w-3.5 ${isRtl ? "rotate-180" : ""} transition-transform group-hover:-translate-x-0.5`} />
+          <ArrowLeft
+            className={`h-3.5 w-3.5 ${isRtl ? "rotate-180" : ""} transition-transform group-hover:-translate-x-0.5`}
+          />
           <span>{t("Back to Stratos Hub")}</span>
         </Link>
 
@@ -293,7 +296,11 @@ export function AuthShell({
             className="h-8 w-8 rounded-full ios-glass text-muted-foreground hover:text-foreground active:scale-90 transition-all"
             title={isDark ? t("Light mode") : t("Dark mode")}
           >
-            {isDark ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5" />}
+            {isDark ? (
+              <Sun className="h-3.5 w-3.5 text-amber-400" />
+            ) : (
+              <Moon className="h-3.5 w-3.5" />
+            )}
           </Button>
 
           <Button
@@ -345,12 +352,8 @@ export function AuthShell({
 
             {/* Header Titles */}
             <div className="text-center mb-6">
-              <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
-                {t(title)}
-              </h1>
-              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
-                {t(subtitle)}
-              </p>
+              <h1 className="text-2xl font-extrabold tracking-tight text-foreground">{t(title)}</h1>
+              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{t(subtitle)}</p>
             </div>
 
             {/* Form Slot */}
@@ -375,7 +378,12 @@ export function AuthShell({
             {t("Privacy Policy")}
           </Link>
           <span>·</span>
-          <Link to="/test-site.html" target="_blank" rel="noopener noreferrer" className="hover:underline">
+          <Link
+            to="/test-site.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
             {t("Agency Web Demo")}
           </Link>
         </div>

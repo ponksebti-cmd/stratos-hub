@@ -327,14 +327,17 @@ export function getDemoMessages(sessionId: string): Message[] {
     const raw = localStorage.getItem(`${STORAGE_PREFIX}messages_${sessionId}`);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return mockMessages[sessionId] || [
-    {
-      id: "init",
-      role: "assistant",
-      content: "Hello! I am your AI property assistant. How can I assist you with your real estate listings today?",
-      createdAt: new Date().toISOString(),
-    },
-  ];
+  return (
+    mockMessages[sessionId] || [
+      {
+        id: "init",
+        role: "assistant",
+        content:
+          "Hello! I am your AI property assistant. How can I assist you with your real estate listings today?",
+        createdAt: new Date().toISOString(),
+      },
+    ]
+  );
 }
 
 export function saveDemoMessages(sessionId: string, messages: Message[]): void {
@@ -363,7 +366,12 @@ export function saveDemoSettings(patch: Partial<Settings>): Settings {
 export function generateRealEstateAIResponse(userPrompt: string): string {
   const lower = userPrompt.toLowerCase();
 
-  if (lower.includes("3bhk") || lower.includes("bandra") || lower.includes("mumbai") || lower.includes("apartment")) {
+  if (
+    lower.includes("3bhk") ||
+    lower.includes("bandra") ||
+    lower.includes("mumbai") ||
+    lower.includes("apartment")
+  ) {
     return (
       "I've searched your active Mumbai listing catalog. Here are the top 3 matching residences:\n\n" +
       "1. **Rustomjee Seasons (BKC Annexe)**: ₹5.4 Cr · 1,420 sqft · Ready to Move\n" +
@@ -373,7 +381,12 @@ export function generateRealEstateAIResponse(userPrompt: string): string {
     );
   }
 
-  if (lower.includes("villa") || lower.includes("luxury") || lower.includes("dubai") || lower.includes("private")) {
+  if (
+    lower.includes("villa") ||
+    lower.includes("luxury") ||
+    lower.includes("dubai") ||
+    lower.includes("private")
+  ) {
     return (
       "Here are our premier luxury villa opportunities:\n\n" +
       "- **The Palm Reserve (Private Gated Enclave)**: ₹12.5 Cr / $1.5M · 4 BHK with private infinity pool & landscaped deck (5,200 sqft plot).\n" +
@@ -382,7 +395,12 @@ export function generateRealEstateAIResponse(userPrompt: string): string {
     );
   }
 
-  if (lower.includes("visit") || lower.includes("showing") || lower.includes("schedule") || lower.includes("view")) {
+  if (
+    lower.includes("visit") ||
+    lower.includes("showing") ||
+    lower.includes("schedule") ||
+    lower.includes("view")
+  ) {
     return (
       "I've logged a site visit request! The buyer has been matched with our senior luxury property specialist. " +
       "An automated confirmation with the GPS location, gate pass, and broker contact has been generated. " +

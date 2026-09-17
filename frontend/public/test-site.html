@@ -471,7 +471,11 @@
         var color = params.get('color') || '#6366f1';
         var name = params.get('name') || 'Sarah - Property Assistant';
         var theme = params.get('theme') || 'light';
-        var greeting = params.get('greeting') || 'Hi there! 👋 Looking for your dream home? I can help you find the perfect property, answer questions about listings, and more!';
+        var lang = (params.get('lang') || '').toLowerCase();
+        var isAr = lang.indexOf('ar') === 0;
+        var greeting = params.get('greeting') || (isAr
+          ? 'مرحباً! 👋 تبحث عن منزل أحلامك؟ يمكنني مساعدتك في العثور على العقار المثالي والإجابة عن أسئلتك حول العقارات المتاحة.'
+          : 'Hi there! 👋 Looking for your dream home? I can help you find the perfect property, answer questions about listings, and more!');
 
         var script = document.createElement('script');
         script.src = (params.get('widget') || '/widget.js') + '?v=' + Date.now();
@@ -481,7 +485,8 @@
         script.setAttribute('data-name', name);
         script.setAttribute('data-greeting', greeting);
         script.setAttribute('data-theme', theme);
-        script.setAttribute('data-position', 'right');
+        script.setAttribute('data-position', isAr ? 'left' : 'right');
+        if (lang) script.setAttribute('data-lang', lang);
         document.body.appendChild(script);
 
         // Interactive property card clicks that trigger the AI assistant
@@ -492,7 +497,9 @@
             var price = card.querySelector('.card-price') ? card.querySelector('.card-price').textContent : '';
             window.postMessage({
               type: 'stratos_open_widget',
-              prompt: 'Tell me more about ' + title + ' (' + price + ') and available viewing times.'
+              prompt: isAr
+                ? 'أخبرني المزيد عن ' + title + ' (' + price + ') ومواعيد المعاينة المتاحة.'
+                : 'Tell me more about ' + title + ' (' + price + ') and available viewing times.'
             }, '*');
             return;
           }

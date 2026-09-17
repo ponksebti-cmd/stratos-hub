@@ -269,7 +269,8 @@ function Settings() {
   });
 
   const widgetKey = settings?.company?.id ?? "your-agency-id";
-  const widgetOrigin = typeof window !== "undefined" ? window.location.origin : "https://stratos-hub.pages.dev";
+  const widgetOrigin =
+    typeof window !== "undefined" ? window.location.origin : "https://stratos-hub.pages.dev";
   const embedCode = [
     `<!-- Stratos Hub Widget — paste before </body> -->`,
     `<script`,
@@ -1242,7 +1243,7 @@ function Settings() {
                     <Input
                       value={wName}
                       onChange={(e) => setWName(e.target.value)}
-                      placeholder="Property Assistant"
+                      placeholder={t("Property Assistant")}
                       maxLength={40}
                     />
                   </div>
@@ -1253,7 +1254,7 @@ function Settings() {
                       onChange={(e) => setWGreeting(e.target.value)}
                       rows={2}
                       maxLength={160}
-                      placeholder="Hi! How can I help you find your perfect property?"
+                      placeholder={t("Hi! How can I help you find your perfect property?")}
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring resize-none placeholder:text-muted-foreground"
                     />
                     <div className="text-[11px] text-muted-foreground text-end">
@@ -1385,6 +1386,7 @@ function darkenPreview(hex: string, f = 0.72): string {
 }
 
 function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
+  const { t } = useTranslation();
   const bg = dark ? "#0f172a" : "#f8fafc";
   const msgBg = dark ? "rgba(255,255,255,0.08)" : "#ffffff";
   const grad = `linear-gradient(135deg, ${color} 0%, ${darkenPreview(color)} 100%)`;
@@ -1412,7 +1414,7 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
             </div>
             <div className="text-[9px] text-white/70 mt-0.5 flex items-center gap-1">
               <span className="h-1 w-1 rounded-full bg-emerald-400 inline-block animate-pulse" />{" "}
-              Online
+              {t("Online")}
             </div>
           </div>
         </div>
@@ -1441,7 +1443,7 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
               className="max-w-[65%] px-2.5 py-1.5 rounded-xl rounded-br-sm text-[10px] text-white leading-relaxed shadow-sm"
               style={{ background: color }}
             >
-              I'm looking for a 3-bedroom luxury villa
+              {t("I'm looking for a 3-bedroom luxury villa")}
             </div>
           </div>
           <div className="flex items-end gap-1.5">
@@ -1467,15 +1469,18 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
             </div>
           </div>
           {/* Quick chips preview */}
-          <div className="flex gap-1 overflow-x-auto pt-1 pb-0.5" style={{ scrollbarWidth: "none" }}>
+          <div
+            className="flex gap-1 overflow-x-auto pt-1 pb-0.5"
+            style={{ scrollbarWidth: "none" }}
+          >
             <span className="text-[9px] px-2 py-0.5 rounded-full border border-indigo-200/50 bg-indigo-50/50 text-indigo-600 font-semibold whitespace-nowrap">
-              🏡 Luxury Villas
+              {t("🏡 Luxury Villas")}
             </span>
             <span className="text-[9px] px-2 py-0.5 rounded-full border border-slate-200 bg-white/50 text-slate-600 font-semibold whitespace-nowrap">
-              🏢 Penthouses
+              {t("🏢 Penthouses")}
             </span>
             <span className="text-[9px] px-2 py-0.5 rounded-full border border-slate-200 bg-white/50 text-slate-600 font-semibold whitespace-nowrap">
-              📅 Book Tour
+              {t("📅 Book Tour")}
             </span>
           </div>
         </div>
@@ -1487,7 +1492,9 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
             borderColor: dark ? "rgba(255,255,255,0.08)" : "#f0f0f0",
           }}
         >
-          <span className="flex-1 text-[10px] text-gray-400">Ask about listings, pricing...</span>
+          <span className="flex-1 text-[10px] text-gray-400">
+            {t("Ask about listings, pricing...")}
+          </span>
           <div
             className="h-6 w-6 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
             style={{ background: grad }}
@@ -1505,7 +1512,7 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
           }}
         >
           <Sparkles className="h-2 w-2 text-indigo-500" />
-          Powered by <span className="font-semibold ms-0.5">Stratos Hub</span>
+          {t("Powered by")} <span className="font-semibold ms-0.5">Stratos Hub</span>
         </div>
       </div>
       {/* FAB preview */}
@@ -1513,7 +1520,7 @@ function WidgetPreview({ color, name, greeting, dark }: WidgetPreviewProps) {
         <div
           className="h-12 w-12 rounded-[18px] flex items-center justify-center shadow-xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer relative"
           style={{ background: grad, boxShadow: `0 10px 24px -4px ${color}66` }}
-          title="Stratos Spatial FAB"
+          title={t("Stratos Spatial FAB")}
         >
           <MessageSquare className="h-5 w-5 text-white" />
           <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm flex items-center justify-center">

@@ -141,7 +141,7 @@ function Chat() {
       queryClient.invalidateQueries({ queryKey: ["chat-sessions"] });
       setActiveId(session.id);
     },
-    onError: () => toast.error("Failed to create conversation"),
+    onError: () => toast.error(t("Failed to create conversation")),
   });
 
   const switchSession = (id: string) => {
@@ -164,7 +164,7 @@ function Chat() {
         targetSessionId = newSession.id;
         setActiveId(newSession.id);
       } catch (err) {
-        toast.error("Failed to auto-create conversation");
+        toast.error(t("Failed to auto-create conversation"));
         setSending(false);
         return;
       }
@@ -226,7 +226,7 @@ function Chat() {
   }, [paramInitialMessage, activeId]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4 h-[calc(100vh-9rem)]">
+    <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4 h-[calc(100dvh-10.5rem)] lg:h-[calc(100dvh-9rem)]">
       {/* Sessions sidebar */}
       <Card className="hidden lg:flex flex-col overflow-hidden">
         <CardHeader className="p-4 pb-2 flex-row items-center justify-between">
@@ -282,8 +282,38 @@ function Chat() {
       </Card>
 
       {/* Chat area */}
-      <Card className="flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <Card className="flex flex-col overflow-hidden min-h-0">
+        {/* Mobile conversation switcher (sidebar is hidden below lg) */}
+        <div className="lg:hidden flex items-center gap-2 px-3 py-2 border-b bg-muted/40">
+          <select
+            value={activeId ?? ""}
+            onChange={(e) => switchSession(e.target.value)}
+            className="flex-1 min-w-0 h-8 rounded-md border border-border bg-card px-2 text-xs font-medium text-foreground outline-none"
+            aria-label={t("Conversations")}
+          >
+            {!activeId && <option value="">{t("New conversation")}</option>}
+            {sessions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
+          </select>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 flex-shrink-0"
+            onClick={() => createSessionMutation.mutate()}
+            disabled={createSessionMutation.isPending}
+            title={t("New conversation")}
+          >
+            {createSessionMutation.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Plus className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
           {messagesLoading ? (
             <div className="space-y-3 p-2">
               <div className="flex justify-end">
@@ -332,7 +362,7 @@ function Chat() {
                   disabled={createSessionMutation.isPending}
                 >
                   {createSessionMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    <Loader2 className="h-3 w-3 animate-spin me-1" />
                   ) : null}
                   {t("New conversation")}
                 </Button>

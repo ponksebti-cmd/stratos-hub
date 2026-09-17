@@ -9,9 +9,12 @@ import {
   Sun,
   Moon,
   Send,
-  Building2,
-  Calendar,
+  Globe2,
   Clock,
+  Users,
+  BarChart3,
+  MessageSquare,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,31 +29,14 @@ export const Route = createFileRoute("/")({
   component: RouteComponent,
 });
 
+// Latin digits for prices/numbers in both languages (keeps prices readable)
+const fmt = (n: number) => n.toLocaleString("en-US");
+
 function RouteComponent() {
   const { t } = useTranslation();
   const isRtl = i18n.dir() === "rtl";
   const [isDark, setIsDark] = useState(false);
   const [billingAnnual, setBillingAnnual] = useState(true);
-
-  // Mount the live embed widget on the landing page
-  useEffect(() => {
-    const existingScript = document.getElementById("stratos-landing-widget");
-    if (!existingScript) {
-      const s = document.createElement("script");
-      s.id = "stratos-landing-widget";
-      s.src = "/widget.js?v=" + Date.now();
-      s.setAttribute("data-key", "demo");
-      s.setAttribute("data-color", "#6366f1");
-      s.setAttribute("data-name", "Sarah - Property Concierge");
-      s.setAttribute(
-        "data-greeting",
-        "Hi! Looking for a luxury villa or apartment? I can answer listing questions and book a private walkthrough for you.",
-      );
-      s.setAttribute("data-theme", isDark ? "dark" : "light");
-      s.setAttribute("data-position", "right");
-      document.body.appendChild(s);
-    }
-  }, [isDark]);
 
   // Synchronize theme
   useEffect(() => {
@@ -67,24 +53,58 @@ function RouteComponent() {
     document.documentElement.classList.toggle("dark", next);
   };
 
-  // ── Interactive Live Tour Booking Simulator (EliseAI Concept) ─────────────
-  const [simChatMessages, setSimChatMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Welcome to Apex Luxury Realty! 👋 I'm Sarah, your 24/7 property concierge. I can answer questions about floor plans, pricing, or schedule a private showing.",
-    },
-    {
-      role: "user",
-      content: "Can I view the 4-Bed Marbella Coastal Villa this Saturday afternoon?",
-    },
-    {
-      role: "assistant",
-      content:
-        "The Palm Reserve Villa (€1,250,000) is available! We have private walkthrough slots this Saturday at 2:00 PM and 4:30 PM CET. Would you like me to reserve the 2:00 PM slot?",
-    },
-  ]);
+  // ── Mount the live embed widget on the landing page (re-mounts on language/theme change)
+  const lang = i18n.language?.startsWith("ar") ? "ar" : "en";
+  useEffect(() => {
+    const scriptId = "stratos-landing-widget";
+    const existing = document.getElementById(scriptId);
+    if (existing) existing.remove();
+    const s = document.createElement("script");
+    s.id = scriptId;
+    s.src = "/widget.js?v=" + Date.now();
+    s.setAttribute("data-key", "demo");
+    s.setAttribute("data-color", "#6366f1");
+    s.setAttribute("data-name", "Sarah - Property Concierge");
+    s.setAttribute("data-lang", lang);
+    s.setAttribute(
+      "data-greeting",
+      lang === "ar"
+        ? "مرحباً! 👋 تبحث عن عقارك القادم؟ أجيب على أسئلتك من كتيبات وأسعار العقارات لدينا."
+        : "Hi! 👋 Looking for your next property? I answer questions using our own brochures and price sheets.",
+    );
+    s.setAttribute("data-theme", isDark ? "dark" : "light");
+    s.setAttribute("data-position", isRtl ? "left" : "right");
+    document.body.appendChild(s);
+  }, [isDark, lang, isRtl]);
+
+  // ── Interactive demo conversation (honest preview of chat + lead capture) ──
+  const demoScript = {
+    welcome: t(
+      "Welcome to Apex Luxury Realty! 👋 I'm Sarah, your 24/7 property assistant. Ask me anything about our listings, prices, or brochures.",
+    ),
+    ask: t("What's the price of the 4-bedroom villa in Palm Reserve?"),
+    answer: t(
+      "The Palm Reserve Villa is listed at €1,250,000 — 4 bedrooms, 4,800 sq ft, sea view, per the uploaded brochure. Would you like the sales team to call you?",
+    ),
+    reply: t(
+      "Done! I've saved your details as a new lead and notified the sales team — they'll reach out shortly.",
+    ),
+  };
+
+  const [simChatMessages, setSimChatMessages] = useState<
+    { role: "user" | "assistant"; content: string }[]
+  >([]);
   const [simInput, setSimInput] = useState("");
+
+  // Seed the conversation whenever the language changes
+  useEffect(() => {
+    setSimChatMessages([
+      { role: "assistant", content: demoScript.welcome },
+      { role: "user", content: demoScript.ask },
+      { role: "assistant", content: demoScript.answer },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   const handleSimSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,75 +114,102 @@ function RouteComponent() {
     setSimChatMessages((prev) => [...prev, { role: "user", content: text }]);
 
     setTimeout(() => {
-      setSimChatMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "I've provisionally reserved Saturday at 2:00 PM for you with our senior broker. Please confirm your details below to sync your calendar invite and gate pass.",
-        },
-      ]);
+      setSimChatMessages((prev) => [...prev, { role: "assistant", content: demoScript.reply }]);
     }, 600);
   };
 
-  // ── ROI Calculator State ──────────────────────────────────────────────────
+  // ── ROI Calculator State (illustrative estimate) ──────────────────────────
   const [inquiries, setInquiries] = useState(400);
   const [commission, setCommission] = useState(12000);
   const hoursSaved = Math.round(inquiries * 0.35);
-  const toursBooked = Math.round(inquiries * 0.18);
-  const additionalDeals = Math.max(1, Math.round(toursBooked * 0.12));
+  const qualifiedLeads = Math.round(inquiries * 0.18);
+  const additionalDeals = Math.max(1, Math.round(qualifiedLeads * 0.12));
   const quarterlyLift = additionalDeals * 3 * commission;
 
   // ── Accordion State ───────────────────────────────────────────────────────
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
+  const faqs = [
+    {
+      q: t("How does the AI answer questions about my listings?"),
+      a: t(
+        "You upload your property PDFs, brochures and spreadsheets (CSV/Excel) in the workspace. The AI parses them into a searchable index, so buyer questions are answered with exact details taken from your own documents.",
+      ),
+    },
+    {
+      q: t("Does it connect to WhatsApp Business?"),
+      a: t(
+        "Yes. Stratos Hub connects to the official WhatsApp Business Cloud API using your own token — you paste the credentials once in Settings and the same assistant answers on WhatsApp, Messenger, Instagram, TikTok and your website.",
+      ),
+    },
+    {
+      q: t("How does Arabic and RTL language support work?"),
+      a: t(
+        "Stratos Hub was built from the ground up with native English and Arabic support. The dashboard switches to full RTL with one click, and the assistant replies to each buyer in the language they write in — with proper RTL formatting.",
+      ),
+    },
+    {
+      q: t("Is our proprietary listing and client data protected?"),
+      a: t(
+        "Yes. All data is encrypted at rest and in transit. Your agency portfolio is strictly private, isolated in your workspace, and never used to train public foundation models.",
+      ),
+    },
+    {
+      q: t("What happens when our free 14-day trial ends?"),
+      a: t(
+        "You can upgrade to the Starter, Growth or Scale plan at any time. There is no auto-billing unless you choose to subscribe, and you keep full access to everything you uploaded.",
+      ),
+    },
+  ];
+
   return (
     <div
       className={cn(
-        "min-h-screen font-sans transition-colors duration-300",
+        "min-h-screen font-sans transition-colors duration-300 overflow-x-hidden",
         isDark ? "bg-[#0b0e14] text-slate-100" : "bg-[#fbfbfd] text-[#1d1d1f]",
       )}
       dir={isRtl ? "rtl" : "ltr"}
     >
       {/* ── Top Navigation Bar ────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 w-full backdrop-blur-xl border-b border-black/[0.06] dark:border-white/[0.08] bg-white/80 dark:bg-[#0b0e14]/85">
-        <div className="mx-auto max-w-7xl flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl flex h-16 items-center justify-between gap-2 px-4 sm:px-6 lg:px-8">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
             <div className="h-9 w-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm shadow-indigo-600/30 overflow-hidden">
               <img src="/logo.png" alt="Stratos Hub" className="h-5 w-5 object-contain" />
             </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-base leading-tight tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
-                Stratos Hub
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
-                  AI Workforce
-                </span>
+            <span className="font-bold text-base leading-tight tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+              Stratos Hub
+              <span className="hidden sm:inline-block text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                {t("AI Workforce")}
               </span>
-            </div>
+            </span>
           </Link>
 
           {/* Nav Links */}
-          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600 dark:text-slate-300">
-            <a href="#solutions" className="hover:text-indigo-600 transition-colors">
-              Platform
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-7 text-sm font-semibold text-slate-600 dark:text-slate-300">
+            <a href="#platform" className="hover:text-indigo-600 transition-colors">
+              {t("Platform")}
             </a>
-            <a href="#showing" className="hover:text-indigo-600 transition-colors">
-              Auto-Scheduler
+            <a href="#demo" className="hover:text-indigo-600 transition-colors">
+              {t("Live Demo")}
             </a>
-            <a href="#nurturing" className="hover:text-indigo-600 transition-colors">
-              Long-Term Follow-Up
+            <a href="#how" className="hover:text-indigo-600 transition-colors">
+              {t("How It Works")}
             </a>
             <a href="#roi" className="hover:text-indigo-600 transition-colors">
-              ROI Calculator
+              {t("ROI Calculator")}
             </a>
             <a href="#pricing" className="hover:text-indigo-600 transition-colors">
-              Pricing
+              {t("Pricing")}
+            </a>
+            <a href="#faq" className="hover:text-indigo-600 transition-colors">
+              {t("FAQ")}
             </a>
           </nav>
 
           {/* Utilities & CTAs */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             <Button
               variant="ghost"
               size="sm"
@@ -178,50 +225,65 @@ function RouteComponent() {
               size="icon"
               onClick={toggleDarkMode}
               className="h-8 w-8 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300"
-              title="Toggle theme"
+              title={isDark ? t("Light mode") : t("Dark mode")}
             >
-              {isDark ? <Sun className="h-3.5 w-3.5 text-amber-400" /> : <Moon className="h-3.5 w-3.5" />}
+              {isDark ? (
+                <Sun className="h-3.5 w-3.5 text-amber-400" />
+              ) : (
+                <Moon className="h-3.5 w-3.5" />
+              )}
             </Button>
 
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex text-xs font-semibold">
-              <Link to="/login">Sign In</Link>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden md:inline-flex text-xs font-semibold"
+            >
+              <Link to="/login">{t("Sign in")}</Link>
             </Button>
 
-            <Button asChild size="sm" className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/30 rounded-lg px-3.5">
-              <Link to="/signup">Start Free Trial</Link>
+            <Button
+              asChild
+              size="sm"
+              className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/30 rounded-lg px-3 sm:px-3.5 flex-shrink-0"
+            >
+              <Link to="/signup">{t("Start Free Trial")}</Link>
             </Button>
           </div>
         </div>
       </header>
 
-      {/* ── Hero Section (The Autonomous Real Estate Workforce) ─────────── */}
-      <section className="relative pt-12 pb-20 md:pt-20 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      {/* ── Hero Section ─────────────────────────────────────────────────── */}
+      <section className="relative pt-12 pb-16 md:pt-20 md:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto space-y-6">
           {/* Trust Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-900 bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-semibold text-indigo-700 dark:text-indigo-300 shadow-sm">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-900 bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-semibold text-indigo-700 dark:text-indigo-300 shadow-sm text-center">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>Autonomous AI for Modern Brokerages & Property Teams</span>
+            <span>{t("Bilingual AI assistant for modern real-estate teams")}</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.12]">
-            Turn Every Buyer Inquiry Into a{" "}
-            <span className="text-indigo-600 dark:text-indigo-400">Confirmed Showing.</span>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]">
+            {t("Turn every buyer inquiry into a")}{" "}
+            <span className="text-indigo-600 dark:text-indigo-400">{t("qualified lead.")}</span>
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
-            Like <strong>EliseAI</strong>, <strong>Roof AI</strong>, and <strong>Structurely</strong> combined. Stratos Hub answers buyer questions 24/7, schedules showings directly into agent calendars, and follows up over WhatsApp and SMS until deals close.
+          <p className="text-sm sm:text-lg text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
+            {t(
+              "Stratos Hub replies to your buyers 24/7 on your website, WhatsApp, Messenger, Instagram and TikTok. It answers questions using your own listings and brochures — and turns every conversation into a structured lead.",
+            )}
           </p>
 
           {/* CTAs */}
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-3 pt-2">
             <Button
               asChild
               size="lg"
               className="h-11 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/25 active:scale-95 transition-all"
             >
               <Link to="/signup">
-                <span>Deploy AI Assistant</span>
-                <ArrowRight className="h-4 w-4 ml-2" />
+                <span>{t("Deploy AI Assistant")}</span>
+                <ArrowRight className={cn("h-4 w-4", isRtl ? "mr-2 rotate-180" : "ml-2")} />
               </Link>
             </Button>
 
@@ -232,56 +294,59 @@ function RouteComponent() {
               className="h-11 px-5 rounded-xl border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800/60"
             >
               <Link to="/test-site.html">
-                <Sparkles className="h-4 w-4 mr-2 text-indigo-500" />
-                <span>Test Live Widget Demo</span>
+                <Sparkles className="h-4 w-4 text-indigo-500 me-2" />
+                <span>{t("Test Live Widget Demo")}</span>
               </Link>
             </Button>
           </div>
 
-          <div className="flex items-center justify-center gap-6 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-3 text-xs font-medium text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5">
-              <Check className="h-3.5 w-3.5 text-emerald-500" /> 14-Day Free Trial
+              <Check className="h-3.5 w-3.5 text-emerald-500" /> {t("14-Day Free Trial")}
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="h-3.5 w-3.5 text-emerald-500" /> No Credit Card Required
+              <Check className="h-3.5 w-3.5 text-emerald-500" /> {t("No Credit Card Required")}
             </span>
             <span className="flex items-center gap-1.5">
-              <Check className="h-3.5 w-3.5 text-emerald-500" /> 2-Minute Setup
+              <Check className="h-3.5 w-3.5 text-emerald-500" /> {t("Arabic & English Bilingual")}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Check className="h-3.5 w-3.5 text-emerald-500" /> {t("2-Minute Setup")}
             </span>
           </div>
         </div>
 
-        {/* ── Interactive Auto-Scheduler & Qualification Console (EliseAI Core) ─ */}
-        <div id="showing" className="mt-14 max-w-4xl mx-auto">
+        {/* ── Interactive Live Preview: chat + lead capture ─────────────────── */}
+        <div id="demo" className="mt-14 max-w-4xl mx-auto scroll-mt-20">
           <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121622] shadow-xl shadow-slate-200/50 dark:shadow-black/40 overflow-hidden">
             {/* Console Header */}
-            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-[#151926]">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1.5">
+            <div className="px-4 sm:px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 bg-slate-50/80 dark:bg-[#151926]">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="hidden sm:flex gap-1.5 flex-shrink-0">
                   <span className="h-3 w-3 rounded-full bg-red-400 inline-block" />
                   <span className="h-3 w-3 rounded-full bg-amber-400 inline-block" />
                   <span className="h-3 w-3 rounded-full bg-emerald-400 inline-block" />
                 </div>
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 ml-2 font-mono">
-                  Autonomous Showing Pipeline · Live Preview
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 sm:ms-2 font-mono truncate">
+                  {t("Live Preview · AI Chat Widget")}
                 </span>
               </div>
-              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
-                ● 24/7 Active
+              <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold flex-shrink-0">
+                ● {t("24/7 Active")}
               </Badge>
             </div>
 
             {/* Interactive Console Content */}
-            <div className="grid grid-cols-1 md:grid-cols-12 min-h-[420px]">
+            <div className="grid grid-cols-1 md:grid-cols-12">
               {/* Left: Conversational Stream (7 cols) */}
-              <div className="md:col-span-7 p-5 flex flex-col justify-between border-b md:border-b-0 md:border-r border-slate-100 dark:border-slate-800">
-                <div className="space-y-3 overflow-y-auto max-h-[300px]">
+              <div className="md:col-span-7 p-4 sm:p-5 flex flex-col border-b md:border-b-0 md:border-e border-slate-100 dark:border-slate-800">
+                <div className="space-y-3 overflow-y-auto max-h-[300px] min-h-[220px]">
                   {simChatMessages.map((msg, i) => (
                     <div
                       key={i}
                       className={cn(
                         "flex gap-2.5 text-xs leading-relaxed max-w-[90%]",
-                        msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto",
+                        msg.role === "user" ? "ms-auto flex-row-reverse" : "me-auto",
                       )}
                     >
                       <div
@@ -296,8 +361,8 @@ function RouteComponent() {
                         className={cn(
                           "p-3 rounded-2xl border",
                           msg.role === "user"
-                            ? "bg-indigo-600 text-white border-transparent rounded-tr-none"
-                            : "bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 border-slate-200/80 dark:border-slate-700 rounded-tl-none shadow-sm",
+                            ? "bg-indigo-600 text-white border-transparent rounded-se-none"
+                            : "bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-100 border-slate-200/80 dark:border-slate-700 rounded-ss-none shadow-sm",
                         )}
                       >
                         {msg.content}
@@ -307,56 +372,73 @@ function RouteComponent() {
                 </div>
 
                 {/* Prompt bar */}
-                <form onSubmit={handleSimSend} className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <form
+                  onSubmit={handleSimSend}
+                  className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800"
+                >
                   <div className="flex gap-2">
                     <Input
                       value={simInput}
                       onChange={(e) => setSimInput(e.target.value)}
-                      placeholder="Type 'Yes, please book 2:00 PM'..."
+                      placeholder={t("Type a message…")}
                       className="text-xs h-9"
                     />
-                    <Button type="submit" size="sm" className="h-9 px-3 bg-indigo-600 hover:bg-indigo-700 text-white">
-                      <Send className="h-3 w-3" />
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-9 px-3 bg-indigo-600 hover:bg-indigo-700 text-white"
+                    >
+                      <Send className="h-3 w-3 rtl:-scale-x-100" />
                     </Button>
                   </div>
                 </form>
               </div>
 
-              {/* Right: Automated Showing Card & Calendar Sync (5 cols) */}
-              <div className="md:col-span-5 p-5 bg-slate-50/50 dark:bg-[#10141f] flex flex-col justify-between space-y-4">
+              {/* Right: Captured Lead Card (5 cols) */}
+              <div className="md:col-span-5 p-4 sm:p-5 bg-slate-50/50 dark:bg-[#10141f] flex flex-col justify-between gap-4">
                 <div className="space-y-3.5">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 text-indigo-500" />
-                    <span>Automated Appointment Booking</span>
+                    <Users className="h-3.5 w-3.5 text-indigo-500" />
+                    <span>{t("Captured automatically")}</span>
                   </div>
 
                   <div className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm space-y-2.5">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <div className="text-xs font-bold text-slate-900 dark:text-white">
-                          Palm Reserve Villa Walkthrough
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                          {t("Palm Reserve Villa Walkthrough")}
                         </div>
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          Saturday · 2:00 PM CET
+                          {t("Interested buyer · WhatsApp")}
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 font-mono">
-                        Confirmed
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono flex-shrink-0">
+                        {t("new")}
                       </span>
                     </div>
 
                     <div className="text-[11px] space-y-1 text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 pt-2">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Prospect:</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-slate-400">{t("Name")}:</span>
                         <span className="font-semibold">Alexander Vance</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Assigned Broker:</span>
-                        <span className="font-semibold">Marcus Sterling</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-slate-400">{t("Phone")}:</span>
+                        <span className="font-semibold" dir="ltr">
+                          +34 612 34 56 78
+                        </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Calendar Sync:</span>
-                        <span className="text-emerald-500 font-semibold">Google & Outlook</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-slate-400">{t("Budget")}:</span>
+                        <span className="font-semibold">€1,200,000</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-slate-400">{t("Property type")}:</span>
+                        <span className="font-semibold">{t("Villa")}</span>
+                      </div>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-slate-400">{t("Qualification score")}:</span>
+                        <span className="text-emerald-500 font-semibold">★★★★☆ 4/5</span>
                       </div>
                     </div>
                   </div>
@@ -364,139 +446,211 @@ function RouteComponent() {
                   <div className="p-3 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-900 text-xs space-y-1">
                     <div className="font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
                       <Zap className="h-3.5 w-3.5" />
-                      <span>Zero Agent Time Spent</span>
+                      <span>{t("Zero manual data entry")}</span>
                     </div>
                     <p className="text-[11px] text-indigo-600/90 dark:text-indigo-400/90 leading-relaxed">
-                      Gate passes, address directions, and broker reminders are generated and dispatched autonomously.
+                      {t(
+                        "Name, phone, budget and property interest are extracted from the conversation and pushed to your leads pipeline.",
+                      )}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-[11px] text-slate-400 text-center font-medium">
-                  Integrates with Google Calendar, Outlook, and Yardi / Entrata.
+                  {t("Also answers on WhatsApp, Messenger, Instagram & TikTok.")}
                 </div>
               </div>
             </div>
           </div>
+          <p className="text-center text-[11px] text-slate-400 mt-3">
+            {t("Simulated preview — connect your documents to make it yours.")}
+          </p>
         </div>
       </section>
 
-      {/* ── Key Missing Ideas: EliseAI, Structurely, Roof AI Pillars ─────── */}
-      <section id="solutions" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800">
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+      {/* ── Feature Pillars (all real, shipped capabilities) ───────────────── */}
+      <section
+        id="platform"
+        className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800 scroll-mt-16"
+      >
+        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16 space-y-3">
           <Badge className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-xs font-bold">
-            The Three Pillars of Modern Real Estate AI
+            {t("Platform")}
           </Badge>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Everything EliseAI, Structurely, and Roof AI Offer — in One Platform.
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {t("One AI assistant across your whole sales funnel.")}
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed">
-            Stop stitching together five different point solutions. Stratos Hub unifies conversational scheduling, long-term nurturing, and MLS document intelligence.
+            {t(
+              "From the first buyer question to a qualified lead in your pipeline — no engineering team required.",
+            )}
           </p>
         </div>
 
-        {/* 3 Pillars Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Pillar 1: Autonomous Leasing & Showing Agent (EliseAI) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+          {/* 1. Web Chat Widget */}
           <Card className="rounded-3xl border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-7 space-y-4">
+            <CardContent className="p-6 sm:p-7 space-y-4">
               <div className="h-12 w-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                <Calendar className="h-6 w-6" />
+                <MessageSquare className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                  Like EliseAI
-                </span>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  24/7 Showing & Tour Scheduler
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  {t("Web Chat Widget")}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Prospective buyers and tenants never wait for office hours. The AI verifies showing availability, books in-person or video tours directly into broker calendars, and issues automated gate passes.
+                  {t("Add an AI property assistant to any website with one line of code.")}
                 </p>
               </div>
-
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Two-way Google & Outlook Calendar Sync</span>
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Custom colors, agent name & greeting")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Automated SMS & WhatsApp Showing Reminders</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Cuts no-shows by 44%</span>
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Light & dark themes, left/right position")}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Pillar 2: 12-Month Conversational Nurturing (Structurely) */}
-          <Card id="nurturing" className="rounded-3xl border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300 scroll-mt-24">
-            <CardContent className="p-7 space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <Clock className="h-6 w-6" />
-              </div>
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                  Like Structurely
-                </span>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Long-Term 2-Way Follow-Up
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  70% of real estate deals close after 5+ touchpoints, but most agents give up after 1. Stratos Hub persistently follows up over WhatsApp, SMS, and email with tailored price cuts and new listings.
-                </p>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Cadence on Days 1, 3, 7, 14, 30 & 60</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Dynamic listing price-drop alerts</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Re-engages 3x more cold leads</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pillar 3: MLS & PDF Document Intelligence (Roof AI) */}
+          {/* 2. Document Q&A */}
           <Card className="rounded-3xl border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300">
-            <CardContent className="p-7 space-y-4">
-              <div className="h-12 w-12 rounded-2xl bg-cyan-50 dark:cyan-950/60 border border-cyan-200 dark:border-cyan-800 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
-                <Building2 className="h-6 w-6" />
+            <CardContent className="p-6 sm:p-7 space-y-4">
+              <div className="h-12 w-12 rounded-2xl bg-cyan-50 dark:bg-cyan-950/60 border border-cyan-200 dark:border-cyan-800 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
+                <FileText className="h-6 w-6" />
               </div>
               <div className="space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-600 dark:text-cyan-400">
-                  Like Roof AI
-                </span>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                  Inventory RAG & Lender Routing
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  {t("Document & brochure Q&A")}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                  Upload PDF development brochures, floor plans, and price sheets. The AI quotes exact square footage and payment milestones, qualifies cash vs. loan readiness, and routes pre-approvals to preferred lenders.
+                  {t(
+                    "Upload PDF brochures, price sheets and spreadsheets — the AI answers buyers with exact details from your own documents.",
+                  )}
                 </p>
               </div>
-
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Parses 100-page property brochures in 60s</span>
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("PDF, Excel & CSV ingestion")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>Mortgage pre-approval qualification</span>
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Answers cite your own listings")}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 3. AI Lead Capture */}
+          <Card className="rounded-3xl border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 sm:p-7 space-y-4">
+              <div className="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  {t("AI lead capture")}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {t("Automatically extract and qualify leads from every conversation.")}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Name, phone, city, budget & property type")}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" />
-                  <span>RERA & Fair Housing compliant</span>
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("1–5 star qualification score")}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 4. Leads CRM */}
+          <Card className="rounded-3xl border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 sm:p-7 space-y-4">
+              <div className="h-12 w-12 rounded-2xl bg-violet-50 dark:bg-violet-950/60 border border-violet-200 dark:border-violet-800 flex items-center justify-center text-violet-600 dark:text-violet-400">
+                <Users className="h-6 w-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  {t("Leads CRM & pipeline")}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {t(
+                    "Search, filter and manage every lead in one pipeline — from first contact to won or lost.",
+                  )}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Search & status filters")}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("One-click status updates")}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 5. Omnichannel */}
+          <Card className="rounded-3xl border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 sm:p-7 space-y-4">
+              <div className="h-12 w-12 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                <Globe2 className="h-6 w-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  {t("Omnichannel inboxes")}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {t(
+                    "Connect the messaging apps your buyers actually use — one AI brain answers everywhere.",
+                  )}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("WhatsApp Business Cloud API")}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Messenger · Instagram · TikTok")}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 6. Usage & ROI */}
+          <Card className="rounded-3xl border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all duration-300">
+            <CardContent className="p-6 sm:p-7 space-y-4">
+              <div className="h-12 w-12 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                <BarChart3 className="h-6 w-6" />
+              </div>
+              <div className="space-y-1.5">
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
+                  {t("Usage & ROI analytics")}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {t("Watch credits, conversations and estimated pipeline value in one dashboard.")}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Credit usage tracking")}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                  <span>{t("Chats handled per day")}</span>
                 </div>
               </div>
             </CardContent>
@@ -504,80 +658,136 @@ function RouteComponent() {
         </div>
       </section>
 
-      {/* ── Follow-Up Cadence Visualizer (Structurely Differentiator) ──────── */}
-      <section className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800">
-        <div className="rounded-3xl bg-slate-50 dark:bg-[#121622] border border-slate-200 dark:border-slate-800 p-8 sm:p-12">
-          <div className="max-w-3xl mb-10 space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-              Automated Conversational Cadence
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              How Stratos Hub Nurtures Prospects Over 60 Days
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-              When a buyer inquires on your site or WhatsApp, our persistent two-way nurturing checks in naturally until an appointment is booked.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-              <div className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">Minute 1 · Inquiry</div>
-              <div className="font-semibold text-slate-900 dark:text-white">Instant Response</div>
-              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
-                "Hi! I see you were looking at the Marbella Coastal Villa. Here is the PDF lookbook and floor plan."
+      {/* ── Bilingual band ───────────────────────────────────────────────── */}
+      <section className="py-14 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800">
+        <div className="rounded-3xl bg-slate-50 dark:bg-[#121622] border border-slate-200 dark:border-slate-800 p-6 sm:p-10 md:p-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                {t("Arabic & English Bilingual")}
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                {t("Arabic & English, out of the box")}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                {t(
+                  "The dashboard switches to native RTL with one click, and your assistant chats with each buyer in the language they write in.",
+                )}
               </p>
             </div>
-
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-              <div className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">Day 3 · Check-in</div>
-              <div className="font-semibold text-slate-900 dark:text-white">Schedule Showing</div>
-              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
-                "Our broker Marcus is hosting private walkthroughs this Saturday. Would 2 PM suit your schedule?"
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-              <div className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">Day 14 · Value Drop</div>
-              <div className="font-semibold text-slate-900 dark:text-white">Portfolio Matching</div>
-              <p className="text-slate-500 dark:text-slate-400 text-[11px] leading-relaxed">
-                "A sister penthouse just listed in the same building with sea views. Thought you'd love a preview."
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900 space-y-2">
-              <div className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">Day 30 · Closing</div>
-              <div className="font-semibold text-slate-900 dark:text-white">Broker Hand-off</div>
-              <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-                Buyer confirms pre-approval and books viewing. Broker receives instant dossier with full chat summary.
-              </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 text-center">
+                <Globe className="h-5 w-5 text-indigo-500 mx-auto" />
+                <div className="font-bold text-slate-900 dark:text-white">
+                  {t("Native RTL dashboard")}
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 text-center">
+                <MessageSquare className="h-5 w-5 text-emerald-500 mx-auto" />
+                <div className="font-bold text-slate-900 dark:text-white">
+                  {t("Bilingual AI replies")}
+                </div>
+              </div>
+              <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5 text-center">
+                <Zap className="h-5 w-5 text-amber-500 mx-auto" />
+                <div className="font-bold text-slate-900 dark:text-white">
+                  {t("One-click language toggle")}
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── How it works ─────────────────────────────────────────────────── */}
+      <section
+        id="how"
+        className="py-14 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800 scroll-mt-16"
+      >
+        <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
+          <Badge className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-xs font-bold">
+            {t("How it works")}
+          </Badge>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {t("Up and running in an afternoon")}
+          </h2>
+          <p className="text-slate-600 dark:text-slate-300 text-sm sm:text-base">
+            {t("No engineering team required.")}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {[
+            {
+              title: t("Connect your data"),
+              desc: t("Upload listings or paste your API key in under two minutes."),
+              icon: FileText,
+              step: "1",
+            },
+            {
+              title: t("Train the assistant"),
+              desc: t("We index your inventory so replies stay accurate and on-brand."),
+              icon: Sparkles,
+              step: "2",
+            },
+            {
+              title: t("Convert leads faster"),
+              desc: t("Your team handles only the qualified, sales-ready conversations."),
+              icon: Clock,
+              step: "3",
+            },
+          ].map((s, i) => (
+            <div
+              key={i}
+              className="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121622] space-y-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="h-11 w-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <s.icon className="h-5 w-5" />
+                </div>
+                <span className="text-3xl font-extrabold font-mono text-slate-200 dark:text-slate-800 select-none">
+                  {s.step}
+                </span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{s.title}</h3>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                {s.desc}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* ── Interactive Financial ROI Calculator ──────────────────────────── */}
-      <section id="roi" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800">
-        <div className="max-w-4xl mx-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121622] p-8 sm:p-12 shadow-xl shadow-slate-200/40 dark:shadow-black/40">
+      <section
+        id="roi"
+        className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800 scroll-mt-16"
+      >
+        <div className="max-w-4xl mx-auto rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121622] p-6 sm:p-10 md:p-12 shadow-xl shadow-slate-200/40 dark:shadow-black/40">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
             {/* Sliders */}
             <div className="md:col-span-7 space-y-6">
               <div className="space-y-1.5">
                 <Badge className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-xs font-bold">
-                  Brokerage ROI Calculator
+                  {t("ROI Calculator")}
                 </Badge>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  Calculate Your Commission Lift
+                  {t("Calculate Your Commission Lift")}
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-                  See how many additional showings and deals Stratos Hub unlocks each quarter.
+                  {t(
+                    "See how many additional qualified leads and deals Stratos Hub can unlock each quarter.",
+                  )}
                 </p>
               </div>
 
               {/* Slider 1 */}
               <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>Monthly Inquiries</span>
-                  <span className="font-mono text-indigo-600">{inquiries} inquiries</span>
+                <div className="flex justify-between text-xs font-bold gap-2">
+                  <span>{t("Monthly Inquiries")}</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                    {fmt(inquiries)} {t("inquiries")}
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -587,14 +797,17 @@ function RouteComponent() {
                   value={inquiries}
                   onChange={(e) => setInquiries(Number(e.target.value))}
                   className="w-full accent-indigo-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                  dir="ltr"
                 />
               </div>
 
               {/* Slider 2 */}
               <div className="space-y-2">
-                <div className="flex justify-between text-xs font-bold">
-                  <span>Average Deal Commission ($)</span>
-                  <span className="font-mono text-indigo-600">${commission.toLocaleString()}</span>
+                <div className="flex justify-between text-xs font-bold gap-2">
+                  <span>{t("Average Deal Commission")}</span>
+                  <span className="font-mono text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                    ${fmt(commission)}
+                  </span>
                 </div>
                 <input
                   type="range"
@@ -604,6 +817,7 @@ function RouteComponent() {
                   value={commission}
                   onChange={(e) => setCommission(Number(e.target.value))}
                   className="w-full accent-indigo-600 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg cursor-pointer"
+                  dir="ltr"
                 />
               </div>
             </div>
@@ -611,45 +825,63 @@ function RouteComponent() {
             {/* Results Card */}
             <div className="md:col-span-5 p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
               <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Projected Quarterly Lift
+                {t("Estimated Quarterly Lift")}
               </div>
 
               <div className="space-y-3">
-                <div className="flex justify-between items-baseline border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <span className="text-xs text-slate-500">Broker Hours Saved:</span>
-                  <span className="text-base font-bold font-mono">{hoursSaved} hrs</span>
+                <div className="flex flex-wrap justify-between items-baseline border-b border-slate-200 dark:border-slate-800 pb-2 gap-x-2 gap-y-1">
+                  <span className="text-xs text-slate-500">{t("Hours saved")}:</span>
+                  <span className="text-base font-bold font-mono whitespace-nowrap">
+                    {fmt(hoursSaved)} {t("hrs")}
+                  </span>
                 </div>
-                <div className="flex justify-between items-baseline border-b border-slate-200 dark:border-slate-800 pb-2">
-                  <span className="text-xs text-slate-500">Additional Showings:</span>
-                  <span className="text-base font-bold font-mono text-emerald-600">+{toursBooked}</span>
+                <div className="flex flex-wrap justify-between items-baseline border-b border-slate-200 dark:border-slate-800 pb-2 gap-x-2 gap-y-1">
+                  <span className="text-xs text-slate-500">{t("Additional qualified leads")}:</span>
+                  <span className="text-base font-bold font-mono text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    +{fmt(qualifiedLeads)}
+                  </span>
                 </div>
-                <div className="flex justify-between items-baseline pt-1">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Commission Lift:</span>
-                  <span className="text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400">
-                    +${quarterlyLift.toLocaleString()}
+                <div className="flex flex-wrap justify-between items-baseline pt-1 gap-x-2 gap-y-1">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    {t("Commission lift")}:
+                  </span>
+                  <span className="text-xl font-extrabold font-mono text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                    +${fmt(quarterlyLift)}
                   </span>
                 </div>
               </div>
 
-              <Button asChild className="w-full h-10 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl">
-                <Link to="/signup">Claim Your Free 14-Day Trial</Link>
+              <Button
+                asChild
+                className="w-full h-10 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl"
+              >
+                <Link to="/signup">{t("Start Free 14-Day Trial")}</Link>
               </Button>
+
+              <p className="text-[10px] text-slate-400 text-center leading-relaxed">
+                {t("Illustrative estimate based on your inputs — not a guarantee.")}
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Pricing Section ──────────────────────────────────────────────── */}
-      <section id="pricing" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800">
-        <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+      <section
+        id="pricing"
+        className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800 scroll-mt-16"
+      >
+        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-14 space-y-3">
           <Badge className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-xs font-bold">
-            Transparent Pricing
+            {t("Transparent Pricing")}
           </Badge>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Simple, Predictable Plans for Brokerages.
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {t("Simple, Predictable Plans for Brokerages.")}
           </h2>
           <p className="text-slate-600 dark:text-slate-300 text-xs sm:text-sm">
-            Pay for intelligence capacity — not seat licenses. Every plan includes full access to document ingestion and showing scheduling.
+            {t(
+              "Pay for AI capacity — not seats. Every plan includes the web widget, document Q&A and the leads CRM.",
+            )}
           </p>
 
           <div className="inline-flex items-center p-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mt-4">
@@ -657,10 +889,12 @@ function RouteComponent() {
               onClick={() => setBillingAnnual(false)}
               className={cn(
                 "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
-                !billingAnnual ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" : "text-slate-500",
+                !billingAnnual
+                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
+                  : "text-slate-500",
               )}
             >
-              Monthly
+              {t("Monthly")}
             </button>
             <button
               onClick={() => setBillingAnnual(true)}
@@ -669,9 +903,9 @@ function RouteComponent() {
                 billingAnnual ? "bg-indigo-600 text-white shadow-sm" : "text-slate-500",
               )}
             >
-              <span>Annual</span>
-              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
-                Save 20%
+              <span>{t("Annual")}</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
+                {t("Save 20%")}
               </span>
             </button>
           </div>
@@ -682,67 +916,83 @@ function RouteComponent() {
           <Card className="rounded-3xl border-slate-200 dark:border-slate-800 p-7 flex flex-col justify-between">
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Starter</h3>
-                <p className="text-xs text-slate-500 mt-0.5">For boutique brokers and solo agents.</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t("Starter")}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{t("For solo agents")}</p>
               </div>
               <div className="text-3xl font-extrabold font-mono">
                 {billingAnnual ? "$39" : "$49"}
-                <span className="text-xs font-normal text-slate-500">/mo</span>
+                <span className="text-xs font-normal text-slate-500">/{t("mo")}</span>
               </div>
               <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 pt-3 border-t">
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> 1,000 AI Conversations / mo
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("1,000 AI Conversations / mo")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> Web Chat Widget Embed
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("Web Chat Widget")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> Brochure & PDF Document RAG
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("Document & brochure Q&A")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> Showing Booking Scheduler
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("Lead capture CRM")}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("English & Arabic AI")}
                 </div>
               </div>
             </div>
             <Button asChild variant="outline" className="mt-8 w-full rounded-xl text-xs font-bold">
-              <Link to="/signup">Start Free Trial</Link>
+              <Link to="/signup">{t("Start Free Trial")}</Link>
             </Button>
           </Card>
 
           {/* Growth */}
           <Card className="rounded-3xl border-2 border-indigo-600 dark:border-indigo-500 p-7 flex flex-col justify-between shadow-xl relative">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider">
-              Most Popular
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+              {t("Most popular")}
             </span>
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Growth Agency</h3>
-                <p className="text-xs text-slate-500 mt-0.5">For expanding teams and top brokerages.</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t("Growth")}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{t("For growing teams")}</p>
               </div>
               <div className="text-3xl font-extrabold font-mono">
                 {billingAnnual ? "$119" : "$149"}
-                <span className="text-xs font-normal text-slate-500">/mo</span>
+                <span className="text-xs font-normal text-slate-500">/{t("mo")}</span>
               </div>
               <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 pt-3 border-t">
                 <div className="flex items-center gap-2 font-bold text-indigo-600 dark:text-indigo-400">
-                  <Check className="h-4 w-4 text-indigo-600" /> 8,000 AI Conversations / mo
+                  <Check className="h-4 w-4 text-indigo-600 flex-shrink-0" />{" "}
+                  {t("8,000 AI Conversations / mo")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-indigo-600" /> Official WhatsApp Cloud API
+                  <Check className="h-4 w-4 text-indigo-600 flex-shrink-0" />{" "}
+                  {t("Everything in Starter")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-indigo-600" /> Automated 60-Day Lead Nurturing
+                  <Check className="h-4 w-4 text-indigo-600 flex-shrink-0" />{" "}
+                  {t("WhatsApp Business Cloud API")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-indigo-600" /> Google & Outlook Calendar Sync
+                  <Check className="h-4 w-4 text-indigo-600 flex-shrink-0" />{" "}
+                  {t("Messenger · Instagram · TikTok")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-indigo-600" /> Arabic RTL & English Bilingual
+                  <Check className="h-4 w-4 text-indigo-600 flex-shrink-0" />{" "}
+                  {t("Usage & ROI analytics")}
                 </div>
               </div>
             </div>
-            <Button asChild className="mt-8 w-full rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md">
-              <Link to="/signup">Start Free 14-Day Trial</Link>
+            <Button
+              asChild
+              className="mt-8 w-full rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md"
+            >
+              <Link to="/signup">{t("Start Free 14-Day Trial")}</Link>
             </Button>
           </Card>
 
@@ -750,77 +1000,67 @@ function RouteComponent() {
           <Card className="rounded-3xl border-slate-200 dark:border-slate-800 p-7 flex flex-col justify-between">
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">Scale & Enterprise</h3>
-                <p className="text-xs text-slate-500 mt-0.5">For multi-office brokerages.</p>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t("Scale")}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{t("For brokerages")}</p>
               </div>
               <div className="text-3xl font-extrabold font-mono">
                 {billingAnnual ? "$319" : "$399"}
-                <span className="text-xs font-normal text-slate-500">/mo</span>
+                <span className="text-xs font-normal text-slate-500">/{t("mo")}</span>
               </div>
               <div className="space-y-2 text-xs text-slate-600 dark:text-slate-300 pt-3 border-t">
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> 30,000 AI Conversations / mo
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("30,000 AI Conversations / mo")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> Unlimited Team Seats
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("Everything in Growth")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> Custom CRM Webhooks (Salesforce, HubSpot)
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("Full widget customization")}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-500" /> Dedicated Account Manager & 99.9% SLA
+                  <Check className="h-4 w-4 text-emerald-500 flex-shrink-0" />{" "}
+                  {t("Priority support")}
                 </div>
               </div>
             </div>
             <Button asChild variant="outline" className="mt-8 w-full rounded-xl text-xs font-bold">
-              <Link to="/signup">Deploy Enterprise</Link>
+              <Link to="/signup">{t("Deploy AI Assistant")}</Link>
             </Button>
           </Card>
         </div>
       </section>
 
       {/* ── FAQ Section ─────────────────────────────────────────────────── */}
-      <section className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto border-t border-slate-200/70 dark:border-slate-800">
+      <section
+        id="faq"
+        className="py-16 md:py-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto border-t border-slate-200/70 dark:border-slate-800 scroll-mt-16"
+      >
         <div className="text-center space-y-2 mb-10">
           <Badge className="bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 text-xs font-bold">
-            FAQ
+            {t("FAQ")}
           </Badge>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Frequently Asked Questions
+            {t("Frequently Asked Questions")}
           </h2>
         </div>
 
         <div className="space-y-3">
-          {[
-            {
-              q: "How does Stratos Hub compare to EliseAI and Structurely?",
-              a: "Stratos Hub provides EliseAI-style autonomous showing booking and property intake combined with Structurely's persistent two-way long-term follow-up over WhatsApp and SMS. Plus, we offer native Arabic RTL support for the MENA region.",
-            },
-            {
-              q: "Can it book showings directly into agent calendars?",
-              a: "Yes! Stratos Hub connects two-way to Google Calendar and Microsoft Outlook. It detects open appointment slots, confirms the time with the buyer, creates the calendar event, and dispatches automated reminder notifications.",
-            },
-            {
-              q: "Does it support WhatsApp Business Cloud API?",
-              a: "Yes. Stratos Hub integrates with the official Meta WhatsApp Business Cloud API. Your assistant replies instantly, shares property photos and PDF brochures, and can alert human agents when a buyer is ready to submit an offer.",
-            },
-            {
-              q: "Is our proprietary listing and client data protected?",
-              a: "Yes. All data is encrypted with AES-256 at rest and TLS 1.3 in transit. Your agency portfolio is strictly private, isolated in your workspace, and never used to train public foundation models.",
-            },
-          ].map((item, idx) => (
+          {faqs.map((item, idx) => (
             <div
               key={idx}
               className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#121622] overflow-hidden"
             >
               <button
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="w-full p-4 text-left text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center justify-between"
+                className="w-full p-4 text-start text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center justify-between gap-3"
               >
                 <span>{item.q}</span>
                 <ChevronDown
                   className={cn(
-                    "h-4 w-4 text-slate-400 transition-transform duration-200",
+                    "h-4 w-4 text-slate-400 transition-transform duration-200 flex-shrink-0",
                     openFaq === idx && "rotate-180 text-indigo-600",
                   )}
                 />
@@ -835,6 +1075,25 @@ function RouteComponent() {
         </div>
       </section>
 
+      {/* ── Final CTA ────────────────────────────────────────────────────── */}
+      <section className="py-14 md:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200/70 dark:border-slate-800">
+        <div className="text-center max-w-2xl mx-auto space-y-4">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            {t("Ready to close more deals?")}
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300">
+            {t("Spin up your workspace in minutes. No credit card required.")}
+          </p>
+          <Button
+            asChild
+            size="lg"
+            className="h-12 px-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm shadow-md shadow-indigo-600/25"
+          >
+            <Link to="/signup">{t("Get started free")}</Link>
+          </Button>
+        </div>
+      </section>
+
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090c12] py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
@@ -843,25 +1102,30 @@ function RouteComponent() {
               S
             </div>
             <span className="font-bold text-slate-900 dark:text-white">Stratos Hub</span>
-            <span>· Autonomous Real Estate AI</span>
+            <span>· {t("Real Estate AI")}</span>
           </div>
 
-          <div className="flex items-center gap-6 font-medium text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-medium text-slate-600 dark:text-slate-400">
             <Link to="/test-site.html" className="hover:text-indigo-600 transition-colors">
-              Widget Showcase
+              {t("Widget Showcase")}
+            </Link>
+            <Link to="/privacy" className="hover:text-indigo-600 transition-colors">
+              {t("Privacy Policy")}
             </Link>
             <Link to="/dashboard" className="hover:text-indigo-600 transition-colors">
-              Workspace
+              {t("Workspace")}
             </Link>
             <Link to="/login" className="hover:text-indigo-600 transition-colors">
-              Sign In
+              {t("Sign in")}
             </Link>
             <Link to="/signup" className="hover:text-indigo-600 transition-colors">
-              Get Started
+              {t("Get started")}
             </Link>
           </div>
 
-          <div>© {new Date().getFullYear()} Stratos Hub Inc. All rights reserved.</div>
+          <div>
+            © {new Date().getFullYear()} Stratos Hub. {t("All rights reserved.")}
+          </div>
         </div>
       </footer>
     </div>

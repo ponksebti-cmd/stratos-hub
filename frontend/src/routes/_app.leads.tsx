@@ -399,7 +399,7 @@ function Leads() {
               onClick={() => active && deleteMutation.mutate(active.id)}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+              {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin me-2" />}
               {t("Delete")}
             </Button>
           </DialogFooter>
@@ -438,7 +438,7 @@ function Leads() {
                 {t("Cancel")}
               </Button>
               <Button type="submit" disabled={createMutation.isPending}>
-                {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin me-2" />}
                 {t("Create")}
               </Button>
             </DialogFooter>

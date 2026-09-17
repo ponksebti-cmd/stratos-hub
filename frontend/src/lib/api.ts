@@ -348,14 +348,17 @@ export const api = {
 
       if (token && !token.startsWith("demo_")) {
         try {
-          const res = await fetch(`${API_BASE_URL}/chat/sessions/${sessionId}/messages?stream=true`, {
-            method: "POST",
-            body: JSON.stringify({ content }),
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+          const res = await fetch(
+            `${API_BASE_URL}/chat/sessions/${sessionId}/messages?stream=true`,
+            {
+              method: "POST",
+              body: JSON.stringify({ content }),
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
             },
-          });
+          );
 
           if (res.ok && res.body) {
             const reader = res.body.getReader();
@@ -485,7 +488,10 @@ export const api = {
           saveDemoLeads(updated);
           return updated.find((l) => l.id === id)!;
         }
-        return await request<Lead>(`/leads/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+        return await request<Lead>(`/leads/${id}`, {
+          method: "PATCH",
+          body: JSON.stringify(patch),
+        });
       } catch {
         const current = getDemoLeads();
         const updated = current.map((l) => (l.id === id ? { ...l, ...patch } : l));
@@ -534,7 +540,10 @@ export const api = {
           saveDemoSettings({ company: { ...cur.company, ...data } });
           return { ok: true };
         }
-        return await request<{ ok: boolean }>("/settings", { method: "PATCH", body: JSON.stringify(data) });
+        return await request<{ ok: boolean }>("/settings", {
+          method: "PATCH",
+          body: JSON.stringify(data),
+        });
       } catch {
         const cur = getDemoSettings();
         saveDemoSettings({ company: { ...cur.company, ...data } });
@@ -590,7 +599,10 @@ export const api = {
           saveDemoSettings({ widgetConfig: { ...cur.widgetConfig!, ...config } });
           return { ok: true };
         }
-        return await request<{ ok: boolean }>("/settings/widget", { method: "PUT", body: JSON.stringify(config) });
+        return await request<{ ok: boolean }>("/settings/widget", {
+          method: "PUT",
+          body: JSON.stringify(config),
+        });
       } catch {
         const cur = getDemoSettings();
         saveDemoSettings({ widgetConfig: { ...cur.widgetConfig!, ...config } });
@@ -614,7 +626,10 @@ export const api = {
           });
           return { ok: true };
         }
-        return await request<{ ok: boolean }>("/settings/whatsapp", { method: "PUT", body: JSON.stringify(data) });
+        return await request<{ ok: boolean }>("/settings/whatsapp", {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
       } catch {
         const cur = getDemoSettings();
         saveDemoSettings({
@@ -626,7 +641,11 @@ export const api = {
         return { ok: true };
       }
     },
-    saveMessenger: async (data: { pageId: string; token: string; verifyToken: string }): Promise<{ ok: boolean }> => {
+    saveMessenger: async (data: {
+      pageId: string;
+      token: string;
+      verifyToken: string;
+    }): Promise<{ ok: boolean }> => {
       try {
         if (!getToken()) {
           const cur = getDemoSettings();
@@ -646,7 +665,11 @@ export const api = {
         return { ok: true };
       }
     },
-    saveInstagram: async (data: { accountId: string; token: string; verifyToken: string }): Promise<{ ok: boolean }> => {
+    saveInstagram: async (data: {
+      accountId: string;
+      token: string;
+      verifyToken: string;
+    }): Promise<{ ok: boolean }> => {
       try {
         if (!getToken()) {
           const cur = getDemoSettings();
@@ -684,7 +707,10 @@ export const api = {
           });
           return { ok: true };
         }
-        return await request<{ ok: boolean }>("/settings/tiktok", { method: "PUT", body: JSON.stringify(data) });
+        return await request<{ ok: boolean }>("/settings/tiktok", {
+          method: "PUT",
+          body: JSON.stringify(data),
+        });
       } catch {
         return { ok: true };
       }

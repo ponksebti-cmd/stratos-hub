@@ -27,6 +27,7 @@ import remarkGfm from "remark-gfm";
 // ─── Route Schema ────────────────────────────────────────────────────────────
 
 const searchSchema = z.object({
+  lang: z.enum(["en", "ar"]).optional(),
   color: z.string().optional().default("#6366f1"),
   name: z.string().optional().default("Sarah - Property Concierge"),
   greeting: z
@@ -85,7 +86,7 @@ const FEATURED_PROPERTIES: PropertyCardData[] = [
   },
 ];
 
-const QUICK_PROMPTS = [
+const QUICK_PROMPT_KEYS = [
   "Looking to buy a luxury villa",
   "Show penthouses with sea view",
   "Schedule a private property tour",
@@ -186,7 +187,7 @@ function TypingDots({ dark, color }: { dark: boolean; color: string }) {
           dark ? "bg-slate-800/90 border-slate-700/80" : "bg-white border-slate-200/80",
         )}
       >
-        <span className="text-[11px] font-medium text-slate-400">Thinking</span>
+        <ThinkingLabel dark={dark} />
         <div className="flex gap-1 items-center">
           {[0, 1, 2].map((i) => (
             <span
@@ -205,11 +206,29 @@ function TypingDots({ dark, color }: { dark: boolean; color: string }) {
   );
 }
 
+function ThinkingLabel({ dark }: { dark: boolean }) {
+  const { t } = useTranslation();
+  return (
+    <span className={cn("text-[11px] font-medium", dark ? "text-slate-400" : "text-slate-500")}>
+      {t("Thinking…")}
+    </span>
+  );
+}
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 function EmbedWidget() {
   const { agencyId } = Route.useParams();
   const searchParams = Route.useSearch();
+  const { t, i18n } = useTranslation();
+
+  // Widget host pages can force the language via ?lang=
+  useEffect(() => {
+    if (searchParams.lang && searchParams.lang !== i18n.language) {
+      i18n.changeLanguage(searchParams.lang);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.lang]);
 
   const [color, setColor] = useState(searchParams.color || "#6366f1");
   const [botName, setBotName] = useState(searchParams.name || "Sarah - Property Concierge");
@@ -309,9 +328,8 @@ function EmbedWidget() {
     setTyping(true);
 
     const assistantMsgId = crypto.randomUUID();
-    const shouldShowListingCards = /villa|penthouse|apartment|property|tour|visit|viewing|rent|buy/i.test(
-      content,
-    );
+    const shouldShowListingCards =
+      /villa|penthouse|apartment|property|tour|visit|viewing|rent|buy/i.test(content);
 
     setMessages((prev) => [
       ...prev,
@@ -352,7 +370,9 @@ function EmbedWidget() {
                 if (data.type === "chunk") {
                   setMessages((m) =>
                     m.map((msg) =>
-                      msg.id === assistantMsgId ? { ...msg, content: msg.content + data.text } : msg,
+                      msg.id === assistantMsgId
+                        ? { ...msg, content: msg.content + data.text }
+                        : msg,
                     ),
                   );
                 } else if (data.type === "done") {
@@ -430,12 +450,10 @@ function EmbedWidget() {
             </div>
 
             <div className="min-w-0">
-              <h1 className="text-[14px] font-bold text-white leading-tight truncate">
-                {botName}
-              </h1>
+              <h1 className="text-[14px] font-bold text-white leading-tight truncate">{botName}</h1>
               <div className="text-[11px] text-white/80 flex items-center gap-1 font-medium mt-0.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>Online · Instant Answers</span>
+                <span>{t("Online · Instant Answers")}</span>
               </div>
             </div>
           </div>
@@ -445,19 +463,27 @@ function EmbedWidget() {
             {/* Theme Toggle */}
             <button
               onClick={() => setIsDark(!isDark)}
-              title={isDark ? "Light mode" : "Dark mode"}
+              title={isDark ? t("Light mode") : t("Dark mode")}
               className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/10 hover:bg-black/20 text-white/90 hover:text-white transition-all active:scale-95"
             >
-              {isDark ? <Sun className="h-3.5 w-3.5 text-amber-300" /> : <Moon className="h-3.5 w-3.5" />}
+              {isDark ? (
+                <Sun className="h-3.5 w-3.5 text-amber-300" />
+              ) : (
+                <Moon className="h-3.5 w-3.5" />
+              )}
             </button>
 
             {/* Sound Toggle */}
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              title={soundEnabled ? "Mute chimes" : "Enable chimes"}
+              title={soundEnabled ? t("Mute chimes") : t("Enable chimes")}
               className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/10 hover:bg-black/20 text-white/90 hover:text-white transition-all active:scale-95"
             >
-              {soundEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5 opacity-60" />}
+              {soundEnabled ? (
+                <Volume2 className="h-3.5 w-3.5" />
+              ) : (
+                <VolumeX className="h-3.5 w-3.5 opacity-60" />
+              )}
             </button>
 
             {/* Reset Chat */}
@@ -472,7 +498,7 @@ function EmbedWidget() {
                   },
                 ])
               }
-              title="Reset conversation"
+              title={t("Reset conversation")}
               className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/10 hover:bg-black/20 text-white/90 hover:text-white transition-all active:scale-95"
             >
               <RotateCcw className="h-3.5 w-3.5" />
@@ -485,7 +511,7 @@ function EmbedWidget() {
                   window.parent.postMessage({ type: "stratos_close_widget" }, "*");
                 }
               }}
-              title="Close"
+              title={t("Close")}
               className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/15 hover:bg-black/30 text-white transition-all active:scale-90 ml-0.5"
             >
               <X className="h-4 w-4" />
@@ -548,9 +574,7 @@ function EmbedWidget() {
                         msg.content
                       ) : (
                         <div className="prose prose-sm max-w-none dark:prose-invert [&_p]:my-1 [&_strong]:font-bold">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {msg.content}
-                          </ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                         </div>
                       )}
                     </div>
@@ -572,7 +596,7 @@ function EmbedWidget() {
                       ) : (
                         <button
                           onClick={() => handleCopy(msg.id, msg.content)}
-                          title="Copy"
+                          title={t("Copy")}
                           className="opacity-0 group-hover:opacity-100 hover:text-indigo-400 ml-1 transition-opacity"
                         >
                           {copiedId === msg.id ? (
@@ -591,7 +615,7 @@ function EmbedWidget() {
                   <div className="w-full pl-9 pr-1 pt-1 flex flex-col gap-2 animate-in fade-in duration-300">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                       <Building2 className="h-3 w-3 text-indigo-500" />
-                      <span>Available Matching Residences</span>
+                      <span>{t("Available Matching Residences")}</span>
                     </div>
 
                     <div className="grid grid-cols-1 gap-1.5">
@@ -616,23 +640,26 @@ function EmbedWidget() {
 
                           <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
                             <span>
-                              {prop.beds} · {prop.baths} · {prop.area}
+                              {t(prop.beds)} · {t(prop.baths)} · {t(prop.area)}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
-                              {prop.badge}
+                              {t(prop.badge)}
                             </span>
                           </div>
 
                           <button
                             onClick={() =>
                               send(
-                                `I'm interested in ${prop.title} (${prop.price}). Please schedule a VIP walkthrough for me.`,
+                                t(
+                                  "I'm interested in {{property}} ({{price}}). Can you share more details?",
+                                  { property: prop.title, price: prop.price },
+                                ),
                               )
                             }
                             className="mt-0.5 py-1 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-sm"
                           >
                             <Calendar className="h-3 w-3" />
-                            <span>Book Private Tour</span>
+                            <span>{t("Ask about this property")}</span>
                           </button>
                         </div>
                       ))}
@@ -666,10 +693,10 @@ function EmbedWidget() {
           )}
           style={{ scrollbarWidth: "none" }}
         >
-          {QUICK_PROMPTS.map((prompt) => (
+          {QUICK_PROMPT_KEYS.map((prompt) => (
             <button
               key={prompt}
-              onClick={() => send(prompt)}
+              onClick={() => send(t(prompt))}
               disabled={typing}
               className={cn(
                 "text-[11px] px-2.5 py-1 rounded-full font-medium border whitespace-nowrap transition-all active:scale-95 disabled:opacity-50 flex-shrink-0",
@@ -678,7 +705,7 @@ function EmbedWidget() {
                   : "bg-slate-50 border-slate-200 text-slate-700 hover:border-indigo-400 hover:bg-indigo-50/50",
               )}
             >
-              {prompt}
+              {t(prompt)}
             </button>
           ))}
         </div>
@@ -708,7 +735,7 @@ function EmbedWidget() {
                   send();
                 }
               }}
-              placeholder="Ask about properties, pricing, showings..."
+              placeholder={t("Ask about properties, pricing, showings...")}
               className={cn(
                 "flex-1 bg-transparent outline-none text-[13px] font-medium placeholder:text-slate-400 min-w-0",
                 isDark ? "text-white" : "text-slate-900",

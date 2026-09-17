@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "@fontsource-variable/plus-jakarta-sans/index.css";
+@import "@fontsource-variable/cairo/index.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -126,6 +127,19 @@ html, body {
   letter-spacing: -0.012em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Arabic typography ─────────────────────────────────────────────────── */
+/* Plus Jakarta Sans has no Arabic glyphs — switch to Cairo (Arabic + Latin) */
+html[lang="ar"], html[lang="ar"] body {
+  font-family: 'Cairo Variable', 'Segoe UI', Tahoma, -apple-system, sans-serif;
+  letter-spacing: 0;
+}
+
+/* Latin snippets (emails, numbers, prices) inside Arabic text stay readable */
+html[lang="ar"] [dir="ltr"],
+[dir="rtl"] [dir="ltr"] {
+  unicode-bidi: embed;
 }
 
 /* ── Grid & Column Helpers for Tailwind v4 ───────────────────────── */

@@ -52,7 +52,7 @@ function Dashboard() {
 
   const createSessionMutation = useMutation({
     mutationFn: () => api.chat.createSession(),
-    onError: () => toast.error("Failed to create conversation"),
+    onError: () => toast.error(t("Failed to create conversation")),
   });
 
   const handleQuickChatSubmit = async (e: React.FormEvent) => {

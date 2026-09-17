@@ -1,15 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import {
-  Loader2,
-  Building,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-  Sparkles,
-  Check,
-} from "lucide-react";
+import { Loader2, Building, Mail, Lock, Eye, EyeOff, Sparkles, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,12 +63,12 @@ function Signup() {
         toast.success(t("Workspace created successfully"));
         navigate({ to: "/dashboard" });
       } catch (err: unknown) {
-        toast.error((err as Error).message ?? "Google registration failed");
+        toast.error((err as Error).message ?? t("Google registration failed"));
       } finally {
         setLoading(false);
       }
     },
-    onError: () => toast.error("Google Registration Failed"),
+    onError: () => toast.error(t("Google registration failed")),
   });
 
   const onSubmit = async (data: SignupForm) => {
@@ -88,7 +79,7 @@ function Signup() {
       toast.success(t("Workspace created successfully"));
       navigate({ to: "/dashboard" });
     } catch (err: unknown) {
-      toast.error((err as Error).message ?? "Registration failed");
+      toast.error((err as Error).message ?? t("Registration failed"));
     } finally {
       setLoading(false);
     }
@@ -109,16 +100,18 @@ function Signup() {
             {t("Agency name")}
           </Label>
           <div className="relative">
-            <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Building className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               id="company"
-              placeholder="e.g. Apex Luxury Realty"
+              placeholder={t("e.g. Apex Luxury Realty")}
               className="h-11 ps-10 rounded-xl bg-background/70 border-black/10 dark:border-white/10 text-sm focus-visible:ring-primary/40 transition-all"
               {...register("company")}
             />
           </div>
           {errors.company && (
-            <p className="text-[11px] text-destructive mt-1 font-medium">{errors.company.message}</p>
+            <p className="text-[11px] text-destructive mt-1 font-medium">
+              {errors.company.message}
+            </p>
           )}
         </div>
 
@@ -128,7 +121,7 @@ function Signup() {
             {t("Work email")}
           </Label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               id="email"
               type="email"
@@ -149,12 +142,12 @@ function Signup() {
             {t("Password")}
           </Label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Lock className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               dir="ltr"
-              placeholder="Minimum 8 characters"
+              placeholder={t("Minimum 8 characters")}
               className="h-11 ps-10 pe-10 rounded-xl bg-background/70 border-black/10 dark:border-white/10 text-sm focus-visible:ring-primary/40 transition-all"
               {...register("password", {
                 onChange: (e) => setPwValue(e.target.value),
@@ -163,7 +156,7 @@ function Signup() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+              className="absolute end-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
               title={showPassword ? t("Hide password") : t("Show password")}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -186,7 +179,9 @@ function Signup() {
           )}
 
           {errors.password && (
-            <p className="text-[11px] text-destructive mt-1 font-medium">{errors.password.message}</p>
+            <p className="text-[11px] text-destructive mt-1 font-medium">
+              {errors.password.message}
+            </p>
           )}
         </div>
 

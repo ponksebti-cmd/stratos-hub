@@ -29,14 +29,21 @@ function Forgot() {
             <CheckCircle2 className="h-6 w-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="font-bold text-sm text-foreground">Reset link dispatched</h3>
+            <h3 className="font-bold text-sm text-foreground">{t("Reset link dispatched")}</h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              If an account exists for <strong className="text-foreground">{email}</strong>, check your inbox for instructions to restore access.
+              {t(
+                "If an account exists for {{email}}, check your inbox for instructions to restore access.",
+                { email },
+              )}
             </p>
           </div>
-          <Button asChild variant="outline" className="w-full h-11 rounded-full text-xs font-semibold mt-4">
+          <Button
+            asChild
+            variant="outline"
+            className="w-full h-11 rounded-full text-xs font-semibold mt-4"
+          >
             <Link to="/login">
-              <ArrowLeft className="h-3.5 w-3.5 me-2" />
+              <ArrowLeft className="h-3.5 w-3.5 me-2 rtl:rotate-180" />
               {t("Back to sign in")}
             </Link>
           </Button>
@@ -54,7 +61,7 @@ function Forgot() {
               {t("Work email")}
             </Label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="email"
                 type="email"
@@ -68,13 +75,19 @@ function Forgot() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full h-11 rounded-full font-semibold shadow-lg shadow-primary/25 bg-primary hover:bg-primary/95 text-primary-foreground active:scale-[0.98] transition-all">
-            Send reset link
+          <Button
+            type="submit"
+            className="w-full h-11 rounded-full font-semibold shadow-lg shadow-primary/25 bg-primary hover:bg-primary/95 text-primary-foreground active:scale-[0.98] transition-all"
+          >
+            {t("Send reset link")}
           </Button>
 
           <p className="text-xs text-center text-muted-foreground pt-2">
-            <Link to="/login" className="text-primary hover:underline font-medium inline-flex items-center gap-1">
-              <ArrowLeft className="h-3 w-3" />
+            <Link
+              to="/login"
+              className="text-primary hover:underline font-medium inline-flex items-center gap-1"
+            >
+              <ArrowLeft className="h-3 w-3 rtl:rotate-180" />
               {t("Back to sign in")}
             </Link>
           </p>

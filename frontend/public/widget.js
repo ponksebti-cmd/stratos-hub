@@ -25,6 +25,35 @@
   var KEY = (script && script.getAttribute("data-key")) || "demo";
   var COLOR = (script && script.getAttribute("data-color")) || "#6366f1";
   var NAME = (script && script.getAttribute("data-name")) || "Sarah - Property Concierge";
+
+  // ── Language detection (data-lang attr → host page lang → browser lang) ────
+  function detectLang() {
+    var attr = script && script.getAttribute("data-lang");
+    if (attr) return attr.toLowerCase().indexOf("ar") === 0 ? "ar" : "en";
+    var html = (document.documentElement.getAttribute("lang") || "").toLowerCase();
+    if (html.indexOf("ar") === 0) return "ar";
+    var nav = (navigator.language || "en").toLowerCase();
+    return nav.indexOf("ar") === 0 ? "ar" : "en";
+  }
+  var LANG = detectLang();
+  var RTL = LANG === "ar";
+  var I18N = RTL
+    ? {
+        now: "الآن",
+        dismiss: "إغلاق",
+        chatWith: "تحدث مع ",
+        notificationFrom: "إشعار من ",
+        chat: " — محادثة",
+        placeholder: "اكتب رسالتك…",
+      }
+    : {
+        now: "now",
+        dismiss: "Dismiss",
+        chatWith: "Chat with ",
+        notificationFrom: "Notification from ",
+        chat: " Chat",
+        placeholder: "Type your message…",
+      };
   var GREETING =
     (script && script.getAttribute("data-greeting")) ||
     "Hi there! 👋 Looking for your dream property? I can help you find exclusive listings, calculate yields, and book private viewings.";
@@ -68,7 +97,14 @@
     );
   }
 
-  var GRAD = "linear-gradient(135deg, " + lighten(COLOR, 0.15) + " 0%, " + COLOR + " 65%, " + darken(COLOR, 0.75) + " 100%)";
+  var GRAD =
+    "linear-gradient(135deg, " +
+    lighten(COLOR, 0.15) +
+    " 0%, " +
+    COLOR +
+    " 65%, " +
+    darken(COLOR, 0.75) +
+    " 100%)";
   var SIDE = POSITION === "left" ? "left" : "right";
   var DARK = THEME === "dark";
 
@@ -84,6 +120,7 @@
 
     "#sw-root {",
     "  position: fixed !important; " + SIDE + ": 20px !important; bottom: 20px !important;",
+    "  direction: " + (RTL ? "rtl" : "ltr") + " !important;",
     "  z-index: 2147483647 !important;",
     "  display: flex !important; flex-direction: column !important;",
     "  align-items: " + (SIDE === "right" ? "flex-end" : "flex-start") + " !important;",
@@ -99,10 +136,14 @@
     "  padding: 12px 14px 12px 12px !important;",
     "  width: 326px !important; max-width: calc(100vw - 40px) !important;",
     "  border-radius: 18px !important;",
-    "  background: " + (DARK ? "rgba(30, 32, 42, 0.94)" : "rgba(255, 255, 255, 0.95)") + " !important;",
+    "  background: " +
+      (DARK ? "rgba(30, 32, 42, 0.94)" : "rgba(255, 255, 255, 0.95)") +
+      " !important;",
     "  backdrop-filter: blur(30px) saturate(190%) !important;",
     "  -webkit-backdrop-filter: blur(30px) saturate(190%) !important;",
-    "  border: 1px solid " + (DARK ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)") + " !important;",
+    "  border: 1px solid " +
+      (DARK ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)") +
+      " !important;",
     "  box-shadow:",
     "    0 16px 36px -6px rgba(0, 0, 0, " + (DARK ? "0.6" : "0.14") + "),",
     "    0 4px 12px -2px rgba(0, 0, 0, 0.06),",
@@ -112,7 +153,9 @@
     "  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease !important;",
     "}",
     "#sw-toast.sw-in { opacity: 1 !important; transform: translateY(0) scale(1) !important; }",
-    "#sw-toast:hover { transform: translateY(-2px) scale(1.01) !important; box-shadow: 0 20px 42px -6px rgba(0,0,0," + (DARK ? "0.65" : "0.18") + ") !important; }",
+    "#sw-toast:hover { transform: translateY(-2px) scale(1.01) !important; box-shadow: 0 20px 42px -6px rgba(0,0,0," +
+      (DARK ? "0.65" : "0.18") +
+      ") !important; }",
 
     "#sw-toast-icon {",
     "  position: relative !important; flex-shrink: 0 !important;",
@@ -125,13 +168,19 @@
     "#sw-toast-online {",
     "  position: absolute !important; bottom: -2px !important; right: -2px !important;",
     "  width: 10px !important; height: 10px !important; border-radius: 50% !important;",
-    "  background: #10b981 !important; border: 2px solid " + (DARK ? "#1e202a" : "#ffffff") + " !important;",
+    "  background: #10b981 !important; border: 2px solid " +
+      (DARK ? "#1e202a" : "#ffffff") +
+      " !important;",
     "}",
 
     "#sw-toast-body { flex: 1 !important; min-width: 0 !important; }",
     "#sw-toast-header { display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 2px !important; }",
-    "#sw-toast-title { font-size: 12px !important; font-weight: 700 !important; color: " + (DARK ? "#f8fafc" : "#0f172a") + " !important; letter-spacing: -0.01em !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }",
-    "#sw-toast-time { font-size: 11px !important; font-weight: 500 !important; color: " + (DARK ? "#94a3b8" : "#64748b") + " !important; margin-left: 6px !important; flex-shrink: 0 !important; }",
+    "#sw-toast-title { font-size: 12px !important; font-weight: 700 !important; color: " +
+      (DARK ? "#f8fafc" : "#0f172a") +
+      " !important; letter-spacing: -0.01em !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }",
+    "#sw-toast-time { font-size: 11px !important; font-weight: 500 !important; color: " +
+      (DARK ? "#94a3b8" : "#64748b") +
+      " !important; margin-left: 6px !important; flex-shrink: 0 !important; }",
     "#sw-toast-msg {",
     "  font-size: 13px !important; font-weight: 450 !important; line-height: 1.38 !important;",
     "  color: " + (DARK ? "#cbd5e1" : "#334155") + " !important;",
@@ -140,7 +189,9 @@
 
     "#sw-toast-close {",
     "  flex-shrink: 0 !important; width: 20px !important; height: 20px !important; margin-left: 2px !important;",
-    "  border: none !important; background: " + (DARK ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") + " !important;",
+    "  border: none !important; background: " +
+      (DARK ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)") +
+      " !important;",
     "  border-radius: 50% !important; padding: 0 !important; cursor: pointer !important;",
     "  display: flex !important; align-items: center !important; justify-content: center !important;",
     "  opacity: 0.65 !important; transition: opacity 0.15s, transform 0.15s !important;",
@@ -164,10 +215,16 @@
     "}",
     "#sw-fab:hover {",
     "  transform: scale(1.07) translateY(-2px) !important;",
-    "  box-shadow: 0 16px 34px -4px " + rgba(COLOR, 0.65) + ", 0 6px 14px -2px " + rgba(COLOR, 0.35) + ", inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;",
+    "  box-shadow: 0 16px 34px -4px " +
+      rgba(COLOR, 0.65) +
+      ", 0 6px 14px -2px " +
+      rgba(COLOR, 0.35) +
+      ", inset 0 1px 1px rgba(255, 255, 255, 0.5) !important;",
     "}",
     "#sw-fab:active { transform: scale(0.93) !important; }",
-    "#sw-fab.sw-open { border-radius: 16px !important; box-shadow: 0 8px 20px -2px " + rgba(COLOR, 0.45) + " !important; }",
+    "#sw-fab.sw-open { border-radius: 16px !important; box-shadow: 0 8px 20px -2px " +
+      rgba(COLOR, 0.45) +
+      " !important; }",
 
     ".sw-fab-icon { position: absolute !important; inset: 0 !important; display: flex !important; align-items: center !important; justify-content: center !important; transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important; }",
     "#sw-icon-chat { opacity: 1 !important; transform: scale(1) rotate(0deg) !important; }",
@@ -178,7 +235,9 @@
     "#sw-fab.sw-open #sw-icon-close { opacity: 1 !important; transform: scale(1) rotate(0deg) !important; }",
 
     "#sw-dot {",
-    "  position: absolute !important; top: -2px !important; " + (SIDE === "right" ? "right: -2px;" : "left: -2px;") + " !important;",
+    "  position: absolute !important; top: -2px !important; " +
+      (SIDE === "right" ? "right: -2px;" : "left: -2px;") +
+      " !important;",
     "  width: 13px !important; height: 13px !important; border-radius: 50% !important;",
     "  background: #10b981 !important; border: 2.5px solid white !important;",
     "  box-shadow: 0 0 6px #10b981 !important;",
@@ -192,7 +251,9 @@
     "  max-height: calc(100svh - 105px) !important;",
     "  border-radius: 22px !important; overflow: hidden !important;",
     "  background: " + (DARK ? "#0f172a" : "#ffffff") + " !important;",
-    "  border: 1px solid " + (DARK ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)") + " !important;",
+    "  border: 1px solid " +
+      (DARK ? "rgba(255, 255, 255, 0.12)" : "rgba(0, 0, 0, 0.08)") +
+      " !important;",
     "  box-shadow:",
     "    0 24px 60px -12px rgba(0, 0, 0, " + (DARK ? "0.6" : "0.2") + "),",
     "    0 6px 20px -4px rgba(0, 0, 0, 0.08) !important;",
@@ -210,7 +271,9 @@
     "@media(max-width: 480px) {",
     "  #sw-root { " + SIDE + ": 14px !important; bottom: 14px !important; }",
     "  #sw-panel {",
-    "    " + SIDE + ": 0 !important; bottom: 0 !important; right: 0 !important; left: 0 !important;",
+    "    " +
+      SIDE +
+      ": 0 !important; bottom: 0 !important; right: 0 !important; left: 0 !important;",
     "    width: 100% !important; height: 100dvh !important; max-height: 100dvh !important; max-width: 100vw !important;",
     "    border-radius: 0 !important; border: none !important;",
     "    transform-origin: bottom center !important;",
@@ -232,7 +295,8 @@
   var toast = document.createElement("div");
   toast.id = "sw-toast";
   toast.setAttribute("role", "button");
-  toast.setAttribute("aria-label", "Notification from " + NAME);
+  toast.setAttribute("aria-label", I18N.notificationFrom + NAME);
+  toast.setAttribute("dir", RTL ? "rtl" : "ltr");
   toast.innerHTML = [
     '<div id="sw-toast-icon">',
     '  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
@@ -241,11 +305,11 @@
     '<div id="sw-toast-body">',
     '  <div id="sw-toast-header">',
     '    <span id="sw-toast-title">' + NAME + "</span>",
-    '    <span id="sw-toast-time">now</span>',
+    '    <span id="sw-toast-time">' + I18N.now + "</span>",
     "  </div>",
     '  <div id="sw-toast-msg">' + GREETING + "</div>",
     "</div>",
-    '<button id="sw-toast-close" aria-label="Dismiss" title="Dismiss">',
+    '<button id="sw-toast-close" aria-label="' + I18N.dismiss + '" title="' + I18N.dismiss + '">',
     '  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
     "</button>",
   ].join("");
@@ -254,7 +318,7 @@
   // FAB
   var fab = document.createElement("button");
   fab.id = "sw-fab";
-  fab.setAttribute("aria-label", "Chat with " + NAME);
+  fab.setAttribute("aria-label", I18N.chatWith + NAME);
   fab.innerHTML = [
     '<div class="sw-fab-icon" id="sw-icon-chat">',
     '  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/></svg>',
@@ -280,13 +344,15 @@
     encodeURIComponent(NAME) +
     "&theme=" +
     encodeURIComponent(THEME) +
+    "&lang=" +
+    encodeURIComponent(LANG) +
     (GREETING ? "&greeting=" + encodeURIComponent(GREETING) : "");
 
   var iframe = document.createElement("iframe");
   iframe.id = "sw-iframe";
   iframe.src = iframeSrc;
   iframe.setAttribute("allow", "clipboard-write; microphone");
-  iframe.setAttribute("title", NAME + " Chat");
+  iframe.setAttribute("title", NAME + I18N.chat);
   panel.appendChild(iframe);
 
   // ── State & Interactions ───────────────────────────────────────────────────
@@ -360,9 +426,17 @@
     if (ev.data.type === "stratos_open_widget") openWidget(ev.data.prompt);
     if (ev.data.type === "stratos_widget_config" && ev.data.color) {
       var c = ev.data.color;
-      var newGrad = "linear-gradient(135deg, " + lighten(c, 0.18) + " 0%, " + c + " 60%, " + darken(c, 0.75) + " 100%)";
+      var newGrad =
+        "linear-gradient(135deg, " +
+        lighten(c, 0.18) +
+        " 0%, " +
+        c +
+        " 60%, " +
+        darken(c, 0.75) +
+        " 100%)";
       fab.style.background = newGrad;
-      fab.style.boxShadow = "0 12px 28px -4px " + rgba(c, 0.55) + ", 0 4px 10px -2px " + rgba(c, 0.3);
+      fab.style.boxShadow =
+        "0 12px 28px -4px " + rgba(c, 0.55) + ", 0 4px 10px -2px " + rgba(c, 0.3);
       var avatar = document.getElementById("sw-toast-icon");
       if (avatar) avatar.style.background = newGrad;
     }

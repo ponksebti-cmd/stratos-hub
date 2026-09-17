@@ -120,7 +120,7 @@ export function AppShell() {
               {t("Stratos Hub")}
             </div>
             <div className="text-[10px] text-muted-foreground font-medium tracking-wide leading-none mt-0.5">
-              Real Estate AI
+              {t("Real Estate AI")}
             </div>
           </div>
         </div>
@@ -142,7 +142,7 @@ export function AppShell() {
                 )}
               >
                 {active && (
-                  <span className="nav-indicator absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-r-full bg-primary shadow-[0_0_8px_0px] shadow-primary/50" />
+                  <span className="nav-indicator absolute start-0 top-1/2 -translate-y-1/2 h-5 w-[3px] rounded-e-full bg-primary shadow-[0_0_8px_0px] shadow-primary/50" />
                 )}
                 <Icon
                   className={cn(
@@ -226,7 +226,7 @@ export function AppShell() {
           <div
             onClick={() => setCmdOpen(true)}
             className="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full ios-glass dynamic-island cursor-pointer border border-primary/25 hover:border-primary/50 text-xs shadow-sm hover:shadow-primary/20 transition-all group select-none"
-            title="Open Stratos Command Center"
+            title={t("Open Stratos Command Center")}
           >
             <div className="flex items-center gap-1">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -250,7 +250,7 @@ export function AppShell() {
               </div>
             </div>
             <span className="font-semibold text-foreground tracking-tight flex items-center gap-1">
-              <span>Stratos Spatial AI</span>
+              <span>{t("Stratos Spatial AI")}</span>
               <span className="text-[10px] text-muted-foreground font-normal">
                 · {creditsLeft.toLocaleString()} {t("credits left")}
               </span>
