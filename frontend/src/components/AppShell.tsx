@@ -12,6 +12,7 @@ import {
   Sun,
   Moon,
   Search,
+  Sparkles,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "react-i18next";
-import { clearToken } from "@/lib/api";
+import { clearToken, isDemoMode } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { CommandPalette } from "@/components/CommandPalette";
@@ -47,10 +48,9 @@ export function AppShell() {
 
   const [cmdOpen, setCmdOpen] = useState(false);
   const [dark, setDark] = useState(() => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === "undefined") return true;
     const stored = localStorage.getItem("theme");
-    if (stored) return stored === "dark";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return stored ? stored === "dark" : true;
   });
 
   useEffect(() => {
@@ -191,13 +191,75 @@ export function AppShell() {
 
       {/* ── Main content ──────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Demo banner */}
+        {isDemoMode() && (
+          <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 text-xs text-primary flex flex-wrap items-center justify-between gap-2 z-30">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 flex-shrink-0 animate-pulse text-primary" />
+              <span className="font-medium">
+                {t(
+                  "Live Demo Mode: Exploring Apex Luxury Realty sample inventory, chats, and qualified leads.",
+                )}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-medium">
+              <Link to="/signup" className="underline hover:text-primary/80 font-semibold">
+                {t("Start Free Trial")}
+              </Link>
+              <span className="text-muted-foreground">·</span>
+              <Link to="/" className="hover:underline text-muted-foreground hover:text-foreground">
+                {t("Back to Website")}
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-20 h-16 flex items-center justify-between px-4 md:px-8 border-b bg-card/80 backdrop-blur-md">
+        <header className="sticky top-0 z-20 h-16 flex items-center justify-between px-4 md:px-8 border-b ios-glass">
           <div className="flex items-center gap-3">
             <h1 className="text-lg font-bold tracking-tight">
               {current ? t(current.label) : t("Stratos Hub")}
             </h1>
           </div>
+
+          {/* iOS 26ish Dynamic Spatial Island Pill */}
+          <div
+            onClick={() => setCmdOpen(true)}
+            className="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-full ios-glass dynamic-island cursor-pointer border border-primary/25 hover:border-primary/50 text-xs shadow-sm hover:shadow-primary/20 transition-all group select-none"
+            title="Open Stratos Command Center"
+          >
+            <div className="flex items-center gap-1">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <div className="flex items-end gap-0.5 h-3 px-1">
+                <span
+                  className="w-0.5 bg-primary rounded-full neural-wave-bar"
+                  style={{ animationDelay: "0s" }}
+                />
+                <span
+                  className="w-0.5 bg-primary rounded-full neural-wave-bar"
+                  style={{ animationDelay: "0.2s" }}
+                />
+                <span
+                  className="w-0.5 bg-primary rounded-full neural-wave-bar"
+                  style={{ animationDelay: "0.4s" }}
+                />
+                <span
+                  className="w-0.5 bg-primary rounded-full neural-wave-bar"
+                  style={{ animationDelay: "0.1s" }}
+                />
+              </div>
+            </div>
+            <span className="font-semibold text-foreground tracking-tight flex items-center gap-1">
+              <span>Stratos Spatial AI</span>
+              <span className="text-[10px] text-muted-foreground font-normal">
+                · {creditsLeft.toLocaleString()} {t("credits left")}
+              </span>
+            </span>
+            <kbd className="text-[9px] font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded-md group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              ⌘K
+            </kbd>
+          </div>
+
           <div className="flex items-center gap-0.5">
             {/* Search / Command palette trigger */}
             <Button
@@ -330,7 +392,7 @@ export function AppShell() {
 
         {/* ── Page content ────────────────────────────────────────────────── */}
         <main className="flex-1 p-4 md:p-8 overflow-auto">
-          <div key={pathname} className="card-pop h-full">
+          <div key={pathname} className="motion-blur-enter h-full">
             <Outlet />
           </div>
         </main>

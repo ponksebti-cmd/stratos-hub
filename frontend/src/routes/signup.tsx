@@ -1,6 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Building,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Check,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +52,7 @@ function Signup() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [pwValue, setPwValue] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -59,6 +69,7 @@ function Signup() {
         const res = await api.auth.google(tokenResponse.access_token);
         setToken(res.token);
         localStorage.setItem("stratos_user", JSON.stringify(res.user));
+        toast.success(t("Workspace created successfully"));
         navigate({ to: "/dashboard" });
       } catch (err: unknown) {
         toast.error((err as Error).message ?? "Google registration failed");
@@ -74,6 +85,7 @@ function Signup() {
     try {
       const res = await api.auth.register(data.email, data.password, data.company);
       setToken(res.token);
+      toast.success(t("Workspace created successfully"));
       navigate({ to: "/dashboard" });
     } catch (err: unknown) {
       toast.error((err as Error).message ?? "Registration failed");
@@ -85,77 +97,134 @@ function Signup() {
   const strength = passwordStrength(pwValue);
 
   return (
-    <AuthShell title="Create your workspace" subtitle="Free for 14 days. No card required.">
+    <AuthShell
+      mode="signup"
+      title="Create your agency workspace"
+      subtitle="Free for 14 days · Full access · No credit card required"
+    >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="company">{t("Agency name")}</Label>
-          <Input id="company" placeholder="Riya Realty" {...register("company")} />
+        {/* Agency Name */}
+        <div className="space-y-1.5">
+          <Label htmlFor="company" className="text-xs font-semibold text-foreground/90">
+            {t("Agency name")}
+          </Label>
+          <div className="relative">
+            <Building className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="company"
+              placeholder="e.g. Apex Luxury Realty"
+              className="h-11 ps-10 rounded-xl bg-background/70 border-black/10 dark:border-white/10 text-sm focus-visible:ring-primary/40 transition-all"
+              {...register("company")}
+            />
+          </div>
           {errors.company && (
-            <p className="text-xs text-destructive mt-1">{errors.company.message}</p>
+            <p className="text-[11px] text-destructive mt-1 font-medium">{errors.company.message}</p>
           )}
         </div>
-        <div>
-          <Label htmlFor="email">{t("Work email")}</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@agency.com"
-            dir="ltr"
-            {...register("email")}
-          />
-          {errors.email && <p className="text-xs text-destructive mt-1">{errors.email.message}</p>}
+
+        {/* Work Email */}
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs font-semibold text-foreground/90">
+            {t("Work email")}
+          </Label>
+          <div className="relative">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="email"
+              type="email"
+              placeholder="founder@luxuryagency.com"
+              dir="ltr"
+              className="h-11 ps-10 rounded-xl bg-background/70 border-black/10 dark:border-white/10 text-sm focus-visible:ring-primary/40 transition-all"
+              {...register("email")}
+            />
+          </div>
+          {errors.email && (
+            <p className="text-[11px] text-destructive mt-1 font-medium">{errors.email.message}</p>
+          )}
         </div>
-        <div>
-          <Label htmlFor="password">{t("Password")}</Label>
-          <Input
-            id="password"
-            type="password"
-            dir="ltr"
-            {...register("password", {
-              onChange: (e) => setPwValue(e.target.value),
-            })}
-          />
+
+        {/* Password */}
+        <div className="space-y-1.5">
+          <Label htmlFor="password" className="text-xs font-semibold text-foreground/90">
+            {t("Password")}
+          </Label>
+          <div className="relative">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              dir="ltr"
+              placeholder="Minimum 8 characters"
+              className="h-11 ps-10 pe-10 rounded-xl bg-background/70 border-black/10 dark:border-white/10 text-sm focus-visible:ring-primary/40 transition-all"
+              {...register("password", {
+                onChange: (e) => setPwValue(e.target.value),
+              })}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
+              title={showPassword ? t("Hide password") : t("Show password")}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+
+          {/* Password Strength Indicator */}
           {pwValue.length > 0 && (
-            <div className="mt-2">
-              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+            <div className="mt-2 space-y-1">
+              <div className="h-1.5 w-full rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all ${strength.color}`}
+                  className={`h-full rounded-full transition-all duration-300 ${strength.color}`}
                   style={{ width: strength.width }}
                 />
               </div>
-              <p className={`text-xs mt-1 ${strength.color.replace("bg-", "text-")}`}>
+              <p className={`text-[11px] font-semibold ${strength.color.replace("bg-", "text-")}`}>
                 {t(strength.label)}
               </p>
             </div>
           )}
+
           {errors.password && (
-            <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
+            <p className="text-[11px] text-destructive mt-1 font-medium">{errors.password.message}</p>
           )}
         </div>
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+
+        {/* Primary Submit Button */}
+        <Button
+          type="submit"
+          className="w-full h-11 rounded-full font-semibold shadow-lg shadow-primary/25 bg-primary hover:bg-primary/95 text-primary-foreground active:scale-[0.98] transition-all mt-2"
+          disabled={loading}
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin me-2" />
+          ) : (
+            <Sparkles className="h-4 w-4 me-2" />
+          )}
           {t("Create account")}
         </Button>
 
+        {/* Apple-style Divider */}
         <div className="relative my-4">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
+            <span className="w-full border-t border-black/5 dark:border-white/10" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
+          <div className="relative flex justify-center text-[10px] uppercase tracking-wider font-semibold">
+            <span className="bg-card/90 px-3 text-muted-foreground rounded-full">
               {t("Or continue with")}
             </span>
           </div>
         </div>
 
+        {/* Google OAuth Button */}
         <Button
           type="button"
           variant="outline"
-          className="w-full"
+          className="w-full h-11 rounded-full ios-glass border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 active:scale-[0.98] transition-all text-xs font-semibold gap-2"
           onClick={() => googleLogin()}
           disabled={loading}
         >
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -176,13 +245,6 @@ function Signup() {
           </svg>
           {t("Sign up with Google")}
         </Button>
-
-        <p className="text-sm text-center text-muted-foreground mt-4">
-          {t("Already have one?")}{" "}
-          <Link to="/login" className="text-primary hover:underline">
-            {t("Sign in")}
-          </Link>
-        </p>
       </form>
     </AuthShell>
   );

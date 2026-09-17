@@ -4,37 +4,43 @@ import {
   Send,
   Sparkles,
   ChevronDown,
-  Lock,
   X,
-  Phone,
-  User,
-  Mail,
-  ShieldCheck,
-  ArrowRight,
+  Volume2,
+  VolumeX,
+  RotateCcw,
+  Sun,
+  Moon,
+  Building2,
+  Calendar,
+  CheckCheck,
+  Check,
+  Copy,
 } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { API_BASE_URL } from "@/lib/api";
+import { generateRealEstateAIResponse } from "@/lib/mock-data";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// ─── Route ──────────────────────────────────────────────────────────────────
+// ─── Route Schema ────────────────────────────────────────────────────────────
 
 const searchSchema = z.object({
   color: z.string().optional().default("#6366f1"),
-  name: z.string().optional().default("Property Assistant"),
+  name: z.string().optional().default("Sarah - Property Concierge"),
   greeting: z
     .string()
     .optional()
-    .default("Hi! I can help you find your perfect property. What are you looking for?"),
+    .default(
+      "Hi there! 👋 Looking for your dream property? I'm here to help you explore listings, compare prices, and schedule VIP tours.",
+    ),
   theme: z.enum(["light", "dark"]).optional().default("light"),
 });
 
 export const Route = createFileRoute("/embed/$agencyId")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Chat" }] }),
+  head: () => ({ meta: [{ title: "AI Property Concierge" }] }),
   component: EmbedWidget,
 });
 
@@ -45,13 +51,101 @@ interface EmbedMsg {
   role: "user" | "assistant";
   content: string;
   createdAt: string;
+  showProperties?: boolean;
 }
 
-// ─── Quick suggestions ───────────────────────────────────────────────────────
+interface PropertyCardData {
+  id: string;
+  title: string;
+  price: string;
+  beds: string;
+  baths: string;
+  area: string;
+  badge: string;
+}
 
-const QUICK = ["Looking to buy", "Looking to rent", "Just browsing"] as const;
+const FEATURED_PROPERTIES: PropertyCardData[] = [
+  {
+    id: "p1",
+    title: "The Palm Reserve Villa, Marbella",
+    price: "€1,250,000",
+    beds: "4 Beds",
+    baths: "4 Baths",
+    area: "4,800 sq ft",
+    badge: "For Sale · Verified",
+  },
+  {
+    id: "p2",
+    title: "Sky Crest Penthouse, Dubai Marina",
+    price: "AED 12,000/mo",
+    beds: "3 Beds",
+    baths: "3 Baths",
+    area: "3,200 sq ft",
+    badge: "For Rent · Sea View",
+  },
+];
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+const QUICK_PROMPTS = [
+  "Looking to buy a luxury villa",
+  "Show penthouses with sea view",
+  "Schedule a private property tour",
+  "What properties have 8%+ yields?",
+];
+
+// ─── Web Audio API (Zero Latency Apple Chimes) ───────────────────────────────
+
+function playChime(type: "send" | "receive") {
+  try {
+    const AudioCtx =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+
+    if (type === "send") {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(540, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } else {
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.type = "sine";
+      osc2.type = "sine";
+      osc1.frequency.setValueAtTime(659.25, ctx.currentTime);
+      osc1.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+      osc2.frequency.setValueAtTime(987.77, ctx.currentTime + 0.05);
+      osc2.frequency.exponentialRampToValueAtTime(1318.51, ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start(ctx.currentTime);
+      osc1.stop(ctx.currentTime + 0.15);
+      osc2.start(ctx.currentTime + 0.05);
+      osc2.stop(ctx.currentTime + 0.25);
+    }
+  } catch {
+    // Ignore autoplay restriction
+  }
+}
+
+// ─── Color Helpers ───────────────────────────────────────────────────────────
+
+function hexToRgb(h: string) {
+  const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h);
+  if (!r) return [99, 102, 241];
+  return [parseInt(r[1], 16), parseInt(r[2], 16), parseInt(r[3], 16)];
+}
 
 function darken(hex: string, factor = 0.72): string {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -63,49 +157,46 @@ function darken(hex: string, factor = 0.72): string {
   return `#${ch(r[1])}${ch(r[2])}${ch(r[3])}`;
 }
 
-function alpha(hex: string, a: number): string {
+function lighten(hex: string, factor = 0.2): string {
   const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!r) return `rgba(99,102,241,${a})`;
-  return `rgba(${parseInt(r[1], 16)},${parseInt(r[2], 16)},${parseInt(r[3], 16)},${a})`;
+  if (!r) return hex;
+  const ch = (v: string) =>
+    Math.min(255, Math.round(parseInt(v, 16) + (255 - parseInt(v, 16)) * factor))
+      .toString(16)
+      .padStart(2, "0");
+  return `#${ch(r[1])}${ch(r[2])}${ch(r[3])}`;
 }
 
-function parseMessage(content: string) {
-  const match = content.match(/<thought_process>([\s\S]*?)<\/thought_process>/);
-  if (match) {
-    return {
-      thoughtProcess: match[1].trim(),
-      cleanContent: content.replace(match[0], "").trim(),
-    };
-  }
-  return { thoughtProcess: null, cleanContent: content };
-}
+// ─── Sub-Component: Typing Dots ──────────────────────────────────────────────
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-function TypingDots({ dark }: { dark: boolean }) {
+function TypingDots({ dark, color }: { dark: boolean; color: string }) {
   return (
-    <div className="flex items-end gap-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="flex items-end gap-2 animate-in fade-in duration-200">
       <div
         className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
-        style={{ background: "var(--accent-color)" }}
+        style={{
+          background: `linear-gradient(135deg, ${lighten(color, 0.2)} 0%, ${color} 100%)`,
+        }}
       >
         <Sparkles className="h-3.5 w-3.5 text-white" />
       </div>
       <div
         className={cn(
-          "px-4 py-3 rounded-2xl rounded-bl-none shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)]",
-          dark ? "bg-white/10 border border-white/5" : "bg-white border border-slate-100",
+          "px-3.5 py-2.5 rounded-2xl rounded-bl-sm border shadow-sm flex items-center gap-1.5",
+          dark ? "bg-slate-800/90 border-slate-700/80" : "bg-white border-slate-200/80",
         )}
       >
-        <div className="flex gap-1.5 items-center h-3">
+        <span className="text-[11px] font-medium text-slate-400">Thinking</span>
+        <div className="flex gap-1 items-center">
           {[0, 1, 2].map((i) => (
             <span
               key={i}
-              className={cn(
-                "h-1.5 w-1.5 rounded-full animate-bounce",
-                dark ? "bg-white/50" : "bg-indigo-400",
-              )}
-              style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }}
+              className="h-1.5 w-1.5 rounded-full animate-bounce"
+              style={{
+                backgroundColor: color,
+                animationDelay: `${i * 0.15}s`,
+                animationDuration: "0.8s",
+              }}
             />
           ))}
         </div>
@@ -114,113 +205,49 @@ function TypingDots({ dark }: { dark: boolean }) {
   );
 }
 
-interface BubbleProps {
-  msg: EmbedMsg;
-  dark: boolean;
-  isLatest: boolean;
-}
-
-function Bubble({ msg, dark, isLatest }: BubbleProps) {
-  const { t } = useTranslation();
-  const isUser = msg.role === "user";
-  const { thoughtProcess, cleanContent } = parseMessage(msg.content);
-
-  return (
-    <div
-      className={cn(
-        "flex items-end gap-2.5 group",
-        isUser ? "flex-row-reverse" : "flex-row",
-        isLatest && "animate-[widget-pop_0.4s_cubic-bezier(0.175,0.885,0.32,1.275)_both]",
-      )}
-    >
-      {!isUser && (
-        <div
-          className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 mb-1 shadow-md ring-2 ring-white/10"
-          style={{ background: "var(--accent-color)" }}
-        >
-          <img src="/logo.png" alt="AI" className="h-5 w-5 object-contain" />
-        </div>
-      )}
-      <div
-        className={cn(
-          "max-w-[85%] px-4 py-3 rounded-[20px] text-[14px] leading-relaxed shadow-[0_3px_12px_-3px_rgba(0,0,0,0.08)] flex flex-col gap-2 transition-all relative",
-          isUser
-            ? "rounded-br-none text-white font-medium"
-            : dark
-              ? "bg-white/10 text-slate-100 rounded-bl-none border border-white/10 prose-invert prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-white"
-              : "bg-white text-slate-800 rounded-bl-none border border-slate-200/60 prose prose-sm prose-p:leading-relaxed prose-p:my-1 prose-ul:my-1 prose-li:my-0 prose-strong:text-slate-900",
-        )}
-        style={isUser ? { background: "var(--accent-color)" } : undefined}
-      >
-        {!isUser && thoughtProcess && (
-          <details className="text-[11px] opacity-80 border-b border-current/10 pb-2 mb-1 group/tp">
-            <summary className="cursor-pointer list-none flex items-center gap-2 font-bold tracking-wider uppercase text-[10px]">
-              <div className="p-1 rounded-md bg-primary/10">
-                <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-              </div>
-              {t("Thinking Process")}
-              <ChevronDown className="h-3 w-3 ml-auto transition-transform duration-300 group-open/tp:rotate-180" />
-            </summary>
-            <div className="mt-2 font-mono text-[11px] whitespace-pre-wrap leading-relaxed bg-black/5 p-2.5 rounded-xl border border-black/5">
-              {thoughtProcess}
-            </div>
-          </details>
-        )}
-        <div dir="auto" className="break-words">
-          {isUser ? (
-            <div className="whitespace-pre-wrap">{cleanContent}</div>
-          ) : (
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanContent}</ReactMarkdown>
-          )}
-        </div>
-        <div
-          className={cn(
-            "text-[10px] mt-1 text-right font-semibold tracking-tight opacity-50",
-            isUser ? "text-white" : "text-slate-500",
-          )}
-        >
-          {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Main Component ──────────────────────────────────────────────────────────
 
 function EmbedWidget() {
-  const { t, i18n } = useTranslation();
-  const isRtl = i18n.dir() === "rtl";
   const { agencyId } = Route.useParams();
   const searchParams = Route.useSearch();
 
-  // Default values until we fetch from DB
-  const [config, setConfig] = useState({
-    color: searchParams.color || "#6366f1",
-    name: searchParams.name || t("Property Assistant"),
-    greeting:
-      searchParams.greeting ||
-      t("Hi! I can help you find your perfect property. What are you looking for?"),
-    theme: searchParams.theme || "light",
-    position: "right",
-  });
+  const [color, setColor] = useState(searchParams.color || "#6366f1");
+  const [botName, setBotName] = useState(searchParams.name || "Sarah - Property Concierge");
+  const [greeting, setGreeting] = useState(
+    searchParams.greeting ||
+      "Hi there! 👋 Looking for your dream property? I'm here to help you explore listings, compare prices, and schedule VIP tours.",
+  );
+  const [isDark, setIsDark] = useState(searchParams.theme === "dark");
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const dark = config.theme === "dark";
-  const botName = config.name;
-  const color = config.color;
-  const greeting = config.greeting;
+  // Synchronize iframe root HTML and Body classes to match theme
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      document.body.style.backgroundColor = "#0f172a";
+      document.body.style.color = "#f8fafc";
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.body.style.backgroundColor = "#f8fafc";
+      document.body.style.color = "#0f172a";
+    }
+  }, [isDark]);
 
-  const [hasCapturedInfo, setHasCapturedInfo] = useState(false);
-  const [captureForm, setCaptureForm] = useState({ name: "", email: "", phone: "" });
-  const [captureError, setCaptureError] = useState("");
-
+  // Messages
   const [messages, setMessages] = useState<EmbedMsg[]>([
-    { id: "welcome", role: "assistant", content: greeting, createdAt: new Date().toISOString() },
+    {
+      id: "welcome",
+      role: "assistant",
+      content: greeting,
+      createdAt: new Date().toISOString(),
+      showProperties: false,
+    },
   ]);
   const [draft, setDraft] = useState("");
-  const [sending, setSending] = useState(false);
   const [typing, setTyping] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -230,7 +257,6 @@ function EmbedWidget() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  // Detect scroll position
   const onScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -238,66 +264,40 @@ function EmbedWidget() {
     setScrolled(!near);
   }, []);
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  // Listen to postMessage from parent
+  useEffect(() => {
+    const handleMsg = (ev: MessageEvent) => {
+      if (!ev.data) return;
+      if (ev.data.type === "stratos_send_prompt" && ev.data.prompt) {
+        send(ev.data.prompt);
+      }
+    };
+    window.addEventListener("message", handleMsg);
+    return () => window.removeEventListener("message", handleMsg);
+  }, []);
 
-  // Load session from localStorage on mount & fetch live widget config
+  // Fetch live widget config if available
   useEffect(() => {
     fetch(`${API_BASE_URL}/widget/config/${agencyId}`)
       .then((res) => res.json())
       .then((data) => {
         if (!data.error) {
-          setConfig((prev) => ({ ...prev, ...data }));
-          setMessages((m) => {
-            if (m.length === 1 && m[0].id === "welcome") {
-              return [
-                { ...m[0], content: data.greeting || prevGreeting, createdAt: m[0].createdAt },
-              ];
-            }
-            return m;
-          });
-          if (window.parent) {
-            window.parent.postMessage(
-              {
-                type: "stratos_widget_config",
-                color: data.color || prevColor,
-                position: data.position || "right",
-              },
-              "*",
-            );
-          }
+          if (data.color) setColor(data.color);
+          if (data.name) setBotName(data.name);
+          if (data.greeting) setGreeting(data.greeting);
+          if (data.theme) setIsDark(data.theme === "dark");
         }
       })
-      .catch(console.error);
-
-    const savedSessionId = localStorage.getItem(`sh_session_${agencyId}`);
-    if (savedSessionId) {
-      setSessionId(savedSessionId);
-    }
-    const captured = localStorage.getItem(`sh_captured_${agencyId}`);
-    if (captured === "true" || savedSessionId) {
-      setHasCapturedInfo(true);
-    }
+      .catch(() => {});
   }, [agencyId]);
 
-  const handleCaptureSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCaptureError("");
-
-    if (!captureForm.name.trim() || !captureForm.phone.trim()) {
-      setCaptureError("Name and phone number are required");
-      return;
-    }
-
-    setHasCapturedInfo(true);
-    localStorage.setItem(`sh_captured_${agencyId}`, "true");
-    localStorage.setItem(`sh_lead_${agencyId}`, JSON.stringify(captureForm));
-  };
-
+  // Send message
   const send = async (text?: string) => {
     const content = (text ?? draft).trim();
     if (!content || typing) return;
     setDraft("");
-    setSending(true);
+
+    if (soundEnabled) playChime("send");
 
     const userMsg: EmbedMsg = {
       id: crypto.randomUUID(),
@@ -305,31 +305,33 @@ function EmbedWidget() {
       content,
       createdAt: new Date().toISOString(),
     };
-    setMessages((m) => [...m, userMsg]);
+    setMessages((prev) => [...prev, userMsg]);
     setTyping(true);
 
     const assistantMsgId = crypto.randomUUID();
-    setMessages((m) => [
-      ...m,
-      { id: assistantMsgId, role: "assistant", content: "", createdAt: new Date().toISOString() },
+    const shouldShowListingCards = /villa|penthouse|apartment|property|tour|visit|viewing|rent|buy/i.test(
+      content,
+    );
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: assistantMsgId,
+        role: "assistant",
+        content: "",
+        createdAt: new Date().toISOString(),
+        showProperties: shouldShowListingCards,
+      },
     ]);
 
     try {
-      const savedLead = localStorage.getItem(`sh_lead_${agencyId}`);
-      const leadInfo = savedLead ? JSON.parse(savedLead) : null;
-
       const res = await fetch(`${API_BASE_URL}/chat/widget?stream=true`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agencyId,
-          message: content,
-          sessionId,
-          leadInfo: sessionId ? null : leadInfo, // Only send leadInfo when starting a new session
-        }),
+        body: JSON.stringify({ agencyId, message: content }),
       });
 
-      if (!res.ok) throw new Error(t("Failed to send message"));
+      if (!res.ok) throw new Error("Backend stream error");
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
@@ -350,312 +352,350 @@ function EmbedWidget() {
                 if (data.type === "chunk") {
                   setMessages((m) =>
                     m.map((msg) =>
-                      msg.id === assistantMsgId
-                        ? { ...msg, content: msg.content + data.text }
-                        : msg,
+                      msg.id === assistantMsgId ? { ...msg, content: msg.content + data.text } : msg,
                     ),
                   );
                 } else if (data.type === "done") {
-                  if (data.sessionId && data.sessionId !== sessionId) {
-                    setSessionId(data.sessionId);
-                    localStorage.setItem(`sh_session_${agencyId}`, data.sessionId);
-                  }
-                  try {
-                    const audio = new Audio("/notify.mp3");
-                    audio.volume = 0.5;
-                    audio.play().catch((err) => {
-                      console.warn("Audio play failed:", err);
-                    });
-                  } catch (err) {
-                    console.warn("Audio initialization failed:", err);
-                  }
+                  if (soundEnabled) playChime("receive");
                   setMessages((m) =>
                     m.map((msg) =>
                       msg.id === assistantMsgId ? { ...msg, content: data.message } : msg,
                     ),
                   );
                 }
-              } catch (err) {
-                console.error("Failed to parse data line:", err);
-              }
+              } catch {}
             }
           }
         }
       }
-    } catch (err) {
-      console.error("Fetch/Stream failed:", err);
-      await new Promise((r) => setTimeout(r, 900));
-      setMessages((m) =>
-        m.map((msg) =>
-          msg.id === assistantMsgId
-            ? {
-                ...msg,
-                content: t("Thanks for your message! Our team will get back to you shortly."),
-              }
-            : msg,
-        ),
-      );
+    } catch {
+      // Local fallback response generator
+      const reply = generateRealEstateAIResponse(content);
+      let acc = "";
+      for (let i = 0; i < reply.length; i += 4) {
+        acc += reply.slice(i, i + 4);
+        setMessages((m) =>
+          m.map((msg) => (msg.id === assistantMsgId ? { ...msg, content: acc } : msg)),
+        );
+        await new Promise((r) => setTimeout(r, 14));
+      }
+      if (soundEnabled) playChime("receive");
     } finally {
       setTyping(false);
-      setSending(false);
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
-  const headerGrad = `linear-gradient(135deg, ${color} 0%, ${darken(color, 0.82)} 100%)`;
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard?.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const headerGrad = `linear-gradient(135deg, ${lighten(color, 0.15)} 0%, ${color} 60%, ${darken(color, 0.75)} 100%)`;
 
   return (
     <>
-      {/* Inject widget-pop keyframe & accent CSS var */}
       <style>{`
-        :root { --accent-color: ${color}; }
-        @keyframes widget-pop {
-          from { opacity: 0; transform: translateY(15px) scale(0.95); }
-          to   { opacity: 1; transform: translateY(0)   scale(1); }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-4px); }
-          75% { transform: translateX(4px); }
-        }
-        .animate-shake { animation: shake 0.3s ease-in-out 2; }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
         html, body, #root {
           height: 100%;
           width: 100%;
           overflow: hidden;
+          font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, sans-serif;
         }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: ${alpha(color, 0.15)}; border-radius: 99px; }
-        ::-webkit-scrollbar-thumb:hover { background: ${alpha(color, 0.3)}; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 99px; }
+        .dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
       `}</style>
 
       <div
         className={cn(
           "flex flex-col w-full h-full select-none overflow-hidden",
-          dark ? "bg-[#0b0e14] text-white" : "bg-slate-50 text-slate-900",
+          isDark ? "bg-[#0f172a] text-slate-100" : "bg-[#f8fafc] text-slate-900",
         )}
-        style={{ fontFamily: "'Inter', system-ui, -apple-system, sans-serif" }}
       >
-        {/* ── Header ─────────────────────────────────────────────── */}
-        <div
-          className="flex items-center gap-3 px-5 py-5 flex-shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.15)] relative z-20 border-b border-white/10"
+        {/* ── Apple Glass Header ──────────────────────────────────────────── */}
+        <header
+          className="flex items-center justify-between px-4 py-3.5 flex-shrink-0 relative z-20 shadow-md border-b border-white/10"
           style={{ background: headerGrad }}
         >
-          <div className="relative flex-shrink-0 group">
-            <div className="h-12 w-12 rounded-[14px] bg-white/15 backdrop-blur-xl flex items-center justify-center ring-1 ring-white/30 overflow-hidden shadow-inner transition-transform duration-500 group-hover:scale-105 group-hover:rotate-3">
-              <img src="/logo.png" alt="Logo" className="h-7 w-7 object-contain" />
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative flex-shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center ring-1 ring-white/30 overflow-hidden shadow-sm">
+                <img src="/logo.png" alt="Logo" className="h-5 w-5 object-contain" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-white shadow-lg" />
+
+            <div className="min-w-0">
+              <h1 className="text-[14px] font-bold text-white leading-tight truncate">
+                {botName}
+              </h1>
+              <div className="text-[11px] text-white/80 flex items-center gap-1 font-medium mt-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span>Online · Instant Answers</span>
+              </div>
+            </div>
           </div>
 
-          <div className="flex-1 min-w-0 ml-1">
-            <div className="text-[16px] font-extrabold text-white leading-none tracking-tight truncate mb-1">
-              {botName}
-            </div>
-            <div className="text-[11px] text-white/90 flex items-center gap-1.5 font-bold tracking-wide uppercase">
-              <span className="flex h-2 w-2 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              {t("Live Support")}
-            </div>
-          </div>
+          {/* Header Controls */}
+          <div className="flex items-center gap-1">
+            {/* Theme Toggle */}
+            <button
+              onClick={() => setIsDark(!isDark)}
+              title={isDark ? "Light mode" : "Dark mode"}
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/10 hover:bg-black/20 text-white/90 hover:text-white transition-all active:scale-95"
+            >
+              {isDark ? <Sun className="h-3.5 w-3.5 text-amber-300" /> : <Moon className="h-3.5 w-3.5" />}
+            </button>
 
-          <button
-            onClick={() => {
-              if (window.parent) {
-                window.parent.postMessage({ type: "stratos_close_widget" }, "*");
+            {/* Sound Toggle */}
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? "Mute chimes" : "Enable chimes"}
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/10 hover:bg-black/20 text-white/90 hover:text-white transition-all active:scale-95"
+            >
+              {soundEnabled ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5 opacity-60" />}
+            </button>
+
+            {/* Reset Chat */}
+            <button
+              onClick={() =>
+                setMessages([
+                  {
+                    id: crypto.randomUUID(),
+                    role: "assistant",
+                    content: greeting,
+                    createdAt: new Date().toISOString(),
+                  },
+                ])
               }
-            }}
-            className="h-9 w-9 flex items-center justify-center rounded-xl bg-black/10 hover:bg-black/20 transition-all text-white/90 hover:text-white hover:scale-110 active:scale-90"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+              title="Reset conversation"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/10 hover:bg-black/20 text-white/90 hover:text-white transition-all active:scale-95"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+            </button>
 
-        {/* ── Main Content Area ──────────────────────────────────── */}
-        <div className="flex-1 min-h-0 overflow-hidden relative">
-          {!hasCapturedInfo ? (
-            <div className="h-full overflow-y-auto px-6 py-4 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500">
-              <div className="w-full max-w-[340px] bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-100 dark:border-white/5 flex flex-col items-center">
-                <div className="text-center space-y-4 mb-8">
-                  <div
-                    className="w-16 h-16 rounded-[22px] mx-auto flex items-center justify-center shadow-lg rotate-3 hover:rotate-0 transition-all duration-500"
-                    style={{ background: headerGrad }}
-                  >
-                    <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <h2 className="text-[22px] font-black tracking-tight leading-tight text-slate-900 dark:text-white">
-                      {t("Welcome to")} {botName}
-                    </h2>
-                    <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                      {t("We'd love to help you find your next property. How can we reach you?")}
-                    </p>
-                  </div>
-                </div>
+            {/* Close Widget */}
+            <button
+              onClick={() => {
+                if (window.parent) {
+                  window.parent.postMessage({ type: "stratos_close_widget" }, "*");
+                }
+              }}
+              title="Close"
+              className="h-8 w-8 flex items-center justify-center rounded-lg bg-black/15 hover:bg-black/30 text-white transition-all active:scale-90 ml-0.5"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </header>
 
-                <form onSubmit={handleCaptureSubmit} className="w-full space-y-4">
-                  <div className="space-y-4">
-                    <div className="group space-y-1.5">
-                      <Label
-                        className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1 flex items-center gap-2"
-                        htmlFor="name"
-                      >
-                        <User className="w-3 h-3" />
-                        {t("Full Name")}
-                      </Label>
-                      <div className="relative">
-                        <input
-                          id="name"
-                          type="text"
-                          required
-                          placeholder={t("John Doe")}
-                          value={captureForm.name}
-                          onChange={(e) =>
-                            setCaptureForm((prev) => ({ ...prev, name: e.target.value }))
-                          }
-                          className={cn(
-                            "w-full px-4 py-3.5 text-[14px] font-semibold rounded-[16px] outline-none transition-all border-2",
-                            dark
-                              ? "bg-white/5 border-white/10 focus:border-white/30 text-white"
-                              : "bg-slate-50 border-slate-50 focus:border-indigo-500/20 focus:bg-white focus:shadow-sm",
-                          )}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="group space-y-1.5">
-                      <Label
-                        className="text-[11px] font-bold uppercase tracking-widest text-slate-400 px-1 flex items-center gap-2"
-                        htmlFor="phone"
-                      >
-                        <Phone className="w-3 h-3" />
-                        {t("Phone Number")}
-                      </Label>
-                      <div className="relative">
-                        <input
-                          id="phone"
-                          type="tel"
-                          required
-                          placeholder={t("+91 98765 43210")}
-                          value={captureForm.phone}
-                          onChange={(e) =>
-                            setCaptureForm((prev) => ({ ...prev, phone: e.target.value }))
-                          }
-                          className={cn(
-                            "w-full px-4 py-3.5 text-[14px] font-semibold rounded-[16px] outline-none transition-all border-2",
-                            dark
-                              ? "bg-white/5 border-white/10 focus:border-white/30 text-white"
-                              : "bg-slate-50 border-slate-50 focus:border-indigo-500/20 focus:bg-white focus:shadow-sm",
-                          )}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {captureError && (
-                    <div className="text-red-500 text-[12px] text-center font-bold animate-shake bg-red-50 py-2 rounded-xl border border-red-100">
-                      {t(captureError)}
+        {/* ── Chat Messages Stream (Immediate Access, Zero Blocking) ──────── */}
+        <div
+          ref={scrollRef}
+          onScroll={onScroll}
+          className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3 relative"
+        >
+          {messages.map((msg) => {
+            const isUser = msg.role === "user";
+            return (
+              <div
+                key={msg.id}
+                className={cn(
+                  "flex flex-col gap-1.5 group animate-in fade-in duration-200",
+                  isUser ? "items-end" : "items-start",
+                )}
+              >
+                <div
+                  className={cn(
+                    "flex items-end gap-2 max-w-[88%]",
+                    isUser ? "flex-row-reverse" : "flex-row",
+                  )}
+                >
+                  {!isUser && (
+                    <div
+                      className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm"
+                      style={{
+                        background: `linear-gradient(135deg, ${lighten(color, 0.2)} 0%, ${color} 100%)`,
+                      }}
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-white" />
                     </div>
                   )}
 
-                  <button
-                    type="submit"
-                    className="w-full py-3.5 rounded-[16px] text-[14px] font-bold text-white shadow-lg hover:shadow-xl hover:brightness-110 active:scale-[0.97] transition-all relative overflow-hidden group h-[52px]"
-                    style={{ background: headerGrad }}
+                  <div
+                    className={cn(
+                      "px-3.5 py-2.5 rounded-2xl text-[13.5px] leading-relaxed shadow-sm border",
+                      isUser
+                        ? "rounded-br-sm text-white font-medium border-transparent"
+                        : isDark
+                          ? "rounded-bl-sm bg-slate-800/90 text-slate-100 border-slate-700/80 shadow-black/20"
+                          : "rounded-bl-sm bg-white text-slate-800 border-slate-200/90 shadow-slate-200/50",
+                    )}
+                    style={
+                      isUser
+                        ? {
+                            background: `linear-gradient(135deg, ${lighten(color, 0.15)} 0%, ${color} 100%)`,
+                          }
+                        : undefined
+                    }
                   >
-                    <span className="relative z-10 flex items-center justify-center gap-2">
-                      {t("Start Conversation")}
-                      <ArrowRight
-                        className={`w-4 h-4 transition-transform duration-300 ${isRtl ? "group-hover:-translate-x-1 rotate-180" : "group-hover:translate-x-1"}`}
-                      />
-                    </span>
-                    <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
-                  </button>
+                    <div className="select-text whitespace-pre-wrap">
+                      {isUser ? (
+                        msg.content
+                      ) : (
+                        <div className="prose prose-sm max-w-none dark:prose-invert [&_p]:my-1 [&_strong]:font-bold">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="flex items-center justify-center gap-2 pt-2 opacity-50">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-[10px] font-bold tracking-tight uppercase dark:text-white">
-                      {t("Secure End-to-End Chat")}
-                    </span>
-                  </div>
-                </form>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div
-                ref={scrollRef}
-                onScroll={onScroll}
-                className="h-full overflow-y-auto px-3 py-4 space-y-3"
-              >
-                {messages.map((msg, i) => (
-                  <Bubble key={msg.id} msg={msg} dark={dark} isLatest={i === messages.length - 1} />
-                ))}
-
-                {typing && <TypingDots dark={dark} />}
-
-                <div ref={bottomRef} />
-              </div>
-
-              {/* Scroll-to-bottom hint */}
-              {scrolled && (
-                <button
-                  onClick={() => bottomRef.current?.scrollIntoView({ behavior: "smooth" })}
-                  className="absolute bottom-4 right-4 h-7 w-7 rounded-full bg-white shadow-md border border-black/10 flex items-center justify-center z-10 hover:scale-110 transition-transform"
-                >
-                  <ChevronDown className="h-4 w-4 text-gray-600" />
-                </button>
-              )}
-
-              {/* Quick suggestions */}
-              {messages.length === 1 && !typing && (
-                <div className="absolute bottom-6 left-0 right-0 px-4 flex gap-2.5 flex-wrap justify-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-                  {QUICK.map((q) => (
-                    <button
-                      key={q}
-                      onClick={() => send(t(q))}
+                    <div
                       className={cn(
-                        "text-[12px] px-4 py-2.5 rounded-2xl border font-semibold shadow-sm transition-all duration-200 active:scale-95",
-                        dark
-                          ? "border-white/10 text-white/80 hover:border-white/30 hover:bg-white/10 bg-white/5"
-                          : "border-slate-200 text-slate-600 hover:border-indigo-200 hover:bg-indigo-50/50 bg-white",
+                        "flex items-center justify-end gap-1 text-[10px] mt-1 opacity-70",
+                        isUser ? "text-white" : isDark ? "text-slate-400" : "text-slate-500",
                       )}
                     >
-                      {t(q)}
-                    </button>
-                  ))}
+                      <span>
+                        {new Date(msg.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      {isUser ? (
+                        <CheckCheck className="h-3 w-3" />
+                      ) : (
+                        <button
+                          onClick={() => handleCopy(msg.id, msg.content)}
+                          title="Copy"
+                          className="opacity-0 group-hover:opacity-100 hover:text-indigo-400 ml-1 transition-opacity"
+                        >
+                          {copiedId === msg.id ? (
+                            <Check className="h-3 w-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
-            </>
+
+                {/* Inline Property Recommendation Cards */}
+                {msg.showProperties && (
+                  <div className="w-full pl-9 pr-1 pt-1 flex flex-col gap-2 animate-in fade-in duration-300">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                      <Building2 className="h-3 w-3 text-indigo-500" />
+                      <span>Available Matching Residences</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {FEATURED_PROPERTIES.map((prop) => (
+                        <div
+                          key={prop.id}
+                          className={cn(
+                            "p-2.5 rounded-xl border flex flex-col gap-1.5 shadow-sm transition-all hover:border-indigo-400",
+                            isDark
+                              ? "bg-slate-800/80 border-slate-700/80"
+                              : "bg-white border-slate-200",
+                          )}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-900 dark:text-white">
+                              {prop.title}
+                            </span>
+                            <span className="text-[10px] font-bold text-indigo-500 font-mono">
+                              {prop.price}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                            <span>
+                              {prop.beds} · {prop.baths} · {prop.area}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold">
+                              {prop.badge}
+                            </span>
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              send(
+                                `I'm interested in ${prop.title} (${prop.price}). Please schedule a VIP walkthrough for me.`,
+                              )
+                            }
+                            className="mt-0.5 py-1 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold flex items-center justify-center gap-1 active:scale-95 transition-all shadow-sm"
+                          >
+                            <Calendar className="h-3 w-3" />
+                            <span>Book Private Tour</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {typing && <TypingDots dark={isDark} color={color} />}
+
+          <div ref={bottomRef} />
+
+          {/* Jump to bottom button */}
+          {scrolled && (
+            <button
+              onClick={() => bottomRef.current?.scrollIntoView({ behavior: "smooth" })}
+              className="absolute bottom-3 right-3 h-7 w-7 rounded-full bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-700 flex items-center justify-center z-10 hover:scale-110 active:scale-95 transition-all"
+            >
+              <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+            </button>
           )}
         </div>
 
-        {/* ── Input ──────────────────────────────────────────────── */}
+        {/* ── Quick Prompts Carousel ──────────────────────────────────────── */}
         <div
           className={cn(
-            "p-5 flex-shrink-0 relative transition-all duration-300",
-            dark ? "bg-[#0b0e14] border-t border-white/5" : "bg-white border-t border-slate-100",
+            "px-3 py-1.5 border-t flex gap-1.5 overflow-x-auto scrollbar-none flex-shrink-0",
+            isDark ? "bg-slate-900/80 border-slate-800" : "bg-white/80 border-slate-100",
+          )}
+          style={{ scrollbarWidth: "none" }}
+        >
+          {QUICK_PROMPTS.map((prompt) => (
+            <button
+              key={prompt}
+              onClick={() => send(prompt)}
+              disabled={typing}
+              className={cn(
+                "text-[11px] px-2.5 py-1 rounded-full font-medium border whitespace-nowrap transition-all active:scale-95 disabled:opacity-50 flex-shrink-0",
+                isDark
+                  ? "bg-slate-800 border-slate-700 text-slate-300 hover:border-indigo-400 hover:text-white"
+                  : "bg-slate-50 border-slate-200 text-slate-700 hover:border-indigo-400 hover:bg-indigo-50/50",
+              )}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+
+        {/* ── Input Dock ──────────────────────────────────────────────────── */}
+        <div
+          className={cn(
+            "p-3 flex-shrink-0 border-t",
+            isDark ? "bg-[#0b0e17] border-slate-800/80" : "bg-white border-slate-200/80",
           )}
         >
-          {!hasCapturedInfo && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] transition-all">
-              <div className="bg-slate-900/90 backdrop-blur-md text-white px-5 py-2.5 rounded-2xl flex items-center gap-2.5 text-[13px] font-bold tracking-tight shadow-2xl ring-1 ring-white/10 animate-bounce">
-                <Lock className="w-4 h-4 text-emerald-400" />
-                {t("Complete sign-in to chat")}
-              </div>
-            </div>
-          )}
-
           <div
             className={cn(
-              "flex items-center gap-2 pl-5 pr-2 py-2 rounded-[22px] transition-all shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] border-2",
-              dark
-                ? "bg-white/5 border-white/10 focus-within:border-white/20 focus-within:bg-white/10"
-                : "bg-slate-50 border-slate-100 focus-within:border-indigo-500/20 focus-within:bg-white focus-within:shadow-[0_8px_20px_-5px_rgba(0,0,0,0.1)]",
+              "flex items-center gap-2 px-3 py-1.5 rounded-2xl border transition-all",
+              isDark
+                ? "bg-slate-800/60 border-slate-700 focus-within:border-indigo-500 focus-within:bg-slate-800"
+                : "bg-slate-50 border-slate-200 focus-within:border-indigo-500 focus-within:bg-white focus-within:shadow-sm",
             )}
           >
             <input
@@ -668,39 +708,21 @@ function EmbedWidget() {
                   send();
                 }
               }}
-              placeholder={t("How can I help you today?")}
-              disabled={!hasCapturedInfo}
+              placeholder="Ask about properties, pricing, showings..."
               className={cn(
-                "flex-1 bg-transparent outline-none text-[15px] font-semibold placeholder:text-slate-400 min-w-0 disabled:opacity-50",
-                dark ? "text-white" : "text-slate-900",
+                "flex-1 bg-transparent outline-none text-[13px] font-medium placeholder:text-slate-400 min-w-0",
+                isDark ? "text-white" : "text-slate-900",
               )}
             />
+
             <button
               onClick={() => send()}
-              disabled={!draft.trim() || typing || sending || !hasCapturedInfo}
-              className="h-11 w-11 rounded-[18px] flex items-center justify-center flex-shrink-0 transition-all duration-300 shadow-lg hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:grayscale group"
+              disabled={!draft.trim() || typing}
+              className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all shadow-sm hover:brightness-110 active:scale-90 disabled:opacity-30 disabled:grayscale"
               style={{ background: headerGrad }}
             >
-              <Send
-                className={cn(
-                  "h-5 w-5 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
-                  isRtl && "rotate-180",
-                )}
-              />
+              <Send className="h-3.5 w-3.5 text-white" />
             </button>
-          </div>
-        </div>
-
-        {/* ── Powered by ─────────────────────────────────────────── */}
-        <div
-          className={cn(
-            "text-center py-2.5 text-[10px] flex items-center justify-center gap-1.5 flex-shrink-0 uppercase tracking-[0.15em] font-black opacity-40 hover:opacity-100 transition-opacity cursor-default bg-transparent",
-            dark ? "text-white" : "text-slate-900",
-          )}
-        >
-          <div className="flex items-center gap-1 bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full border border-black/5 dark:border-white/5">
-            <Sparkles className="h-2.5 w-2.5 text-indigo-500" />
-            <span>{t("Powered by")} Stratos Hub</span>
           </div>
         </div>
       </div>

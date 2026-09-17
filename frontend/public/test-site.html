@@ -467,14 +467,14 @@
       (function() {
         var params = new URLSearchParams(window.location.search);
         var key = params.get('key') || 'demo';
-        var api = params.get('api') || 'https://stratos-fefe-production.up.railway.app';
+        var api = params.get('api') || window.location.origin;
         var color = params.get('color') || '#6366f1';
         var name = params.get('name') || 'Sarah - Property Assistant';
         var theme = params.get('theme') || 'light';
         var greeting = params.get('greeting') || 'Hi there! 👋 Looking for your dream home? I can help you find the perfect property, answer questions about listings, and more!';
 
         var script = document.createElement('script');
-        script.src = 'https://stratos-hub.pages.dev/widget.js';
+        script.src = (params.get('widget') || '/widget.js') + '?v=' + Date.now();
         script.setAttribute('data-key', key);
         script.setAttribute('data-api', api);
         script.setAttribute('data-color', color);
@@ -483,6 +483,38 @@
         script.setAttribute('data-theme', theme);
         script.setAttribute('data-position', 'right');
         document.body.appendChild(script);
+
+        // Interactive property card clicks that trigger the AI assistant
+        document.addEventListener('click', function(e) {
+          var card = e.target.closest('.card');
+          if (card) {
+            var title = card.querySelector('.card-title') ? card.querySelector('.card-title').textContent : 'this property';
+            var price = card.querySelector('.card-price') ? card.querySelector('.card-price').textContent : '';
+            window.postMessage({
+              type: 'stratos_open_widget',
+              prompt: 'Tell me more about ' + title + ' (' + price + ') and available viewing times.'
+            }, '*');
+            return;
+          }
+
+          if (e.target.closest('.nav-cta')) {
+            e.preventDefault();
+            window.postMessage({
+              type: 'stratos_open_widget',
+              prompt: 'Hi! I would like to speak with a senior luxury property specialist.'
+            }, '*');
+            return;
+          }
+
+          if (e.target.closest('.btn-primary')) {
+            e.preventDefault();
+            window.postMessage({
+              type: 'stratos_open_widget',
+              prompt: 'Show me your premier luxury listings for sale with sea view.'
+            }, '*');
+            return;
+          }
+        });
       })();
     </script>
   </body>
